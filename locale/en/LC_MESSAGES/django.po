@@ -1,0 +1,389 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-28 21:01+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\config\settings.py:122 .\core\models.py:9
+msgid "English"
+msgstr "English"
+
+#: .\config\settings.py:123 .\core\models.py:10
+msgid "Russian"
+msgstr "Russian"
+
+#: .\config\settings.py:124 .\core\models.py:8
+msgid "Qaraqalpaqsha"
+msgstr "Qaraqalpaqsha"
+
+#: .\core\models.py:13
+msgid "Phone Number"
+msgstr "Phone Number"
+
+#: .\core\models.py:14 .\templates\register.html:156
+msgid "Age"
+msgstr "Age"
+
+#: .\core\models.py:15
+msgid "Preferred Language"
+msgstr "Preferred Language"
+
+#: .\core\models.py:21 .\core\models.py:31 .\core\models.py:42
+msgid "Title"
+msgstr "Title"
+
+#: .\core\models.py:22
+msgid "Description"
+msgstr "Description"
+
+#: .\core\models.py:23 .\templates\register.html:170
+msgid "Language"
+msgstr "Language"
+
+#: .\core\models.py:24
+msgid "Created At"
+msgstr "Created At"
+
+#: .\core\models.py:32 .\core\models.py:44
+msgid "Order"
+msgstr "Order"
+
+#: .\core\models.py:43
+msgid "Markdown content"
+msgstr ""
+
+#: .\core\models.py:43
+msgid "Content"
+msgstr "Content"
+
+#: .\core\models.py:54
+msgid "Question"
+msgstr "Question"
+
+#: .\core\models.py:55
+msgid "List of options"
+msgstr ""
+
+#: .\core\models.py:55
+msgid "Options"
+msgstr "Options"
+
+#: .\core\models.py:56
+msgid "Correct Answer"
+msgstr "Correct Answer"
+
+#: .\debug_output.txt:10 .\templates\dashboard.html:4
+msgid "My Dashboard - ULP"
+msgstr ""
+
+#: .\templates\base.html:8 .\templates\base.html:241 .\templates\landing.html:8
+#: .\templates\landing.html:102 .\templates\landing.html:316
+msgid "Universal Learning Platform"
+msgstr "Universal Learning Platform"
+
+#: .\templates\base.html:58
+msgid "ULP"
+msgstr "ULP"
+
+#: .\templates\base.html:68 .\templates\base.html:176
+#, fuzzy
+#| msgid "Leaderboard"
+msgid "Dashboard"
+msgstr "Leaderboard"
+
+#: .\templates\base.html:72 .\templates\base.html:180
+msgid "New Course"
+msgstr "New Course"
+
+#: .\templates\base.html:76 .\templates\base.html:184
+#: .\templates\leaderboard.html:72
+msgid "Leaderboard"
+msgstr "Leaderboard"
+
+#: .\templates\base.html:146 .\templates\base.html:221
+msgid "Logout"
+msgstr "Logout"
+
+#: .\templates\base.html:241 .\templates\landing.html:316
+msgid "All rights reserved."
+msgstr "All rights reserved."
+
+#: .\templates\chatbot.html:4
+msgid "AI Learning Assistant - ULP"
+msgstr ""
+
+#: .\templates\chatbot.html:129
+msgid "AI Learning Assistant"
+msgstr ""
+
+#: .\templates\chatbot.html:130
+msgid "Ask me anything to generate a course"
+msgstr ""
+
+#: .\templates\chatbot.html:160
+msgid "Hello"
+msgstr ""
+
+#: .\templates\chatbot.html:161
+msgid "What would you like to learn today?"
+msgstr ""
+
+#: .\templates\chatbot.html:170
+msgid "Generating your personalized course..."
+msgstr ""
+
+#: .\templates\chatbot.html:171
+msgid "This may take 20-30 seconds"
+msgstr ""
+
+#: .\templates\chatbot.html:183
+#, fuzzy
+#| msgid "New Course"
+msgid "Generate Course"
+msgstr "New Course"
+
+#: .\templates\chatbot.html:191
+msgid "Type your message..."
+msgstr ""
+
+#: .\templates\chatbot.html:306
+msgid "Sorry, something went wrong. Please try again."
+msgstr ""
+
+#: .\templates\chatbot.html:340
+msgid "Error generating course: "
+msgstr ""
+
+#: .\templates\chatbot.html:344
+msgid "Error generating course. Please try again."
+msgstr ""
+
+#: .\templates\course_detail.html:9
+#, fuzzy
+#| msgid "Leaderboard"
+msgid "Back to Dashboard"
+msgstr "Leaderboard"
+
+#: .\templates\course_detail.html:21
+msgid "Course Completed!"
+msgstr ""
+
+#: .\templates\course_detail.html:28
+msgid "Download Certificate"
+msgstr ""
+
+#: .\templates\course_detail.html:69
+msgid "Completed"
+msgstr ""
+
+#: .\templates\dashboard.html:35
+msgid "Welcome back,"
+msgstr ""
+
+#: .\templates\dashboard.html:36 .\templates\login.html:88
+msgid "Continue your learning journey"
+msgstr ""
+
+#: .\templates\dashboard.html:52
+msgid "modules"
+msgstr ""
+
+#: .\templates\dashboard.html:61
+msgid "Progress"
+msgstr ""
+
+#: .\templates\dashboard.html:72
+msgid "Continue Learning"
+msgstr ""
+
+#: .\templates\dashboard.html:84
+#, fuzzy
+#| msgid "New Course"
+msgid "No Courses Yet"
+msgstr "New Course"
+
+#: .\templates\dashboard.html:89
+msgid "Create Your First Course"
+msgstr ""
+
+#: .\templates\landing.html:212
+msgid "Gamified Learning"
+msgstr ""
+
+#: .\templates\landing.html:227
+msgid "How It Works"
+msgstr ""
+
+#: .\templates\landing.html:242
+msgid "Choose a Topic"
+msgstr ""
+
+#: .\templates\landing.html:251
+#, fuzzy
+#| msgid "New Course"
+msgid "Get Your Course"
+msgstr "New Course"
+
+#: .\templates\landing.html:260
+msgid "Start Learning"
+msgstr ""
+
+#: .\templates\landing.html:272
+msgid "Ready to Start Your Journey?"
+msgstr ""
+
+#: .\templates\landing.html:278
+#, fuzzy
+#| msgid "Created At"
+msgid "Create Free Account"
+msgstr "Created At"
+
+#: .\templates\landing.html:298
+msgid "Platform"
+msgstr ""
+
+#: .\templates\landing.html:300
+#, fuzzy
+#| msgid "New Course"
+msgid "Courses"
+msgstr "New Course"
+
+#: .\templates\landing.html:301
+msgid "Features"
+msgstr ""
+
+#: .\templates\landing.html:302
+msgid "Pricing"
+msgstr ""
+
+#: .\templates\landing.html:306
+msgid "Legal"
+msgstr ""
+
+#: .\templates\landing.html:308
+msgid "Privacy Policy"
+msgstr ""
+
+#: .\templates\leaderboard.html:75
+#, fuzzy
+#| msgid "Universal Learning Platform"
+msgid ""
+"Rise through the ranks and become a legend in the Universal Learning "
+"Platform."
+msgstr "Universal Learning Platform"
+
+#: .\templates\leaderboard.html:100
+msgid "XP to"
+msgstr ""
+
+#: .\templates\leaderboard.html:101
+msgid "Silver"
+msgstr ""
+
+#: .\templates\leaderboard.html:105
+msgid "Max League Reached!"
+msgstr ""
+
+#: .\templates\leaderboard.html:137 .\templates\leaderboard.html:168
+#: .\templates\leaderboard.html:200
+msgid "League"
+msgstr ""
+
+#: .\templates\leaderboard.html:216
+msgid "Full Rankings"
+msgstr ""
+
+#: .\templates\leaderboard.html:219
+msgid "Top 100 Learners"
+msgstr ""
+
+#: .\templates\leaderboard.html:292
+msgid "No Rankings Yet"
+msgstr ""
+
+#: .\templates\leaderboard.html:293
+msgid "Be the first to complete a lesson and earn XP!"
+msgstr ""
+
+#: .\templates\login.html:8
+#, fuzzy
+#| msgid "Universal Learning Platform"
+msgid "Login - Universal Learning Platform"
+msgstr "Universal Learning Platform"
+
+#: .\templates\login.html:75 .\templates\register.html:76
+msgid "Back to Home"
+msgstr ""
+
+#: .\templates\login.html:87
+msgid "Welcome Back"
+msgstr ""
+
+#: .\templates\login.html:102 .\templates\register.html:103
+msgid "Username"
+msgstr ""
+
+#: .\templates\login.html:115 .\templates\register.html:182
+msgid "Password"
+msgstr ""
+
+#: .\templates\login.html:129
+msgid "Sign In"
+msgstr ""
+
+#: .\templates\login.html:135
+msgid "Don't have an account?"
+msgstr ""
+
+#: .\templates\register.html:8
+#, fuzzy
+#| msgid "Universal Learning Platform"
+msgid "Register - Universal Learning Platform"
+msgstr "Universal Learning Platform"
+
+#: .\templates\register.html:88 .\templates\register.html:209
+#, fuzzy
+#| msgid "Created At"
+msgid "Create Account"
+msgstr "Created At"
+
+#: .\templates\register.html:89
+msgid "Start your learning journey today"
+msgstr ""
+
+#: .\templates\register.html:117
+msgid "First Name"
+msgstr ""
+
+#: .\templates\register.html:129
+msgid "Last Name"
+msgstr ""
+
+#: .\templates\register.html:144
+msgid "Phone"
+msgstr ""
+
+#: .\templates\register.html:195
+msgid "Confirm Password"
+msgstr ""
+
+#: .\templates\register.html:215
+msgid "Already have an account?"
+msgstr ""
+
+#~ msgid "Login"
+#~ msgstr "Login"

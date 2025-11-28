@@ -1,0 +1,43 @@
+{% load i18n %}
+<div class="flex gap-3 mb-4 animate-fade-in">
+    {% if is_ai %}
+    <!-- AI Message -->
+    <div class="flex-shrink-0">
+        <div
+            class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <i class="fa-solid fa-robot text-white text-sm"></i>
+        </div>
+    </div>
+    <div class="flex-1">
+        <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-md border border-gray-100">
+            <div class="chatbot-message prose prose-sm max-w-none text-gray-800 leading-relaxed">{{ message }}</div>
+        </div>
+        <span class="text-xs text-gray-400 mt-1 ml-2">{% trans "AI Assistant" %}</span>
+    </div>
+    {% else %}
+    <!-- User Message -->
+    <div class="flex-1"></div>
+    <div class="flex-shrink-0 flex flex-col items-end">
+        <div
+            class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl rounded-tr-none p-4 shadow-md max-w-[80%]">
+            <p class="text-white text-sm leading-relaxed">{{ message }}</p>
+        </div>
+        <span class="text-xs text-gray-400 mt-1 mr-2">{% trans "You" %}</span>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Render markdown in chatbot messages
+    document.querySelectorAll('.chatbot-message').forEach(el => {
+        if (typeof marked !== 'undefined') {
+            el.innerHTML = marked.parse(el.textContent.trim());
+            // Apply syntax highlighting if available
+            if (typeof hljs !== 'undefined') {
+                el.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }
+        }
+    });
+</script>

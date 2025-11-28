@@ -1,0 +1,1095 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-28 23:35+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\config\settings.py:122 .\core\models.py:9
+msgid "English"
+msgstr "Inglis tili"
+
+#: .\config\settings.py:123 .\core\models.py:10
+msgid "Russian"
+msgstr "Rus tili"
+
+#: .\config\settings.py:124 .\core\models.py:8
+msgid "Qaraqalpaqsha"
+msgstr "Qaraqalpaqsha"
+
+#: .\core\models.py:13
+msgid "Phone Number"
+msgstr "Telefon nomeri"
+
+#: .\core\models.py:14 .\templates\register.html:156
+msgid "Age"
+msgstr "Jas"
+
+#: .\core\models.py:15
+msgid "Preferred Language"
+msgstr "Qolaylı til"
+
+#: .\core\models.py:21 .\core\models.py:31 .\core\models.py:42
+msgid "Title"
+msgstr "Ataması"
+
+#: .\core\models.py:22
+msgid "Description"
+msgstr "Sipatlaması"
+
+#: .\core\models.py:23 .\templates\base.html:189 .\templates\register.html:171
+msgid "Language"
+msgstr "Til"
+
+#: .\core\models.py:24
+msgid "Created At"
+msgstr "Jaratılǵan waqtı"
+
+#: .\core\models.py:32 .\core\models.py:44
+msgid "Order"
+msgstr "Tártibi"
+
+#: .\core\models.py:43
+msgid "Markdown content"
+msgstr "Markdown mazmunı"
+
+#: .\core\models.py:43
+msgid "Content"
+msgstr "Mazmunı"
+
+#: .\core\models.py:54
+msgid "Question"
+msgstr "Soraw"
+
+#: .\core\models.py:55
+msgid "List of options"
+msgstr "Variantlar dizimi"
+
+#: .\core\models.py:55
+msgid "Options"
+msgstr "Variantlar"
+
+#: .\core\models.py:56
+msgid "Correct Answer"
+msgstr "Durıs juwap"
+
+#: .\debug_output.txt:10
+msgid "My Dashboard - ULP"
+msgstr "Meniń panelim - ULP"
+
+#: .\templates\base.html:8 .\templates\landing.html:8
+msgid "Universal Learning Platform"
+msgstr "Universal Oqıw Platforması"
+
+#: .\templates\base.html:68 .\templates\base.html:176 .\templates\base.html:258
+#: .\templates\landing.html:611
+msgid "Dashboard"
+msgstr "Basqarıw paneli"
+
+#: .\templates\base.html:72 .\templates\base.html:180 .\templates\base.html:259
+#: .\templates\dashboard.html:94 .\templates\landing.html:612
+msgid "New Course"
+msgstr "Taza Kurs"
+
+#: .\templates\base.html:76 .\templates\base.html:184 .\templates\base.html:260
+#: .\templates\landing.html:613 .\templates\leaderboard.html:72
+msgid "Leaderboard"
+msgstr "Jetekshiler kestesi"
+
+#: .\templates\base.html:140
+msgid "View Gamification"
+msgstr "Oyınlastırıwdı kóriw"
+
+#: .\templates\base.html:147 .\templates\base.html:220
+msgid "Logout"
+msgstr "Shıǵıw"
+
+#: .\templates\base.html:153 .\templates\landing.html:143
+#: .\templates\landing.html:163
+msgid "Login"
+msgstr "Kiriw"
+
+#: .\templates\base.html:251 .\templates\landing.html:604
+msgid ""
+"The world's most advanced AI-powered learning platform. Empowering education "
+"for everyone, everywhere."
+msgstr ""
+"Dúnyadaǵı eń jetilistirilgen AI oqıw platforması. Hámme ushın, hár jerde "
+"bilimlendiriwdi kúsheytiw."
+
+#: .\templates\base.html:256 .\templates\landing.html:609
+msgid "Platform"
+msgstr "Platforma"
+
+#: .\templates\base.html:266 .\templates\landing.html:619
+msgid "About"
+msgstr "Haqqında"
+
+#: .\templates\base.html:267 .\templates\landing.html:620
+msgid "Developed by"
+msgstr "Islep shıǵarıwshı"
+
+#: .\templates\base.html:269 .\templates\landing.html:621
+msgid "Making education accessible through AI"
+msgstr "AI arqalı bilimlendiriwdi qoljetimli etiw"
+
+#: .\templates\base.html:275 .\templates\landing.html:627
+msgid "All rights reserved."
+msgstr "Barlıq huqıqlar qorǵalǵan."
+
+#: .\templates\chatbot.html:4
+msgid "AI Learning Assistant - StuDy"
+msgstr "AI Oqıw Járdemshisi - StuDy"
+
+#: .\templates\chatbot.html:129
+msgid "AI Learning Assistant"
+msgstr "AI Oqıw Járdemshisi"
+
+#: .\templates\chatbot.html:130
+msgid "Ask me anything to generate a course"
+msgstr "Kurs jaratıw ushın qálegen sorawıńızdı beriń"
+
+#: .\templates\chatbot.html:160
+msgid "Hello"
+msgstr "Sálem"
+
+#: .\templates\chatbot.html:161
+msgid "What would you like to learn today?"
+msgstr "Búgin ne úyrengińiz keledi?"
+
+#: .\templates\chatbot.html:170
+msgid "Generating your personalized course..."
+msgstr "Sizge arnalǵan kurs jaratılıp atır..."
+
+#: .\templates\chatbot.html:171
+msgid "This may take 20-30 seconds"
+msgstr "Bul 20-30 sekund waqıt alıwı múmkin"
+
+#: .\templates\chatbot.html:183
+msgid "Generate Course"
+msgstr "Kurs jaratıw"
+
+#: .\templates\chatbot.html:191
+msgid "Type your message..."
+msgstr "Xabarıńızdı jazıń..."
+
+#: .\templates\chatbot.html:306
+msgid "Sorry, something went wrong. Please try again."
+msgstr "Keshiriń, qátelik júz berdi. Iltimas, qaytadan háreket etiń."
+
+#: .\templates\chatbot.html:340
+msgid "Error generating course: "
+msgstr "Kurs jaratıwda qátelik: "
+
+#: .\templates\chatbot.html:344
+msgid "Error generating course. Please try again."
+msgstr "Kurs jaratıwda qátelik. Iltimas, qaytadan háreket etiń."
+
+#: .\templates\course_detail.html:9
+msgid "Back to Dashboard"
+msgstr "Basqarıw paneline qaytıw"
+
+#: .\templates\course_detail.html:21
+msgid "Course Completed!"
+msgstr "Kurs tamamlandı!"
+
+#: .\templates\course_detail.html:28
+msgid "Download Certificate"
+msgstr "Sertifikattı júklep alıw"
+
+#: .\templates\course_detail.html:69 .\templates\dashboard.html:114
+msgid "Completed"
+msgstr "Tamamlandı"
+
+#: .\templates\dashboard.html:4
+msgid "My Dashboard - StuDy"
+msgstr "Meniń panelim - StuDy"
+
+#: .\templates\dashboard.html:54
+msgid "Welcome back,"
+msgstr "Qayta xosh keldińiz,"
+
+#: .\templates\dashboard.html:57 .\templates\login.html:88
+msgid "Continue your learning journey"
+msgstr "Oqıw sayaxatıńızdı dawam etiń"
+
+#: .\templates\dashboard.html:66
+msgid "Courses"
+msgstr "Kurslar"
+
+#: .\templates\dashboard.html:91
+msgid "Your Courses"
+msgstr "Siziń kurslarıńız"
+
+#: .\templates\dashboard.html:108
+msgid "modules"
+msgstr "moduller"
+
+#: .\templates\dashboard.html:128
+msgid "Progress"
+msgstr "Progress"
+
+#: .\templates\dashboard.html:143
+msgid "Review Course"
+msgstr "Kurstı kórip shıǵıw"
+
+#: .\templates\dashboard.html:145
+msgid "Continue Learning"
+msgstr "Oqıwdı dawam etiw"
+
+#: .\templates\dashboard.html:165
+msgid "No Courses Yet"
+msgstr "Házirshe kurslar joq"
+
+#: .\templates\dashboard.html:167
+msgid "Start your learning journey by creating your first AI-powered course!"
+msgstr "Birinshi AI kursıńızdı jaratıp, oqıw sayaxatıńızdı baslań!"
+
+#: .\templates\dashboard.html:172 .\templates\gamification.html:429
+msgid "Create Your First Course"
+msgstr "Birinshi kursıńızdı jaratıń"
+
+#: .\templates\gamification.html:4
+msgid "Gamification - StuDy"
+msgstr "Oyınlastırıw - StuDy"
+
+#: .\templates\gamification.html:94
+msgid "Gamification"
+msgstr "Oyınlastırıw"
+
+#: .\templates\gamification.html:97
+msgid "Track your progress, earn rewards, and level up your learning!"
+msgstr "Progressińizdi baqlań, sıylıqlar alıń hám oqıw dárejeńizdi kóteriń!"
+
+#: .\templates\gamification.html:106
+msgid "Keep Learning!"
+msgstr "Oqıwdı dawam etiń!"
+
+#: .\templates\gamification.html:107
+msgid "Complete activities to earn more XP"
+msgstr "Kóbirek XP jıynaw ushın tapsırmalardı orınlań"
+
+#: .\templates\gamification.html:118
+msgid "How to Earn XP"
+msgstr "XP-di qalay jıynawǵa boladı"
+
+#: .\templates\gamification.html:121
+msgid "Complete activities to gain experience points and unlock rewards"
+msgstr "Tájiriybe upayların (XP) jıynaw hám sıylıqlardı ashıw ushın tapsırmalardı orınlań"
+
+#: .\templates\gamification.html:134
+msgid "Complete a Lesson"
+msgstr "Sabaqtı tamamlań"
+
+#: .\templates\gamification.html:135
+msgid "Read through a lesson to gain knowledge"
+msgstr "Bilim alıw ushın sabaqtı oqıp shıǵıń"
+
+#: .\templates\gamification.html:149
+msgid "Pass a Quiz"
+msgstr "Testten ótiń"
+
+#: .\templates\gamification.html:150
+msgid "Test your knowledge and pass quizzes"
+msgstr "Bilimińizdi sınań hám testlerden ótiń"
+
+#: .\templates\gamification.html:152
+msgid "+5 XP bonus for perfect score"
+msgstr "Minsiz nátiyje ushın +5 XP bonus"
+
+#: .\templates\gamification.html:165
+msgid "Finish a Course"
+msgstr "Kurstı tamamlań"
+
+#: .\templates\gamification.html:166
+msgid "Complete all lessons and quizzes in a course"
+msgstr "Kurstaǵı barlıq sabaqlar hám testlerdi orınlań"
+
+#: .\templates\gamification.html:180
+msgid "Daily Login Streak"
+msgstr "Kúndelikli kiriw izbe-izligi"
+
+#: .\templates\gamification.html:181
+msgid "Log in every day to maintain your streak"
+msgstr "Izbe-izligińizdi saqlaw ushın hár kúni kiriń"
+
+#: .\templates\gamification.html:195
+msgid "Create First Course"
+msgstr "Birinshi kurstı jaratıń"
+
+#: .\templates\gamification.html:196
+msgid "One-time bonus for creating your first course"
+msgstr "Birinshi kursıńızdı jaratqanıńız ushın bir márte beriletuǵın bonus"
+
+#: .\templates\gamification.html:210
+msgid "Share on Social Media"
+msgstr "Sociallıq tarmaqlarda bólisiw"
+
+#: .\templates\gamification.html:211
+msgid "Share your achievements with friends"
+msgstr "Jetiskenliklerińizdi doslarıńız benen bólisiń"
+
+#: .\templates\gamification.html:213
+msgid "Once per week"
+msgstr "Haptasına bir márte"
+
+#: .\templates\gamification.html:226
+msgid "Reward Tiers"
+msgstr "Sıylıq dárejeleri"
+
+#: .\templates\gamification.html:229
+msgid "Unlock premium subscription trials by earning XP"
+msgstr "XP jıynaw arqalı premium jazılıw sınawların ashıń"
+
+#: .\templates\gamification.html:241
+msgid "Bronze Tier"
+msgstr "Qola dárejesi"
+
+#: .\templates\gamification.html:246
+msgid "1-Day Plus Trial"
+msgstr "1 kúnlik Plus sınawı"
+
+#: .\templates\gamification.html:251 .\templates\gamification.html:278
+#: .\templates\gamification.html:305 .\templates\gamification.html:332
+#: .\templates\gamification.html:359
+msgid "to unlock"
+msgstr "ashıw ushın"
+
+#: .\templates\gamification.html:268
+msgid "Silver Tier"
+msgstr "Gúmis dárejesi"
+
+#: .\templates\gamification.html:273
+msgid "1-Week Plus Trial"
+msgstr "1 haptalıq Plus sınawı"
+
+#: .\templates\gamification.html:295
+msgid "Gold Tier"
+msgstr "Altın dárejesi"
+
+#: .\templates\gamification.html:300
+msgid "1-Week Pro Trial"
+msgstr "1 haptalıq Pro sınawı"
+
+#: .\templates\gamification.html:322
+msgid "Platinum Tier"
+msgstr "Platina dárejesi"
+
+#: .\templates\gamification.html:327
+msgid "1-Month Plus Trial"
+msgstr "1 aylıq Plus sınawı"
+
+#: .\templates\gamification.html:349
+msgid "Diamond Tier"
+msgstr "Brilliant dárejesi"
+
+#: .\templates\gamification.html:354
+msgid "1-Month Pro Trial"
+msgstr "1 aylıq Pro sınawı"
+
+#: .\templates\gamification.html:377
+msgid "Top Learners"
+msgstr "Eń jaqsı oqıwshılar"
+
+#: .\templates\gamification.html:380
+msgid "See how you rank against other students"
+msgstr "Basqa studentler arasındaǵı ornińızdı kóriń"
+
+#: .\templates\gamification.html:403
+msgid "No leaderboard data yet. Be the first to earn XP!"
+msgstr "Házirshe jetekshiler kestesi maǵlıwmatları joq. Birinshi bolıp XP jıynań!"
+
+#: .\templates\gamification.html:412
+msgid "View Full Leaderboard"
+msgstr "Tolıq jetekshiler kestesin kóriw"
+
+#: .\templates\gamification.html:422
+msgid "Start Earning XP Today!"
+msgstr "Búgin XP jıynawdı baslań!"
+
+#: .\templates\gamification.html:425
+msgid "Complete lessons, pass quizzes, and unlock amazing rewards"
+msgstr "Sabaqlardı tamamlań, testlerden ótiń hám ájayıp sıylıqlardı ashıń"
+
+#: .\templates\landing.html:8
+msgid "AI-Powered Education"
+msgstr "AI tiykarındaǵı bilimlendiriw"
+
+#: .\templates\landing.html:140 .\templates\landing.html:160
+msgid "Features"
+msgstr "Múmkinshilikler"
+
+#: .\templates\landing.html:141 .\templates\landing.html:161
+#: .\templates\landing.html:320
+msgid "How It Works"
+msgstr "Bul qalay isleydi"
+
+#: .\templates\landing.html:142 .\templates\landing.html:162
+msgid "Pricing"
+msgstr "Bahalar"
+
+#: .\templates\landing.html:146 .\templates\landing.html:164
+#: .\templates\landing.html:412
+msgid "Get Started"
+msgstr "Baslaw"
+
+#: .\templates\landing.html:180
+msgid "AI-Powered Learning Revolution"
+msgstr "AI tiykarındaǵı oqıw revolyuciyası"
+
+#: .\templates\landing.html:184
+msgid "Master Any Skill with"
+msgstr "Qálegen kónlikpeni iyeleń"
+
+#: .\templates\landing.html:185
+msgid "Personalized AI Courses"
+msgstr "Jeke AI kursları menen"
+
+#: .\templates\landing.html:188
+msgid ""
+"Generate custom courses on any topic in seconds. Learn in your preferred "
+"language, track your progress, and earn certificates."
+msgstr ""
+"Sekundlar ishinde qálegen temada arnawlı kurslar jaratıń. Qálegen tilińizde "
+"úyreniń, progressińizdi baqlań hám sertifikatlar alıń."
+
+#: .\templates\landing.html:192
+msgid "Start Learning Free"
+msgstr "Biypul oqıwdı baslań"
+
+#: .\templates\landing.html:195
+msgid "See How It Works"
+msgstr "Qalay isleytuǵının kóriń"
+
+#: .\templates\landing.html:203
+msgid "Topics"
+msgstr "Temalar"
+
+#: .\templates\landing.html:207
+msgid "Languages"
+msgstr "Tiller"
+
+#: .\templates\landing.html:211
+msgid "Students"
+msgstr "Studentler"
+
+#: .\templates\landing.html:215
+msgid "Rating"
+msgstr "Reyting"
+
+#: .\templates\landing.html:226
+msgid "Why Choose StuDy?"
+msgstr "Nege StuDy-di tańlaw kerek?"
+
+#: .\templates\landing.html:229
+msgid "Experience the future of education with our cutting-edge features."
+msgstr ""
+"Bizdiń zamanagóy múmkinshiliklerimiz benen bilimlendiriwdiń keleshegin "
+"seziniń."
+
+#: .\templates\landing.html:241
+msgid "AI-Powered Curriculum"
+msgstr "AI tiykarındaǵı oqıw baǵdarlaması"
+
+#: .\templates\landing.html:243
+msgid ""
+"Our advanced AI analyzes your request and builds a structured, comprehensive "
+"course tailored just for you."
+msgstr ""
+"Bizdiń jetilistirilgen AI sorawıńızdı analizleydi hám sizge arnalǵan "
+"strukturalıq, tolıq kurs dúzedi."
+
+#: .\templates\landing.html:254
+msgid "Multi-Language Support"
+msgstr "Kóp tilli qollap-quwatlaw"
+
+#: .\templates\landing.html:256
+msgid ""
+"Learn in English, Russian, Uzbek, or any other language. The AI adapts the "
+"content to your native tongue."
+msgstr ""
+"Inglis, Rus, Ózbek yamasa basqa qálegen tilde úyreniń. AI mazmundı ana "
+"tilińizge beyimleydi."
+
+#: .\templates\landing.html:267
+msgid "Gamified Learning"
+msgstr "Oyınlastırılǵan Oqıw"
+
+#: .\templates\landing.html:269
+msgid ""
+"Earn XP, climb the leaderboard, and unlock achievements. Learning has never "
+"been this addictive."
+msgstr ""
+"XP jıynań, jetekshiler kestesin basıp ótiń hám jetiskenliklerdi ashıń. Oqıw "
+"heshqashan bunsha qızıqlı bolmaǵan."
+
+#: .\templates\landing.html:280
+msgid "Official Certificates"
+msgstr "Rásmiy sertifikatlar"
+
+#: .\templates\landing.html:282
+msgid ""
+"Complete courses and earn beautiful, shareable certificates to showcase your "
+"achievements."
+msgstr ""
+"Kurslarni tamamlań hám jetiskenliklerińizdi kórsetiwi ushın ájayıp, "
+"bólisiwge bolatuǵan sertifikatlar alıń."
+
+#: .\templates\landing.html:293
+msgid "Progress Tracking"
+msgstr "Progress baqlawı"
+
+#: .\templates\landing.html:295
+msgid ""
+"Monitor your learning journey with detailed analytics and progress reports "
+"for every course."
+msgstr ""
+"Hár bir kurs ushın batafsıl analitika hám progress esapları menen oqıw "
+"sayaxatıńızdı baqlań."
+
+#: .\templates\landing.html:306
+msgid "Instant Generation"
+msgstr "Tez jaratıw"
+
+#: .\templates\landing.html:308
+msgid ""
+"Get your personalized course in under 30 seconds. No waiting, just learning."
+msgstr "Jeke kursıńızdı 30 sekundtan az waqıtta alıń. Kútpesten, tek oqıń."
+
+#: .\templates\landing.html:323
+msgid "Start your learning journey in three simple steps."
+msgstr "Oqıw sayaxatıńızdı úsh ápiwayı qádemde baslań."
+
+#: .\templates\landing.html:338
+msgid "Choose a Topic"
+msgstr "Temanı tańlań"
+
+#: .\templates\landing.html:340
+msgid "Tell our AI chatbot what you want to learn, from Python to Pottery."
+msgstr ""
+"AI chatbotqa ne úyrengińiz keletuǵının aytıń, Pythondan baslap gúlalshılıqqa "
+"shekem."
+
+#: .\templates\landing.html:349
+msgid "Get Your Course"
+msgstr "Kursıńızdı alıń"
+
+#: .\templates\landing.html:351
+msgid "The AI instantly generates modules, lessons, and quizzes for you."
+msgstr "AI siz ushın moduller, sabaqlar hám testlerdi sol jerde jaratadı."
+
+#: .\templates\landing.html:360
+msgid "Start Learning"
+msgstr "Oqıwdı baslań"
+
+#: .\templates\landing.html:362
+msgid "Read lessons, take quizzes, earn XP, and get certified!"
+msgstr "Sabaqlardı oqıń, testlerdi tapsırıń, XP jıynań hám sertifikat alıń!"
+
+#: .\templates\landing.html:374
+msgid "Simple, Affordable Pricing"
+msgstr "Ápiwayı, qolaylı bahalar"
+
+#: .\templates\landing.html:377
+msgid "Choose the plan that fits your learning goals"
+msgstr "Oqıw maqsetlerińizge sáykes keliwshi planı tańlań"
+
+#: .\templates\landing.html:387
+msgid "Free"
+msgstr "Biypul"
+
+#: .\templates\landing.html:390 .\templates\landing.html:425
+#: .\templates\landing.html:463
+msgid "per month"
+msgstr "ayına"
+
+#: .\templates\landing.html:395
+msgid "3 AI-generated courses per month"
+msgstr "Ayına 3 AI-jaratılǵan kurs"
+
+#: .\templates\landing.html:399
+msgid "Basic progress tracking"
+msgstr "Ápiwayı progress baqlawı"
+
+#: .\templates\landing.html:403
+msgid "Community support"
+msgstr "Jámáát qollap-quwatlaw"
+
+#: .\templates\landing.html:407
+msgid "Course certificates"
+msgstr "Kurs sertifikatları"
+
+#: .\templates\landing.html:422
+msgid "Plus"
+msgstr "Plus"
+
+#: .\templates\landing.html:430
+msgid "Unlimited AI-generated courses"
+msgstr "Sheksiz AI-jaratılǵan kurslar"
+
+#: .\templates\landing.html:434
+msgid "Advanced analytics & insights"
+msgstr "Jetilistirilgen analitika hám túsinigiwler"
+
+#: .\templates\landing.html:438
+msgid "Priority AI generation"
+msgstr "Birinshi nobettegi AI jaratıw"
+
+#: .\templates\landing.html:442
+msgid "Premium certificates"
+msgstr "Premium sertifikatlar"
+
+#: .\templates\landing.html:446
+msgid "Email support"
+msgstr "Email qollap-quwatlaw"
+
+#: .\templates\landing.html:451
+msgid "Start Plus Trial"
+msgstr "Plus sınawın baslań"
+
+#: .\templates\landing.html:460
+msgid "Pro"
+msgstr "Pro"
+
+#: .\templates\landing.html:468
+msgid "Everything in Plus"
+msgstr "Plus-taǵı hámme nárse"
+
+#: .\templates\landing.html:472
+msgid "AI Learning Assistant for every lesson"
+msgstr "Hár sabaq ushın AI oqıw járdemshisi"
+
+#: .\templates\landing.html:476
+msgid "Custom course templates"
+msgstr "Arnawlı kurs shablonları"
+
+#: .\templates\landing.html:480
+msgid "Offline course downloads"
+msgstr "Offlayn kurs júklep alıw"
+
+#: .\templates\landing.html:484
+msgid "Priority 24/7 support"
+msgstr "Birinshi nobettegi 24/7 qollap-quwatlaw"
+
+#: .\templates\landing.html:488
+msgid "Early access to new features"
+msgstr "Jańa múmkinshiliklerge erte qoljetimlilik"
+
+#: .\templates\landing.html:493
+msgid "Start Pro Trial"
+msgstr "Pro sınawın baslań"
+
+#: .\templates\landing.html:502
+msgid "30-day money-back guarantee. Cancel anytime."
+msgstr ""
+"30 kúnlik pul qaytarıw kepillik. Istalǵan waqıtta biykar etiwińiz múmkin."
+
+#: .\templates\landing.html:513
+msgid "Frequently Asked Questions"
+msgstr "Kóp berilgen sorawlar"
+
+#: .\templates\landing.html:516
+msgid "Everything you need to know about StuDy"
+msgstr "StuDy haqqında bilip alıwıńız kerek bolǵan hámme nárse"
+
+#: .\templates\landing.html:525
+msgid "How does the AI generate courses?"
+msgstr "AI kurslarni qalay jaratadı?"
+
+#: .\templates\landing.html:528
+msgid ""
+"Our advanced AI analyzes your topic request and creates a comprehensive "
+"curriculum with modules, lessons, and quizzes tailored to your learning "
+"needs."
+msgstr ""
+"Bizdiń jetilistirilgen AI tema sorawıńızdı analizleydi hám oqıw "
+"ehtiyajlarıńızǵa sáykes moduller, sabaqlar hám testler menen tolıq oqıw "
+"baǵdarlamasın jaratadı."
+
+#: .\templates\landing.html:536
+msgid "Can I really learn in any language?"
+msgstr "Men shınında da qálegen tilde úyrene alaman ba?"
+
+#: .\templates\landing.html:539
+msgid ""
+"Yes! Our AI supports 50+ languages including English, Russian, Uzbek, "
+"Karakalpak, and many more. Just specify your preferred language."
+msgstr ""
+"Awa! Bizdiń AI 50+ tildi qollap-quwatlaydı, solay etip Inglis, Rus, Ózbek, "
+"Qaraqalpaq hám basqa kóp tillerdi. Tek qolaylı tilińizdi kórsetiń."
+
+#: .\templates\landing.html:547
+msgid "Are the certificates recognized?"
+msgstr "Sertifikatlar tanılǵan ba?"
+
+#: .\templates\landing.html:550
+msgid ""
+"Our certificates showcase your achievement and can be shared on LinkedIn, "
+"resumes, and portfolios to demonstrate your skills."
+msgstr ""
+"Bizdiń sertifikatlarımız jetiskenliklerińizdi kórsetedi hám "
+"kónlikpelerińizdi kórsetiw ushın LinkedIn, rezyume hám portfellerińizde "
+"bóliwińiz múmkin."
+
+#: .\templates\landing.html:558
+msgid "Can I cancel my subscription anytime?"
+msgstr "Jazılıwımdı istalǵan waqıtta biykar ete alaman ba?"
+
+#: .\templates\landing.html:561
+msgid ""
+"Absolutely! You can cancel your Plus or Pro subscription at any time with no "
+"questions asked. We also offer a 30-day money-back guarantee."
+msgstr ""
+"Álbette! Plus yamasa Pro jazılıwıńızdı istalǵan waqıtta hesh qanday sorawsız "
+"biykar ete alasız. Biz tağı 30 kúnlik pul qaytarıw kepilligin de usınıs "
+"etemiz."
+
+#: .\templates\landing.html:576
+msgid "Ready to Start Your Journey?"
+msgstr "Sayaxatıńızdı baslawǵa tayarsız ba?"
+
+#: .\templates\landing.html:579
+msgid ""
+"Join thousands of learners and master new skills today. It's free to get "
+"started."
+msgstr ""
+"Mińlaǵan oqıwshılarǵa qosılıń hám búgin jańa kónlikpelerdi iyeleń. Baslaw "
+"biypul."
+
+#: .\templates\landing.html:583
+msgid "Create Free Account"
+msgstr "Biypul akkaunt jaratıń"
+
+#: .\templates\landing.html:586
+msgid "No credit card required"
+msgstr "Kredit karta talap etilmeydi"
+
+#: .\templates\landing.html:586
+msgid "Start learning in 30 seconds"
+msgstr "30 sekundta oqıwdı baslań"
+
+#: .\templates\leaderboard.html:75
+msgid ""
+"Rise through the ranks and become a legend in the Universal Learning "
+"Platform."
+msgstr ""
+"Dárejeler boyınsha kóteriliń hám Universal Oqıw Platformasında ańızǵa "
+"aylanıń."
+
+#: .\templates\leaderboard.html:93
+msgid "Your Score"
+msgstr "Siziń upayıńız"
+
+#: .\templates\leaderboard.html:99
+msgid "XP to"
+msgstr "XP qalǵanı"
+
+#: .\templates\leaderboard.html:99
+msgid "Bronze"
+msgstr "Qola"
+
+#: .\templates\leaderboard.html:99
+msgid "Silver"
+msgstr "Gúmis"
+
+#: .\templates\leaderboard.html:99
+msgid "Gold"
+msgstr "Altın"
+
+#: .\templates\leaderboard.html:102
+msgid "Max League Reached!"
+msgstr "Maksimal ligaǵa erisildi!"
+
+#: .\templates\leaderboard.html:134 .\templates\leaderboard.html:165
+#: .\templates\leaderboard.html:197 .\templates\leaderboard.html:228
+msgid "League"
+msgstr "Liga"
+
+#: .\templates\leaderboard.html:213
+msgid "Full Rankings"
+msgstr "Tolıq reyting"
+
+#: .\templates\leaderboard.html:216
+msgid "Top 100 Learners"
+msgstr "Top 100 oqıwshı"
+
+#: .\templates\leaderboard.html:224
+msgid "Rank"
+msgstr "Orın"
+
+#: .\templates\leaderboard.html:226
+msgid "Learner"
+msgstr "Oqıwshı"
+
+#: .\templates\leaderboard.html:230
+msgid "Total XP"
+msgstr "Jámı XP"
+
+#: .\templates\leaderboard.html:260 .\templates\lesson.html:434
+#: .\templates\partials\lesson_chatbot_message.html:25
+msgid "You"
+msgstr "Siz"
+
+#: .\templates\leaderboard.html:285
+msgid "No Rankings Yet"
+msgstr "Házirshe reyting joq"
+
+#: .\templates\leaderboard.html:286
+msgid "Be the first to complete a lesson and earn XP!"
+msgstr "Sabaqtı birinshi bolıp tamamlań hám XP jıynań!"
+
+#: .\templates\lesson.html:144
+msgid "Back to Course"
+msgstr "Kursqa qaytıw"
+
+#: .\templates\lesson.html:164
+msgid "Quiz Time!"
+msgstr "Test waqtı!"
+
+#: .\templates\lesson.html:172
+msgid "You have already completed this lesson!"
+msgstr "Siz bul sabaqtı tamamladıńız!"
+
+#: .\templates\lesson.html:179 .\templates\lesson.html:251
+msgid "Previous Lesson"
+msgstr "Aldınǵı sabaq"
+
+#: .\templates\lesson.html:186 .\templates\lesson.html:258
+msgid "Next Lesson"
+msgstr "Keyingi sabaq"
+
+#: .\templates\lesson.html:191 .\templates\lesson.html:263
+msgid "Complete Module"
+msgstr "Moduldi tamamlaw"
+
+#: .\templates\lesson.html:224
+msgid "Check Answer"
+msgstr "Juwaptı tekseriw"
+
+#: .\templates\lesson.html:231
+msgid "No quizzes for this lesson."
+msgstr "Bul sabaq ushın testler joq."
+
+#: .\templates\lesson.html:241
+msgid "Lesson Complete!"
+msgstr "Sabaq tamamlandı!"
+
+#: .\templates\lesson.html:242
+msgid "Great job! You've answered all questions correctly."
+msgstr "Bárekella! Siz barlıq sorawlarǵa durıs juwap berdińiz."
+
+#: .\templates\lesson.html:285
+msgid "Lesson Assistant"
+msgstr "Sabaq járdemshisi"
+
+#: .\templates\lesson.html:286
+msgid "Ask me about this lesson"
+msgstr "Sabaq boyınsha soraw beriń"
+
+#: .\templates\lesson.html:307
+msgid ""
+"Hi! I'm here to help you understand this lesson. Feel free to ask me "
+"questions about the content!"
+msgstr ""
+"Sálem! Men sizge bul sabaqtı túsiniwge járdem beremen. Mazmun boyınsha "
+"sorawlarıńızdı beriń!"
+
+#: .\templates\lesson.html:309
+msgid ""
+"Note: I can't help with quiz answers, but I'll explain concepts to help you "
+"learn!"
+msgstr ""
+"Eskertpe: Men test juwapların ayta almayman, biraq túsiniklerdi túsindirip "
+"bere alaman!"
+
+#: .\templates\lesson.html:343
+msgid "Ask about this lesson..."
+msgstr "Sabaq haqqında sorań..."
+
+#: .\templates\lesson.html:361
+msgid "Ask AI Helper"
+msgstr "AI Járdemshiden soraw"
+
+#: .\templates\login.html:8
+msgid "Login - Universal Learning Platform"
+msgstr "Kiriw - Universal Oqıw Platforması"
+
+#: .\templates\login.html:75 .\templates\register.html:76
+msgid "Back to Home"
+msgstr "Bas betke qaytıw"
+
+#: .\templates\login.html:87
+msgid "Welcome Back"
+msgstr "Qayta xosh keldińiz"
+
+#: .\templates\login.html:102 .\templates\register.html:103
+msgid "Username"
+msgstr "Paydalanıwshı atı"
+
+#: .\templates\login.html:115 .\templates\register.html:183
+msgid "Password"
+msgstr "Parol"
+
+#: .\templates\login.html:129 .\templates\register.html:217
+msgid "Sign In"
+msgstr "Kiriw"
+
+#: .\templates\login.html:135
+msgid "Don't have an account?"
+msgstr "Akkauntıńız joq pa?"
+
+#: .\templates\login.html:136 .\templates\register.html:88
+#: .\templates\register.html:210
+msgid "Create Account"
+msgstr "Akkaunt jaratıw"
+
+#: .\templates\partials\lesson_chatbot_message.html:15
+msgid "AI Assistant"
+msgstr "AI Járdemshisi"
+
+#: .\templates\partials\quiz_result.html:11
+msgid "Correct!"
+msgstr "Durıs!"
+
+#: .\templates\partials\quiz_result.html:13
+msgid "Great job! You earned 10 XP."
+msgstr "Bárekella! Siz 10 XP jınadıńız."
+
+#: .\templates\partials\quiz_result.html:28
+msgid "Incorrect"
+msgstr "Qáte"
+
+#: .\templates\partials\quiz_result.html:30
+msgid "You lost 5 XP."
+msgstr "Siz 5 XP joyttıńız."
+
+#: .\templates\partials\quiz_result.html:32
+msgid "Correct answer:"
+msgstr "Durıs juwap:"
+
+#: .\templates\register.html:8
+msgid "Register - Universal Learning Platform"
+msgstr "Dizimnen ótiw - Universal Oqıw Platforması"
+
+#: .\templates\register.html:89
+msgid "Start your learning journey today"
+msgstr "Oqıw sayaxatıńızdı búgin baslań"
+
+#: .\templates\register.html:117
+msgid "First Name"
+msgstr "Atıńız"
+
+#: .\templates\register.html:129
+msgid "Last Name"
+msgstr "Familiyańız"
+
+#: .\templates\register.html:144
+msgid "Phone"
+msgstr "Telefon"
+
+#: .\templates\register.html:196
+msgid "Confirm Password"
+msgstr "Paroldi tastıyıqlań"
+
+#: .\templates\register.html:216
+msgid "Already have an account?"
+msgstr "Akkauntıńız bar ma?"
+
+#~ msgid "ULP"
+#~ msgstr "ULP"
+
+#, fuzzy
+#~| msgid "Question"
+#~ msgid "Testimonials"
+#~ msgstr "Soraw"
+
+#~ msgid "Legal"
+#~ msgstr "Huqıqıy"
+
+#~ msgid "Privacy Policy"
+#~ msgstr "Qupıyalılıq siyasatı"
+
+#~ msgid "Terms of Service"
+#~ msgstr "Xızmet kórsetiw shártleri"
+
+#~ msgid "Cookie Policy"
+#~ msgstr "Cookie siyasatı"
+
+#~ msgid "Contact Us"
+#~ msgstr "Biz benen baylanısıw"
+
+#~ msgid "Help Center"
+#~ msgstr "Járdem merkezi"
+
+#~ msgid "Status"
+#~ msgstr "Status"
+
+#~ msgid "Blog"
+#~ msgstr "Blog"
+
+#~ msgid "What Our Students Say"
+#~ msgstr "Studentlerimiz ne deydi"
+
+#~ msgid "Join thousands of satisfied learners worldwide"
+#~ msgstr "Dúnya júzindegi mıńlaǵan qanaaǵatlanǵan oqıwshılarǵa qosılıń"
+
+#~ msgid "Aisha K."
+#~ msgstr "Aysha Q."
+
+#~ msgid "Software Developer"
+#~ msgstr "Programma jaratıwshı"
+
+#~ msgid ""
+#~ "This platform is incredible! I learned React in just 2 weeks. The AI-"
+#~ "generated courses are so well-structured and easy to follow."
+#~ msgstr ""
+#~ "Bul platforma ajoyıp! Men React-ti tek 2 haptada úyrendim. AI-jaratılǵan "
+#~ "kurslar jaqsı qurilǵan hám jengil túsiniwli."
+
+#~ msgid "Mukhammad R."
+#~ msgstr "Muhammad R."
+
+#~ msgid "Student"
+#~ msgstr "Student"
+
+#~ msgid ""
+#~ "Learning in my native language made all the difference. The gamification "
+#~ "keeps me motivated every day!"
+#~ msgstr ""
+#~ "Ana tilimde oqıw hámme nárseni ózgertirdi. Oyınlastırıw meni hár kúni "
+#~ "motivaciyalap turadı!"
+
+#~ msgid "Sarah L."
+#~ msgstr "Sara L."
+
+#~ msgid "Entrepreneur"
+#~ msgstr "Kárxanaker"
+
+#~ msgid ""
+#~ "I've tried many learning platforms, but ULP is by far the best. The AI "
+#~ "creates exactly what I need to learn."
+#~ msgstr ""
+#~ "Men kóp oqıw platformalarını sınadım, biraq ULP eń jaqsısı. AI meniń "
+#~ "úyreniwim kerek bolǵan nárseni anıq jaratadı."
+
+#~ msgid ""
+#~ "Congratulations! You've mastered this course. Download your official "
+#~ "certificate now."
+#~ msgstr ""
+#~ "Qutlıqlaymız! Siz bul kurstı iyeledińiz. Rásmiy sertifikatıńızdı házir "
+#~ "júklep alıń."
+
+#~ msgid "Log In"
+#~ msgstr "Kiriw"

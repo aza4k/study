@@ -1,0 +1,1020 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-29 00:01+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: .\config\settings.py:124 .\core\models.py:9
+msgid "English"
+msgstr "Английский"
+
+#: .\config\settings.py:125 .\core\models.py:10
+msgid "Russian"
+msgstr "Русский"
+
+#: .\config\settings.py:126 .\core\models.py:8
+msgid "Qaraqalpaqsha"
+msgstr "Каракалпакский"
+
+#: .\core\models.py:13
+msgid "Phone Number"
+msgstr "Номер телефона"
+
+#: .\core\models.py:14 .\templates\register.html:156
+msgid "Age"
+msgstr "Возраст"
+
+#: .\core\models.py:15
+msgid "Preferred Language"
+msgstr "Предпочитаемый язык"
+
+#: .\core\models.py:21 .\core\models.py:31 .\core\models.py:42
+msgid "Title"
+msgstr "Название"
+
+#: .\core\models.py:22
+msgid "Description"
+msgstr "Описание"
+
+#: .\core\models.py:23 .\templates\base.html:189 .\templates\register.html:171
+msgid "Language"
+msgstr "Язык"
+
+#: .\core\models.py:24
+msgid "Created At"
+msgstr "Создано"
+
+#: .\core\models.py:32 .\core\models.py:44
+msgid "Order"
+msgstr "Порядок"
+
+#: .\core\models.py:43
+msgid "Markdown content"
+msgstr "Markdown контент"
+
+#: .\core\models.py:43
+msgid "Content"
+msgstr "Содержание"
+
+#: .\core\models.py:54
+msgid "Question"
+msgstr "Вопрос"
+
+#: .\core\models.py:55
+msgid "List of options"
+msgstr "Список вариантов"
+
+#: .\core\models.py:55
+msgid "Options"
+msgstr "Варианты"
+
+#: .\core\models.py:56
+msgid "Correct Answer"
+msgstr "Правильный ответ"
+
+#: .\debug_output.txt:10
+msgid "My Dashboard - ULP"
+msgstr "Моя панель - ULP"
+
+#: .\templates\base.html:8 .\templates\landing.html:8
+msgid "Universal Learning Platform"
+msgstr "Универсальная обучающая платформа"
+
+#: .\templates\base.html:68 .\templates\base.html:176 .\templates\base.html:258
+#: .\templates\landing.html:611
+msgid "Dashboard"
+msgstr "Панель управления"
+
+#: .\templates\base.html:72 .\templates\base.html:180 .\templates\base.html:259
+#: .\templates\dashboard.html:94 .\templates\landing.html:612
+msgid "New Course"
+msgstr "Новый курс"
+
+#: .\templates\base.html:76 .\templates\base.html:184 .\templates\base.html:260
+#: .\templates\landing.html:613 .\templates\leaderboard.html:72
+msgid "Leaderboard"
+msgstr "Таблица лидеров"
+
+#: .\templates\base.html:140
+msgid "View Gamification"
+msgstr "Посмотреть геймификацию"
+
+#: .\templates\base.html:147 .\templates\base.html:220
+msgid "Logout"
+msgstr "Выйти"
+
+#: .\templates\base.html:153 .\templates\landing.html:143
+#: .\templates\landing.html:163
+msgid "Login"
+msgstr "Войти"
+
+#: .\templates\base.html:251 .\templates\landing.html:604
+msgid ""
+"The world's most advanced AI-powered learning platform. Empowering education "
+"for everyone, everywhere."
+msgstr ""
+"Самая передовая в мире обучающая платформа с ИИ. Расширение возможностей "
+"образования для всех и везде."
+
+#: .\templates\base.html:256 .\templates\landing.html:609
+msgid "Platform"
+msgstr "Платформа"
+
+#: .\templates\base.html:266 .\templates\landing.html:619
+msgid "About"
+msgstr "О нас"
+
+#: .\templates\base.html:267 .\templates\landing.html:620
+msgid "Developed by"
+msgstr "Разработано"
+
+#: .\templates\base.html:269 .\templates\landing.html:621
+msgid "Making education accessible through AI"
+msgstr "Делаем образование доступным с помощью ИИ"
+
+#: .\templates\base.html:275 .\templates\landing.html:627
+msgid "All rights reserved."
+msgstr "Все права защищены."
+
+#: .\templates\chatbot.html:4
+msgid "AI Learning Assistant - StuDy"
+msgstr "ИИ Ассистент - StuDy"
+
+#: .\templates\chatbot.html:129
+msgid "AI Learning Assistant"
+msgstr "ИИ Ассистент"
+
+#: .\templates\chatbot.html:130
+msgid "Ask me anything to generate a course"
+msgstr "Спросите меня о чем угодно, чтобы создать курс"
+
+#: .\templates\chatbot.html:160
+msgid "Hello"
+msgstr "Привет"
+
+#: .\templates\chatbot.html:161
+msgid "What would you like to learn today?"
+msgstr "Чему бы вы хотели научиться сегодня?"
+
+#: .\templates\chatbot.html:170
+msgid "Generating your personalized course..."
+msgstr "Создание вашего персонального курса..."
+
+#: .\templates\chatbot.html:171
+msgid "This may take 20-30 seconds"
+msgstr "Это может занять 20-30 секунд"
+
+#: .\templates\chatbot.html:183
+msgid "Generate Course"
+msgstr "Создать курс"
+
+#: .\templates\chatbot.html:191
+msgid "Type your message..."
+msgstr "Введите ваше сообщение..."
+
+#: .\templates\chatbot.html:306
+msgid "Sorry, something went wrong. Please try again."
+msgstr "Извините, что-то пошло не так. Пожалуйста, попробуйте снова."
+
+#: .\templates\chatbot.html:340
+msgid "Error generating course: "
+msgstr "Ошибка при создании курса: "
+
+#: .\templates\chatbot.html:344
+msgid "Error generating course. Please try again."
+msgstr "Ошибка при создании курса. Пожалуйста, попробуйте снова."
+
+#: .\templates\course_detail.html:9
+msgid "Back to Dashboard"
+msgstr "Назад к панели"
+
+#: .\templates\course_detail.html:21
+msgid "Course Completed!"
+msgstr "Курс завершен!"
+
+#: .\templates\course_detail.html:28
+msgid "Download Certificate"
+msgstr "Скачать сертификат"
+
+#: .\templates\course_detail.html:69 .\templates\dashboard.html:114
+msgid "Completed"
+msgstr "Завершено"
+
+#: .\templates\dashboard.html:4
+msgid "My Dashboard - StuDy"
+msgstr "Моя панель - StuDy"
+
+#: .\templates\dashboard.html:54
+msgid "Welcome back,"
+msgstr "С возвращением,"
+
+#: .\templates\dashboard.html:57 .\templates\login.html:88
+msgid "Continue your learning journey"
+msgstr "Продолжите свое обучение"
+
+#: .\templates\dashboard.html:66
+msgid "Courses"
+msgstr "Курсы"
+
+#: .\templates\dashboard.html:91
+msgid "Your Courses"
+msgstr "Ваши курсы"
+
+#: .\templates\dashboard.html:108
+msgid "modules"
+msgstr "модулей"
+
+#: .\templates\dashboard.html:128
+msgid "Progress"
+msgstr "Прогресс"
+
+#: .\templates\dashboard.html:143
+msgid "Review Course"
+msgstr "Обзор курса"
+
+#: .\templates\dashboard.html:145
+msgid "Continue Learning"
+msgstr "Продолжить обучение"
+
+#: .\templates\dashboard.html:165
+msgid "No Courses Yet"
+msgstr "Пока нет курсов"
+
+#: .\templates\dashboard.html:167
+msgid "Start your learning journey by creating your first AI-powered course!"
+msgstr "Начните свое обучение, создав свой первый курс с ИИ!"
+
+#: .\templates\dashboard.html:172 .\templates\gamification.html:429
+msgid "Create Your First Course"
+msgstr "Создать свой первый курс"
+
+#: .\templates\gamification.html:4
+msgid "Gamification - StuDy"
+msgstr "Геймификация - StuDy"
+
+#: .\templates\gamification.html:94
+msgid "Gamification"
+msgstr "Геймификация"
+
+#: .\templates\gamification.html:97
+msgid "Track your progress, earn rewards, and level up your learning!"
+msgstr "Отслеживайте прогресс, получайте награды и повышайте уровень!"
+
+#: .\templates\gamification.html:106
+msgid "Keep Learning!"
+msgstr "Продолжайте учиться!"
+
+#: .\templates\gamification.html:107
+msgid "Complete activities to earn more XP"
+msgstr "Выполняйте задания, чтобы заработать больше XP"
+
+#: .\templates\gamification.html:118
+msgid "How to Earn XP"
+msgstr "Как заработать XP"
+
+#: .\templates\gamification.html:121
+msgid "Complete activities to gain experience points and unlock rewards"
+msgstr "Выполняйте задания, чтобы получить очки опыта и открыть награды"
+
+#: .\templates\gamification.html:134
+msgid "Complete a Lesson"
+msgstr "Завершить урок"
+
+#: .\templates\gamification.html:135
+msgid "Read through a lesson to gain knowledge"
+msgstr "Прочитайте урок, чтобы получить знания"
+
+#: .\templates\gamification.html:149
+msgid "Pass a Quiz"
+msgstr "Пройти тест"
+
+#: .\templates\gamification.html:150
+msgid "Test your knowledge and pass quizzes"
+msgstr "Проверьте свои знания и пройдите тесты"
+
+#: .\templates\gamification.html:152
+msgid "+5 XP bonus for perfect score"
+msgstr "Бонус +5 XP за идеальный результат"
+
+#: .\templates\gamification.html:165
+msgid "Finish a Course"
+msgstr "Завершить курс"
+
+#: .\templates\gamification.html:166
+msgid "Complete all lessons and quizzes in a course"
+msgstr "Завершите все уроки и тесты в курсе"
+
+#: .\templates\gamification.html:180
+msgid "Daily Login Streak"
+msgstr "Ежедневная серия входов"
+
+#: .\templates\gamification.html:181
+msgid "Log in every day to maintain your streak"
+msgstr "Заходите каждый день, чтобы сохранить серию"
+
+#: .\templates\gamification.html:195
+msgid "Create First Course"
+msgstr "Создать первый курс"
+
+#: .\templates\gamification.html:196
+msgid "One-time bonus for creating your first course"
+msgstr "Единоразовый бонус за создание первого курса"
+
+#: .\templates\gamification.html:210
+msgid "Share on Social Media"
+msgstr "Поделиться в соцсетях"
+
+#: .\templates\gamification.html:211
+msgid "Share your achievements with friends"
+msgstr "Поделитесь достижениями с друзьями"
+
+#: .\templates\gamification.html:213
+msgid "Once per week"
+msgstr "Раз в неделю"
+
+#: .\templates\gamification.html:226
+msgid "Reward Tiers"
+msgstr "Уровни наград"
+
+#: .\templates\gamification.html:229
+msgid "Unlock premium subscription trials by earning XP"
+msgstr "Откройте пробные премиум-подписки, зарабатывая XP"
+
+#: .\templates\gamification.html:241
+msgid "Bronze Tier"
+msgstr "Бронзовый уровень"
+
+#: .\templates\gamification.html:246
+msgid "1-Day Plus Trial"
+msgstr "Пробная подписка Plus на 1 день"
+
+#: .\templates\gamification.html:251 .\templates\gamification.html:278
+#: .\templates\gamification.html:305 .\templates\gamification.html:332
+#: .\templates\gamification.html:359
+msgid "to unlock"
+msgstr "чтобы открыть"
+
+#: .\templates\gamification.html:268
+msgid "Silver Tier"
+msgstr "Серебряный уровень"
+
+#: .\templates\gamification.html:273
+msgid "1-Week Plus Trial"
+msgstr "Пробная подписка Plus на 1 неделю"
+
+#: .\templates\gamification.html:295
+msgid "Gold Tier"
+msgstr "Золотой уровень"
+
+#: .\templates\gamification.html:300
+msgid "1-Week Pro Trial"
+msgstr "Пробная подписка Pro на 1 неделю"
+
+#: .\templates\gamification.html:322
+msgid "Platinum Tier"
+msgstr "Платиновый уровень"
+
+#: .\templates\gamification.html:327
+msgid "1-Month Plus Trial"
+msgstr "Пробная подписка Plus на 1 месяц"
+
+#: .\templates\gamification.html:349
+msgid "Diamond Tier"
+msgstr "Бриллиантовый уровень"
+
+#: .\templates\gamification.html:354
+msgid "1-Month Pro Trial"
+msgstr "Пробная подписка Pro на 1 месяц"
+
+#: .\templates\gamification.html:377
+msgid "Top Learners"
+msgstr "Лучшие ученики"
+
+#: .\templates\gamification.html:380
+msgid "See how you rank against other students"
+msgstr "Посмотрите свое место среди других студентов"
+
+#: .\templates\gamification.html:403
+msgid "No leaderboard data yet. Be the first to earn XP!"
+msgstr "Пока нет данных. Будьте первым, кто заработает XP!"
+
+#: .\templates\gamification.html:412
+msgid "View Full Leaderboard"
+msgstr "Посмотреть полную таблицу лидеров"
+
+#: .\templates\gamification.html:422
+msgid "Start Earning XP Today!"
+msgstr "Начните зарабатывать XP сегодня!"
+
+#: .\templates\gamification.html:425
+msgid "Complete lessons, pass quizzes, and unlock amazing rewards"
+msgstr "Завершайте уроки, проходите тесты и открывайте удивительные награды"
+
+#: .\templates\landing.html:8
+msgid "AI-Powered Education"
+msgstr "Образование с ИИ"
+
+#: .\templates\landing.html:140 .\templates\landing.html:160
+msgid "Features"
+msgstr "Функции"
+
+#: .\templates\landing.html:141 .\templates\landing.html:161
+#: .\templates\landing.html:320
+msgid "How It Works"
+msgstr "Как это работает"
+
+#: .\templates\landing.html:142 .\templates\landing.html:162
+msgid "Pricing"
+msgstr "Цены"
+
+#: .\templates\landing.html:146 .\templates\landing.html:164
+#: .\templates\landing.html:412
+msgid "Get Started"
+msgstr "Начать"
+
+#: .\templates\landing.html:180
+msgid "AI-Powered Learning Revolution"
+msgstr "Революция в обучении с ИИ"
+
+#: .\templates\landing.html:184
+msgid "Master Any Skill with"
+msgstr "Освойте любой навык с"
+
+#: .\templates\landing.html:185
+msgid "Personalized AI Courses"
+msgstr "Персонализированными ИИ-курсами"
+
+#: .\templates\landing.html:188
+msgid ""
+"Generate custom courses on any topic in seconds. Learn in your preferred "
+"language, track your progress, and earn certificates."
+msgstr ""
+"Создавайте индивидуальные курсы на любую тему за секунды. Учитесь на "
+"предпочитаемом языке, отслеживайте прогресс и получайте сертификаты."
+
+#: .\templates\landing.html:192
+msgid "Start Learning Free"
+msgstr "Начать обучение бесплатно"
+
+#: .\templates\landing.html:195
+msgid "See How It Works"
+msgstr "Посмотрите, как это работает"
+
+#: .\templates\landing.html:203
+msgid "Topics"
+msgstr "Темы"
+
+#: .\templates\landing.html:207
+msgid "Languages"
+msgstr "Языки"
+
+#: .\templates\landing.html:211
+msgid "Students"
+msgstr "Студенты"
+
+#: .\templates\landing.html:215
+msgid "Rating"
+msgstr "Рейтинг"
+
+#: .\templates\landing.html:226
+msgid "Why Choose StuDy?"
+msgstr "Почему выбирают StuDy?"
+
+#: .\templates\landing.html:229
+msgid "Experience the future of education with our cutting-edge features."
+msgstr "Почувствуйте будущее образования с нашими передовыми функциями."
+
+#: .\templates\landing.html:241
+msgid "AI-Powered Curriculum"
+msgstr "Учебная программа на базе ИИ"
+
+#: .\templates\landing.html:243
+msgid ""
+"Our advanced AI analyzes your request and builds a structured, comprehensive "
+"course tailored just for you."
+msgstr ""
+"Наш продвинутый ИИ анализирует ваш запрос и создает структурированный, "
+"всесторонний курс, специально для вас."
+
+#: .\templates\landing.html:254
+msgid "Multi-Language Support"
+msgstr "Мультиязычная поддержка"
+
+#: .\templates\landing.html:256
+msgid ""
+"Learn in English, Russian, Uzbek, or any other language. The AI adapts the "
+"content to your native tongue."
+msgstr ""
+"Учитесь на английском, русском, узбекском или любом другом языке. ИИ "
+"адаптирует контент под ваш родной язык."
+
+#: .\templates\landing.html:267
+msgid "Gamified Learning"
+msgstr "Геймифицированное обучение"
+
+#: .\templates\landing.html:269
+msgid ""
+"Earn XP, climb the leaderboard, and unlock achievements. Learning has never "
+"been this addictive."
+msgstr ""
+"Зарабатывайте XP, поднимайтесь в таблице лидеров и открывайте достижения. "
+"Обучение никогда не было таким увлекательным."
+
+#: .\templates\landing.html:280
+msgid "Official Certificates"
+msgstr "Официальные сертификаты"
+
+#: .\templates\landing.html:282
+msgid ""
+"Complete courses and earn beautiful, shareable certificates to showcase your "
+"achievements."
+msgstr ""
+"Завершайте курсы и получайте красивые сертификаты, которыми можно поделиться, "
+"чтобы продемонстрировать свои достижения."
+
+#: .\templates\landing.html:293
+msgid "Progress Tracking"
+msgstr "Отслеживание прогресса"
+
+#: .\templates\landing.html:295
+msgid ""
+"Monitor your learning journey with detailed analytics and progress reports "
+"for every course."
+msgstr ""
+"Отслеживайте свое обучение с помощью подробной аналитики и отчетов о "
+"прогрессе для каждого курса."
+
+#: .\templates\landing.html:306
+msgid "Instant Generation"
+msgstr "Мгновенная генерация"
+
+#: .\templates\landing.html:308
+msgid ""
+"Get your personalized course in under 30 seconds. No waiting, just learning."
+msgstr ""
+"Получите свой персональный курс менее чем за 30 секунд. Никакого ожидания, "
+"только обучение."
+
+#: .\templates\landing.html:323
+msgid "Start your learning journey in three simple steps."
+msgstr "Начните свое обучение в три простых шага."
+
+#: .\templates\landing.html:338
+msgid "Choose a Topic"
+msgstr "Выберите тему"
+
+#: .\templates\landing.html:340
+msgid "Tell our AI chatbot what you want to learn, from Python to Pottery."
+msgstr ""
+"Скажите нашему ИИ-чатботу, чему вы хотите научиться, от Python до гончарного "
+"дела."
+
+#: .\templates\landing.html:349
+msgid "Get Your Course"
+msgstr "Получите свой курс"
+
+#: .\templates\landing.html:351
+msgid "The AI instantly generates modules, lessons, and quizzes for you."
+msgstr "ИИ мгновенно создает для вас модули, уроки и тесты."
+
+#: .\templates\landing.html:360
+msgid "Start Learning"
+msgstr "Начните обучение"
+
+#: .\templates\landing.html:362
+msgid "Read lessons, take quizzes, earn XP, and get certified!"
+msgstr "Читайте уроки, проходите тесты, получайте XP и сертификаты!"
+
+#: .\templates\landing.html:374
+msgid "Simple, Affordable Pricing"
+msgstr "Простые и доступные цены"
+
+#: .\templates\landing.html:377
+msgid "Choose the plan that fits your learning goals"
+msgstr "Выберите план, который соответствует вашим целям обучения"
+
+#: .\templates\landing.html:387
+msgid "Free"
+msgstr "Бесплатно"
+
+#: .\templates\landing.html:390 .\templates\landing.html:425
+#: .\templates\landing.html:463
+msgid "per month"
+msgstr "в месяц"
+
+#: .\templates\landing.html:395
+msgid "3 AI-generated courses per month"
+msgstr "3 ИИ-курса в месяц"
+
+#: .\templates\landing.html:399
+msgid "Basic progress tracking"
+msgstr "Базовое отслеживание прогресса"
+
+#: .\templates\landing.html:403
+msgid "Community support"
+msgstr "Поддержка сообщества"
+
+#: .\templates\landing.html:407
+msgid "Course certificates"
+msgstr "Сертификаты курсов"
+
+#: .\templates\landing.html:422
+msgid "Plus"
+msgstr "Плюс"
+
+#: .\templates\landing.html:430
+msgid "Unlimited AI-generated courses"
+msgstr "Неограниченное количество ИИ-курсов"
+
+#: .\templates\landing.html:434
+msgid "Advanced analytics & insights"
+msgstr "Продвинутая аналитика и инсайты"
+
+#: .\templates\landing.html:438
+msgid "Priority AI generation"
+msgstr "Приоритетная генерация ИИ"
+
+#: .\templates\landing.html:442
+msgid "Premium certificates"
+msgstr "Премиум сертификаты"
+
+#: .\templates\landing.html:446
+msgid "Email support"
+msgstr "Поддержка по электронной почте"
+
+#: .\templates\landing.html:451
+msgid "Start Plus Trial"
+msgstr "Начать пробную версию Plus"
+
+#: .\templates\landing.html:460
+msgid "Pro"
+msgstr "Про"
+
+#: .\templates\landing.html:468
+msgid "Everything in Plus"
+msgstr "Все, что в Plus"
+
+#: .\templates\landing.html:472
+msgid "AI Learning Assistant for every lesson"
+msgstr "ИИ-ассистент для каждого урока"
+
+#: .\templates\landing.html:476
+msgid "Custom course templates"
+msgstr "Пользовательские шаблоны курсов"
+
+#: .\templates\landing.html:480
+msgid "Offline course downloads"
+msgstr "Скачивание курсов для офлайн доступа"
+
+#: .\templates\landing.html:484
+msgid "Priority 24/7 support"
+msgstr "Приоритетная поддержка 24/7"
+
+#: .\templates\landing.html:488
+msgid "Early access to new features"
+msgstr "Ранний доступ к новым функциям"
+
+#: .\templates\landing.html:493
+msgid "Start Pro Trial"
+msgstr "Начать пробную версию Pro"
+
+#: .\templates\landing.html:502
+msgid "30-day money-back guarantee. Cancel anytime."
+msgstr "30-дневная гарантия возврата денег. Отмена в любое время."
+
+#: .\templates\landing.html:513
+msgid "Frequently Asked Questions"
+msgstr "Часто задаваемые вопросы"
+
+#: .\templates\landing.html:516
+msgid "Everything you need to know about StuDy"
+msgstr "Все, что вам нужно знать о StuDy"
+
+#: .\templates\landing.html:525
+msgid "How does the AI generate courses?"
+msgstr "Как ИИ создает курсы?"
+
+#: .\templates\landing.html:528
+msgid ""
+"Our advanced AI analyzes your topic request and creates a comprehensive "
+"curriculum with modules, lessons, and quizzes tailored to your learning "
+"needs."
+msgstr ""
+"Наш продвинутый ИИ анализирует ваш запрос и создает структурированный, "
+"всесторонний курс с модулями, уроками и тестами, специально для вас."
+
+#: .\templates\landing.html:536
+msgid "Can I really learn in any language?"
+msgstr "Могу ли я действительно учиться на любом языке?"
+
+#: .\templates\landing.html:539
+msgid ""
+"Yes! Our AI supports 50+ languages including English, Russian, Uzbek, "
+"Karakalpak, and many more. Just specify your preferred language."
+msgstr ""
+"Да! Наш ИИ поддерживает более 50 языков, включая английский, русский, "
+"узбекский, каракалпакский и многие другие. Просто укажите предпочитаемый язык."
+
+#: .\templates\landing.html:547
+msgid "Are the certificates recognized?"
+msgstr "Признаются ли сертификаты?"
+
+#: .\templates\landing.html:550
+msgid ""
+"Our certificates showcase your achievement and can be shared on LinkedIn, "
+"resumes, and portfolios to demonstrate your skills."
+msgstr ""
+"Наши сертификаты демонстрируют ваши достижения, и ими можно поделиться в "
+"LinkedIn, резюме и портфолио, чтобы показать свои навыки."
+
+#: .\templates\landing.html:558
+msgid "Can I cancel my subscription anytime?"
+msgstr "Могу ли я отменить подписку в любое время?"
+
+#: .\templates\landing.html:561
+msgid ""
+"Absolutely! You can cancel your Plus or Pro subscription at any time with no "
+"questions asked. We also offer a 30-day money-back guarantee."
+msgstr ""
+"Абсолютно! Вы можете отменить подписку Plus или Pro в любое время без лишних "
+"вопросов. Мы также предлагаем 30-дневную гарантию возврата денег."
+
+#: .\templates\landing.html:576
+msgid "Ready to Start Your Journey?"
+msgstr "Готовы начать свое путешествие?"
+
+#: .\templates\landing.html:579
+msgid ""
+"Join thousands of learners and master new skills today. It's free to get "
+"started."
+msgstr ""
+"Присоединяйтесь к тысячам учеников и осваивайте новые навыки уже сегодня. "
+"Это бесплатно."
+
+#: .\templates\landing.html:583
+msgid "Create Free Account"
+msgstr "Создать бесплатный аккаунт"
+
+#: .\templates\landing.html:586
+msgid "No credit card required"
+msgstr "Кредитная карта не требуется"
+
+#: .\templates\landing.html:586
+msgid "Start learning in 30 seconds"
+msgstr "Начните учиться через 30 секунд"
+
+#: .\templates\leaderboard.html:75
+msgid ""
+"Rise through the ranks and become a legend in the Universal Learning "
+"Platform."
+msgstr ""
+"Поднимайтесь в рейтинге и станьте легендой Универсальной обучающей платформы."
+
+#: .\templates\leaderboard.html:93
+msgid "Your Score"
+msgstr "Ваш счет"
+
+#: .\templates\leaderboard.html:99
+msgid "XP to"
+msgstr "XP до"
+
+#: .\templates\leaderboard.html:99
+msgid "Bronze"
+msgstr ""
+
+#: .\templates\leaderboard.html:99
+msgid "Silver"
+msgstr ""
+
+#: .\templates\leaderboard.html:99
+msgid "Gold"
+msgstr ""
+
+#: .\templates\leaderboard.html:102
+msgid "Max League Reached!"
+msgstr ""
+
+#: .\templates\leaderboard.html:134 .\templates\leaderboard.html:165
+#: .\templates\leaderboard.html:197 .\templates\leaderboard.html:228
+msgid "League"
+msgstr ""
+
+#: .\templates\leaderboard.html:213
+msgid "Full Rankings"
+msgstr ""
+
+#: .\templates\leaderboard.html:216
+msgid "Top 100 Learners"
+msgstr ""
+
+#: .\templates\leaderboard.html:224
+msgid "Rank"
+msgstr ""
+
+#: .\templates\leaderboard.html:226
+msgid "Learner"
+msgstr ""
+
+#: .\templates\leaderboard.html:230
+msgid "Total XP"
+msgstr ""
+
+#: .\templates\leaderboard.html:260 .\templates\lesson.html:434
+#: .\templates\partials\lesson_chatbot_message.html:25
+msgid "You"
+msgstr ""
+
+#: .\templates\leaderboard.html:285
+msgid "No Rankings Yet"
+msgstr ""
+
+#: .\templates\leaderboard.html:286
+msgid "Be the first to complete a lesson and earn XP!"
+msgstr ""
+
+#: .\templates\lesson.html:144
+#, fuzzy
+#| msgid "Back to Home"
+msgid "Back to Course"
+msgstr "На главную"
+
+#: .\templates\lesson.html:164
+msgid "Quiz Time!"
+msgstr "Время теста!"
+
+#: .\templates\lesson.html:172
+msgid "You have already completed this lesson!"
+msgstr "Вы уже прошли этот урок!"
+
+#: .\templates\lesson.html:179 .\templates\lesson.html:251
+msgid "Previous Lesson"
+msgstr "Предыдущий урок"
+
+#: .\templates\lesson.html:186 .\templates\lesson.html:258
+msgid "Next Lesson"
+msgstr "Следующий урок"
+
+#: .\templates\lesson.html:191 .\templates\lesson.html:263
+msgid "Complete Module"
+msgstr "Завершить модуль"
+
+#: .\templates\lesson.html:224
+msgid "Check Answer"
+msgstr "Проверить ответ"
+
+#: .\templates\lesson.html:231
+msgid "No quizzes for this lesson."
+msgstr "Для этого урока нет тестов."
+
+#: .\templates\lesson.html:241
+msgid "Lesson Complete!"
+msgstr "Урок завершен!"
+
+#: .\templates\lesson.html:242
+msgid "Great job! You've answered all questions correctly."
+msgstr "Отличная работа! Вы правильно ответили на все вопросы."
+
+#: .\templates\lesson.html:285
+msgid "Lesson Assistant"
+msgstr "Ассистент урока"
+
+#: .\templates\lesson.html:286
+msgid "Ask me about this lesson"
+msgstr "Спросите меня об этом уроке"
+
+#: .\templates\lesson.html:307
+msgid ""
+"Hi! I'm here to help you understand this lesson. Feel free to ask me "
+"questions about the content!"
+msgstr ""
+"Привет! Я здесь, чтобы помочь вам понять этот урок. Не стесняйтесь задавать "
+"вопросы по содержанию!"
+
+#: .\templates\lesson.html:309
+msgid ""
+"Note: I can't help with quiz answers, but I'll explain concepts to help you "
+"learn!"
+msgstr ""
+"Примечание: Я не могу подсказать ответы на тест, но я объясню концепции, "
+"чтобы помочь вам учиться!"
+
+#: .\templates\lesson.html:343
+msgid "Ask about this lesson..."
+msgstr "Спросите об этом уроке..."
+
+#: .\templates\lesson.html:361
+msgid "Ask AI Helper"
+msgstr "Спросить ИИ"
+
+#: .\templates\login.html:8
+msgid "Login - Universal Learning Platform"
+msgstr "Вход - Универсальная обучающая платформа"
+
+#: .\templates\login.html:75 .\templates\register.html:76
+msgid "Back to Home"
+msgstr "На главную"
+
+#: .\templates\login.html:87
+msgid "Welcome Back"
+msgstr "С возвращением"
+
+#: .\templates\login.html:102 .\templates\register.html:103
+msgid "Username"
+msgstr "Имя пользователя"
+
+#: .\templates\login.html:115 .\templates\register.html:183
+msgid "Password"
+msgstr "Пароль"
+
+#: .\templates\login.html:129 .\templates\register.html:217
+msgid "Sign In"
+msgstr "Войти"
+
+#: .\templates\login.html:135
+msgid "Don't have an account?"
+msgstr "Нет аккаунта?"
+
+#: .\templates\login.html:136 .\templates\register.html:88
+#: .\templates\register.html:210
+msgid "Create Account"
+msgstr "Создать аккаунт"
+
+#: .\templates\partials\lesson_chatbot_message.html:15
+msgid "AI Assistant"
+msgstr "ИИ Ассистент"
+
+#: .\templates\partials\quiz_result.html:11
+msgid "Correct!"
+msgstr "Правильно!"
+
+#: .\templates\partials\quiz_result.html:13
+msgid "Great job! You earned 10 XP."
+msgstr "Отличная работа! Вы заработали 10 XP."
+
+#: .\templates\partials\quiz_result.html:28
+msgid "Incorrect"
+msgstr "Неправильно"
+
+#: .\templates\partials\quiz_result.html:30
+msgid "You lost 5 XP."
+msgstr "Вы потеряли 5 XP."
+
+#: .\templates\partials\quiz_result.html:32
+msgid "Correct answer:"
+msgstr "Правильный ответ:"
+
+#: .\templates\register.html:8
+msgid "Register - Universal Learning Platform"
+msgstr "Регистрация - Универсальная обучающая платформа"
+
+#: .\templates\register.html:89
+msgid "Start your learning journey today"
+msgstr "Начните обучение сегодня"
+
+#: .\templates\register.html:117
+msgid "First Name"
+msgstr "Имя"
+
+#: .\templates\register.html:129
+msgid "Last Name"
+msgstr "Фамилия"
+
+#: .\templates\register.html:144
+msgid "Phone"
+msgstr "Телефон"
+
+#: .\templates\register.html:196
+msgid "Confirm Password"
+msgstr "Подтвердите пароль"
+
+#: .\templates\register.html:216
+msgid "Already have an account?"
+msgstr "Уже есть аккаунт?"
+
+#~ msgid "ULP"
+#~ msgstr "ULP"
+
+#~ msgid ""
+#~ "Congratulations! You've mastered this course. Download your official "
+#~ "certificate now."
+#~ msgstr ""
+#~ "Поздравляем! Вы освоили этот курс. Скачайте ваш официальный сертификат "
+#~ "сейчас."
+
+#~ msgid "Log In"
+#~ msgstr "Войти"

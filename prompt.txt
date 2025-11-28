@@ -1,0 +1,1 @@
+Har bir Lesson ichiga chat bot qo'sh. Chat bot tugmasi player kabi lekin ekranning chap tarafida turadi. Chat bot faqat shu darslik asosida user savollariga yordam beradi. Tili user tanlagan tilda bo'lishi kerak!
