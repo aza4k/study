@@ -167,58 +167,63 @@
     </nav>
 
     <!-- Hero Section with Animated Gradient -->
-    <section class="relative min-h-screen flex items-center justify-center animated-gradient overflow-hidden pt-20">
-        <!-- Floating blobs -->
-        <div class="blob w-96 h-96 bg-purple-500 top-20 left-10"></div>
-        <div class="blob w-80 h-80 bg-blue-500 bottom-20 right-10"></div>
-        <div class="blob w-72 h-72 bg-pink-500 top-40 right-20"></div>
+<section class="relative min-h-screen flex items-center justify-center animated-gradient overflow-hidden py-12 sm:py-20 w-full">
+    <!-- Floating blobs: Reduced size and opacity for mobile so they don't distract -->
+    <div class="blob w-48 h-48 md:w-96 md:h-96 bg-purple-500 top-0 -left-10 md:top-20 md:left-10 opacity-60 mix-blend-multiply filter blur-xl animate-blob"></div>
+    <div class="blob w-48 h-48 md:w-80 md:h-80 bg-blue-500 bottom-0 -right-10 md:bottom-20 md:right-10 opacity-60 mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div class="mb-6">
-                <span
-                    class="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-medium text-sm mb-8">
-                    <i class="fas fa-sparkles mr-2"></i>{% trans "AI-Powered Learning Revolution" %}
-                </span>
-            </div>
-            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 hero-text-shadow leading-tight">
-                {% trans "Master Any Skill with" %}<br>
-                <span class="text-yellow-300">{% trans "Personalized AI Courses" %}</span>
-            </h1>
-            <p class="text-xl md:text-2xl text-white/95 mb-10 max-w-3xl mx-auto hero-text-shadow">
-                {% trans "Generate custom courses on any topic in seconds. Learn in your preferred language, track your progress, and earn certificates." %}
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a href="{% url 'register' %}" class="px-10 py-4 bg-white text-indigo-600 rounded-full text-lg font-bold shadow-2xl hover:bg-gray-100 transition transform hover:-translate-y-1 hover:shadow-glow">
-                    <i class="fas fa-rocket mr-2"></i>{% trans "Start Learning Free" %}
-                </a>
-                <a href="#how-it-works" class="px-10 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full text-lg font-bold border-2 border-white/30 hover:bg-white/20 transition transform hover:-translate-y-1">
-                    <i class="fas fa-play-circle mr-2"></i>{% trans "See How It Works" %}
-                </a>
-            </div>
+    <!-- Added w-full and px-4 to ensure content doesn't touch edges -->
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
 
-            <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
-                <div class="text-center">
-                    <div class="text-4xl font-black text-white mb-2">1000+</div>
-                    <div class="text-white/80 font-medium">{% trans "Topics" %}</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-black text-white mb-2">50+</div>
-                    <div class="text-white/80 font-medium">{% trans "Languages" %}</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-black text-white mb-2">10K+</div>
-                    <div class="text-white/80 font-medium">{% trans "Students" %}</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-black text-white mb-2">4.9★</div>
-                    <div class="text-white/80 font-medium">{% trans "Rating" %}</div>
-                </div>
+        <div class="mb-6">
+            <span class="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-medium text-xs sm:text-sm mb-4 border border-white/10">
+                <i class="fas fa-sparkles mr-2"></i>{% trans "AI-Powered Learning Revolution" %}
+            </span>
+        </div>
+
+        <!-- FIX 1: Reduced text size to text-3xl for mobile & added break-words -->
+        <!-- 'break-words' and 'hyphens-auto' prevent long words from going off-screen -->
+        <h1 class="text-3xl sm:text-5xl md:text-7xl font-black text-white mb-6 hero-text-shadow leading-tight break-words hyphens-auto">
+            {% trans "Master Any Skill with" %}<br>
+            <span class="text-yellow-300 block mt-2">{% trans "Personalized AI Courses" %}</span>
+        </h1>
+
+        <!-- FIX 2: Adjusted paragraph text size and line height -->
+        <p class="text-base sm:text-lg md:text-2xl text-white/95 mb-8 max-w-3xl mx-auto hero-text-shadow leading-relaxed">
+            {% trans "Generate custom courses on any topic in seconds. Learn in your preferred language, track your progress, and earn certificates." %}
+        </p>
+
+        <!-- FIX 3: Buttons stacked vertically (flex-col) with full width -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none">
+            <a href="{% url 'register' %}" class="w-full sm:w-auto px-6 py-3.5 bg-white text-indigo-600 rounded-full text-base sm:text-lg font-bold shadow-xl hover:bg-gray-100 transition transform hover:-translate-y-1 text-center">
+                <i class="fas fa-rocket mr-2"></i>{% trans "Start Learning Free" %}
+            </a>
+            <a href="#how-it-works" class="w-full sm:w-auto px-6 py-3.5 bg-white/10 backdrop-blur-sm text-white rounded-full text-base sm:text-lg font-bold border border-white/40 hover:bg-white/20 transition transform hover:-translate-y-1 text-center">
+                <i class="fas fa-play-circle mr-2"></i>{% trans "See How It Works" %}
+            </a>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 mt-12 max-w-4xl mx-auto">
+            <div class="text-center p-2 bg-white/5 rounded-lg sm:bg-transparent">
+                <div class="text-2xl sm:text-4xl font-black text-white mb-1">1000+</div>
+                <div class="text-white/80 font-medium text-xs sm:text-base">{% trans "Topics" %}</div>
+            </div>
+            <div class="text-center p-2 bg-white/5 rounded-lg sm:bg-transparent">
+                <div class="text-2xl sm:text-4xl font-black text-white mb-1">3+</div>
+                <div class="text-white/80 font-medium text-xs sm:text-base">{% trans "Languages" %}</div>
+            </div>
+            <div class="text-center p-2 bg-white/5 rounded-lg sm:bg-transparent">
+                <div class="text-2xl sm:text-4xl font-black text-white mb-1">{{ user_count }}+</div>
+                <div class="text-white/80 font-medium text-xs sm:text-base">{% trans "Students" %}</div>
+            </div>
+            <div class="text-center p-2 bg-white/5 rounded-lg sm:bg-transparent">
+                <div class="text-2xl sm:text-4xl font-black text-white mb-1">4.9★</div>
+                <div class="text-white/80 font-medium text-xs sm:text-base">{% trans "Rating" %}</div>
             </div>
         </div>
-    </section>
-
-    <!-- Features Section -->
+    </div>
+</section>    <!-- Features Section -->
     <section id="features" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">

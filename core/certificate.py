@@ -82,15 +82,16 @@ def generate_certificate(user, course):
     completion_date = datetime.now().strftime("%B %d, %Y")
     c.drawCentredString(width/2, height - 4.8*inch, f"Completed on {completion_date}")
     
+    c.setFont(title_font, 25)  # Changed from Helvetica-Oblique to regular Arial as Arial-Oblique might not be standard
+    c.setFillColor(colors.HexColor('#4F46E5'))
+    c.drawCentredString(width/2, height - 5.7*inch, "StuDy Education Platform")
+
     # Signature line
     c.setStrokeColor(colors.HexColor('#D1D5DB'))
     c.setLineWidth(1)
     c.line(width/2 - 2*inch, height - 5.8*inch, width/2 + 2*inch, height - 5.8*inch)
     
     # Signature label
-    c.setFont(text_font, 12)  # Changed from Helvetica-Oblique to regular Arial as Arial-Oblique might not be standard
-    c.setFillColor(colors.HexColor('#9CA3AF'))
-    c.drawCentredString(width/2, height - 6.1*inch, "Universal Learning Platform")
     
     # Footer
     c.setFont(text_font, 10)

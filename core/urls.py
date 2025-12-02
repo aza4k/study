@@ -15,6 +15,7 @@ urlpatterns = [
     path('lesson/<int:lesson_id>/submit-quiz/', views.submit_quiz, name='submit_quiz'),
     path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
     path('gamification/', views.GamificationView.as_view(), name='gamification'),
+    path('pricing/', views.PricingView.as_view(), name='pricing'),
     path('course/<int:course_id>/certificate/', views.download_certificate, name='download_certificate'),
     path('change-language/', views.change_language, name='change_language'),
     path('lesson/<int:lesson_id>/chatbot/', views.lesson_chatbot, name='lesson_chatbot'),

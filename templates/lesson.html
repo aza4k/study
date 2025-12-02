@@ -274,7 +274,7 @@
 <div id="lesson-chatbot-container" class="fixed bottom-8 left-8 z-40">
     <!-- Chat Panel (Hidden by default) -->
     <div id="chatbot-panel"
-        class="hidden mb-4 w-[500px] h-[600px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 flex flex-col overflow-hidden">
+        class="hidden mb-4 w-[500px] h-[500px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 flex flex-col overflow-hidden">
         <!-- Header -->
         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -412,35 +412,55 @@
     }
 
     // Listen for chatbot form submission
-    document.body.addEventListener('htmx:afterRequest', function (event) {
+    document.body.addEventListener('htmx:beforeRequest', function (event) {
         if (event.detail.elt.id === 'chatbot-form') {
-            // Clear input
-            document.getElementById('chatbot-input').value = '';
-            // Scroll to bottom
+            const input = document.getElementById('chatbot-input');
+            const message = input.value.trim();
+
+            if (!message) {
+                event.preventDefault();
+                return;
+            }
+
+            // Add user message immediately
             const messagesDiv = document.getElementById('chatbot-messages');
+
+            // Simple HTML escape
+            const div = document.createElement('div');
+            div.textContent = message;
+            const escapedMessage = div.innerHTML;
+
+            const userMsgHTML = `
+<div class="flex gap-3 mb-4 animate-fade-in">
+    <div class="flex-1"></div>
+    <div class="flex-shrink-0 flex flex-col items-end">
+        <div
+            class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl rounded-tr-none p-4 shadow-md max-w-[80%]">
+            <p class="text-white text-sm leading-relaxed">${escapedMessage}</p>
+        </div>
+        <span class="text-xs text-gray-400 mt-1 mr-2">{% trans "You" %}</span>
+    </div>
+</div>
+`;
+            messagesDiv.insertAdjacentHTML('beforeend', userMsgHTML);
+
+            // Show typing indicator
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.classList.remove('hidden');
+            }
+
+            // Scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-            // Add user message to chat
-            const formData = new FormData(event.detail.elt);
-            const userMessage = formData.get('message');
-            if (userMessage) {
-                const userMsgHTML = `
-                    <div class="flex gap-3 mb-4 animate-fade-in">
-                        <div class="flex-1"></div>
-                        <div class="flex-shrink-0 flex flex-col items-end">
-                            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl rounded-tr-none p-4 shadow-md max-w-[80%]">
-                                <p class="text-white text-sm leading-relaxed">${userMessage}</p>
-                            </div>
-                            <span class="text-xs text-gray-400 mt-1 mr-2">{% trans "You" %}</span>
-                        </div>
-                    </div>
-                `;
-                messagesDiv.insertAdjacentHTML('beforeend', userMsgHTML);
-            }
+            // Clear input after a short delay to ensure HTMX captures the value
+            setTimeout(() => {
+                input.value = '';
+            }, 10);
         }
     });
 
-    // Listen for successful quiz submissions
+    // Listen for successful quiz submissions and chatbot responses
     document.body.addEventListener('htmx:afterSwap', function (event) {
         if (event.detail.target.id && event.detail.target.id.startsWith('quiz-result-')) {
             const resultDiv = event.detail.target;
@@ -459,6 +479,11 @@
 
         // Scroll chatbot messages to bottom after AI response
         if (event.detail.target.id === 'chatbot-messages') {
+            // Hide typing indicator
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.classList.add('hidden');
+            }
             event.detail.target.scrollTop = event.detail.target.scrollHeight;
         }
     });
@@ -478,7 +503,8 @@
         try {
             contentDiv.innerHTML = marked.parse(rawContent);
             hljs.highlightAll();
-            paragraphs = Array.from(contentDiv.querySelectorAll('p, h1, h2, h3, li')).map(el => el.textContent.trim()).filter(text => text.length > 0);
+            paragraphs = Array.from(contentDiv.querySelectorAll('p, h1, h2, h3, li')).map(el =>
+                el.textContent.trim()).filter(text => text.length > 0);
 
             document.querySelectorAll('.quiz-question, .quiz-option-label').forEach(el => {
                 el.innerHTML = marked.parse(el.textContent.trim());
@@ -539,14 +565,9 @@
 
         utterance.onend = function () {
             currentParagraphIndex++;
-            if (currentParagraphIndex < paragraphs.length && isPlaying) {
-                speakContent();
-            } else {
-                stopSpeech();
-            }
+            if (currentParagraphIndex < paragraphs.length && isPlaying) { speakContent(); } else { stopSpeech(); }
         };
-
         synth.speak(utterance);
-    }
+    } 
 </script>
 {% endblock %}

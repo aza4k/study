@@ -4,7 +4,7 @@ from .models import CustomUser, Course, Module, Lesson, Quiz, UserProgress, User
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    list_display = ['username', 'email', 'first_name', 'last_name', 'preferred_language', 'age']
+    list_display = ['username', 'email', 'first_name', 'last_name', 'preferred_language', 'age','date_joined']
     fieldsets = UserAdmin.fieldsets + (
         ('Additional Info', {'fields': ('phone_number', 'age', 'preferred_language')}),
     )
@@ -52,7 +52,7 @@ class ChatMessageAdmin(admin.ModelAdmin):
     list_display = ['user', 'is_user', 'message_preview', 'created_at']
     list_filter = ['is_user', 'created_at']
     search_fields = ['user__username', 'message']
-    
+
     def message_preview(self, obj):
         return obj.message[:50] + '...' if len(obj.message) > 50 else obj.message
     message_preview.short_description = 'Message'
