@@ -51,31 +51,60 @@
         <div class="flex flex-col md:flex-row items-center justify-between gap-8">
             <div>
                 <h1 class="text-5xl md:text-6xl font-black mb-3" style="text-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-                    {% trans "Welcome back," %} {{ user.first_name }}! 👋
+                    {% trans "Welcome back," %} {{ user.first_name|default:user.username }}! 👋
                 </h1>
                 <p class="text-xl text-white/90 mb-6" style="text-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                     {% trans "Continue your learning journey" %}
                 </p>
+
+                <!-- STATISTIKA KARTALARI -->
                 <div class="flex flex-wrap gap-4">
-                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30">
-                        <div class="text-3xl font-black">{{ user_xp|default:0 }}</div>
+
+                    <!-- XP Card -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30 hover:bg-white/30 transition duration-300">
+                        <div class="text-3xl font-black flex items-center gap-2">
+                            ⚡ {{ user_xp|default:0 }}
+                        </div>
                         <div class="text-sm text-white/80">Total XP</div>
                     </div>
-                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30">
-                        <div class="text-3xl font-black">{{ courses|length }}</div>
+
+                    <!-- Courses Card -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30 hover:bg-white/30 transition duration-300">
+                        <div class="text-3xl font-black flex items-center gap-2">
+                            📚 {{ courses|length }}
+                        </div>
                         <div class="text-sm text-white/80">{% trans "Courses" %}</div>
                     </div>
-                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30">
-                        <div class="text-3xl font-black">🔥 0</div>
-                        <div class="text-sm text-white/80">Day Streak</div>
+
+                    <!-- STREAK CARD (Yangilangan qism) -->
+                    <div class="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/30 hover:bg-white/30 transition duration-300 group relative overflow-hidden">
+                        <!-- Orqa fondagi olov effekti (optional) -->
+                        <div class="absolute -right-4 -top-4 text-6xl opacity-10 group-hover:opacity-20 transition">🔥</div>
+
+                        <div class="text-3xl font-black flex items-center gap-2">
+                            <!-- Olov yonib turishi uchun animatsiya qo'shildi -->
+                            <span class="{% if streak.current_streak > 0 %}animate-pulse drop-shadow-lg text-orange-300{% endif %}">
+                                🔥
+                            </span>
+                            {{ streak.current_streak|default:0 }}
+                        </div>
+
+                        <div class="text-sm text-white/80">
+                            Day Streak
+                            <!-- Agar rekord bo'lsa, kichkina qilib ko'rsatish -->
+                            {% if streak.max_streak > 0 %}
+                                <span class="text-xs opacity-70 block">Best: {{ streak.max_streak }}</span>
+                            {% endif %}
+                        </div>
                     </div>
+
                 </div>
             </div>
+
+            <!-- O'ng tomondagi ikonka -->
             <div class="hidden md:block">
-                <div
-                    class="w-48 h-48 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/30">
-                    <i class="fas fa-graduation-cap text-8xl text-white"
-                        style="text-shadow: 0 4px 16px rgba(0,0,0,0.3);"></i>
+                <div class="w-48 h-48 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/30 shadow-2xl">
+                    <i class="fas fa-graduation-cap text-8xl text-white drop-shadow-lg"></i>
                 </div>
             </div>
         </div>

@@ -17,7 +17,7 @@ import json
 import re
 from django.views.generic import TemplateView
 from django.contrib.auth import get_user_model
-
+from .models import UserStreak
 User = get_user_model()
 # Helper to get user XP
 def get_user_xp(user):
@@ -170,6 +170,9 @@ class DashboardView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['user_xp'] = get_user_xp(self.request.user)
+
+        streak_obj, created = UserStreak.objects.get_or_create(user=self.request.user)
+        context['streak'] = streak_obj
 
         # Calculate progress for each course
         for course in context['courses']:
