@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-6 sm:px-0">
+    <div class="mb-8">
+        <a href="{% url 'dashboard' %}"
+            class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold mb-4 transition">
+            <i class="fa-solid fa-arrow-left"></i> {% trans "Back to Dashboard" %}
+        </a>
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-3">{{ course.title }}</h1>
+        <p class="text-xl text-gray-600">{{ course.description }}</p>
+    </div>
+
+    {% if is_completed %}
+    <div class="mb-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl p-8 text-white">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-3">
+                    <i class="fa-solid fa-trophy text-5xl"></i>
+                    <h2 class="text-3xl font-bold">{% trans "Course Completed!" %}</h2>
+                </div>
+                <p class="text-green-50 text-lg">{% trans "Congratulations! You've mastered this course. Download your official certificate now." %}</p>
+            </div>
+            <a href="{% url 'download_certificate' course.id %}"
+                class="inline-flex items-center gap-2 px-8 py-4 bg-white text-green-600 rounded-xl font-bold text-lg hover:bg-green-50 transition shadow-xl transform hover:scale-105">
+                <i class="fa-solid fa-download"></i> {% trans "Download Certificate" %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="space-y-6">
+        {% for module in course.modules.all %}
+        <div class="bg-white shadow-lg overflow-hidden rounded-2xl border border-gray-100">
+            <div class="px-6 py-5 bg-gradient-to-r from-indigo-600 to-purple-600">
+                <h3 class="text-xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-book-open"></i>
+                    {{ module.title }}
+                </h3>
+            </div>
+            <ul class="divide-y divide-gray-200">
+                {% for lesson in module.lessons.all %}
+                <li>
+                    <a href="{% url 'lesson_detail' lesson.pk %}"
+                        class="block hover:bg-gray-50 transition-colors group">
+                        <div class="px-6 py-5 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="flex-shrink-0">
+                                    {% if lesson.id in completed_lesson_ids %}
+                                    <div
+                                        class="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg">
+                                        <i class="fa-solid fa-check text-xl"></i>
+                                    </div>
+                                    {% else %}
+                                    <div
+                                        class="h-12 w-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg border-2 border-gray-300">
+                                        {{ lesson.order }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition">
+                                        {{ lesson.title }}
+                                    </p>
+                                    {% if lesson.id in completed_lesson_ids %}
+                                    <p class="text-sm text-green-600 font-semibold flex items-center gap-1 mt-1">
+                                        <i class="fa-solid fa-circle-check"></i> {% trans "Completed" %}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <i
+                                    class="fa-solid fa-chevron-right text-gray-400 group-hover:text-indigo-600 transition"></i>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

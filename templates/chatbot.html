@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "AI Learning Assistant - StuDy" %}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+    .chat-container {
+        height: calc(100vh - 300px);
+        min-height: 400px;
+    }
+
+    @keyframes pulse-slow {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .typing-indicator {
+        animation: pulse-slow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+        0% {
+            width: 0%;
+        }
+
+        100% {
+            width: 100%;
+        }
+    }
+
+    .progress-bar {
+        animation: progress 30s linear forwards;
+    }
+
+    /* Chat Content Styling */
+    .chat-content p {
+        margin-bottom: 0.5rem;
+    }
+
+    .chat-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-content ul {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .chat-content ol {
+        list-style-type: decimal;
+        margin-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .chat-content strong {
+        font-weight: bold;
+    }
+
+    .chat-content em {
+        font-style: italic;
+    }
+
+    .chat-content pre {
+        background-color: #1f2937;
+        color: #f3f4f6;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .chat-content blockquote {
+        border-left: 4px solid currentColor;
+        padding-left: 1rem;
+        font-style: italic;
+        opacity: 0.8;
+    }
+
+    .bot-bubble code {
+        background-color: rgba(0, 0, 0, 0.1);
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
+        font-family: monospace;
+    }
+
+    .bot-bubble a {
+        color: #4f46e5;
+        text-decoration: underline;
+    }
+
+    .user-bubble code {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
+        font-family: monospace;
+    }
+
+    .user-bubble a {
+        color: white;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Chat Container -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Header for Chat (Optional, since we have main nav, but maybe good for context) -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white shadow-md">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">{% trans "AI Learning Assistant" %}</h2>
+                <p class="text-xs text-gray-500">{% trans "Ask me anything to generate a course" %}</p>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="chat-container overflow-y-auto p-6 space-y-4 bg-gray-50/30">
+            {% if chat_messages %}
+            {% for message in chat_messages %}
+            {% if message.is_user %}
+            <div class="flex justify-end">
+                <div
+                    class="chat-content user-bubble bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl rounded-tr-none px-6 py-3 max-w-md shadow-lg">
+                    {{ message.message }}
+                </div>
+            </div>
+            {% else %}
+            <div class="flex justify-start">
+                <div
+                    class="chat-content bot-bubble bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-none px-6 py-3 max-w-md shadow-sm">
+                    {{ message.message }}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-12">
+                <div
+                    class="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-robot text-4xl text-indigo-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">{% trans "Hello" %} {{ user.first_name }}!</h2>
+                <p class="text-gray-600">{% trans "What would you like to learn today?" %}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Course Generation Progress -->
+        <div id="progress-container" class="hidden p-6 bg-indigo-50 border-t border-indigo-100">
+            <div class="text-center mb-4">
+                <i class="fa-solid fa-graduation-cap text-4xl text-indigo-600 mb-2"></i>
+                <p class="text-indigo-800 font-semibold">{% trans "Generating your personalized course..." %}</p>
+                <p class="text-indigo-600 text-sm">{% trans "This may take 20-30 seconds" %}</p>
+            </div>
+            <div class="w-full bg-indigo-200 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-indigo-600 to-purple-600 h-3 rounded-full"
+                    style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Generate Course Button -->
+        <div id="generate-button-container" class="hidden p-6 bg-green-50 border-t border-green-100">
+            <button id="generate-course-btn"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition duration-300 shadow-lg">
+                <i class="fa-solid fa-graduation-cap mr-2"></i> {% trans "Generate Course" %}
+            </button>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t border-gray-200 p-6 bg-white">
+            <form id="chat-form" class="flex gap-3">
+                {% csrf_token %}
+                <input type="text" id="message-input" name="message" placeholder="{% trans 'Type your message...' %}"
+                    class="flex-1 px-6 py-4 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition"
+                    autocomplete="off">
+                <button type="submit"
+                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const generateButtonContainer = document.getElementById('generate-button-container');
+    const generateCourseBtn = document.getElementById('generate-course-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+
+    let currentTopic = null;
+
+    // Initialize Marked options
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        highlight: function (code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+        }
+    });
+
+    // Render existing messages
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.chat-content').forEach(el => {
+            const rawContent = el.textContent.trim();
+            el.innerHTML = marked.parse(rawContent);
+            el.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        });
+        scrollToBottom();
+    });
+
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addMessage(message, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isUser ? 'flex justify-end' : 'flex justify-start';
+
+        const bubble = document.createElement('div');
+        bubble.className = isUser
+            ? 'chat-content user-bubble bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl rounded-tr-none px-6 py-3 max-w-md shadow-lg'
+            : 'chat-content bot-bubble bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-none px-6 py-3 max-w-md shadow-sm';
+
+        bubble.innerHTML = marked.parse(message);
+        bubble.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
+        messageDiv.appendChild(bubble);
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    function showTyping() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typing-indicator';
+        typingDiv.className = 'flex justify-start typing-indicator';
+        typingDiv.innerHTML = '<div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-none px-6 py-3 shadow-md"><i class="fa-solid fa-ellipsis"></i></div>';
+        chatMessages.appendChild(typingDiv);
+        scrollToBottom();
+    }
+
+    function hideTyping() {
+        const typing = document.getElementById('typing-indicator');
+        if (typing) typing.remove();
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        messageInput.value = '';
+        showTyping();
+
+        try {
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            const response = await fetch('{% url "send_message" %}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            hideTyping();
+
+            if (data.bot_message) {
+                addMessage(data.bot_message, false);
+            }
+
+            if (data.topic_clear && data.topic) {
+                currentTopic = data.topic;
+                generateButtonContainer.classList.remove('hidden');
+            }
+        } catch (error) {
+            hideTyping();
+            addMessage('{% trans "Sorry, something went wrong. Please try again." %}', false);
+        }
+    });
+
+    generateCourseBtn.addEventListener('click', async () => {
+        if (!currentTopic) return;
+
+        generateButtonContainer.classList.add('hidden');
+        progressContainer.classList.remove('hidden');
+
+        progressBar.style.width = '0%';
+        setTimeout(() => {
+            progressBar.classList.add('progress-bar');
+        }, 100);
+
+        try {
+            const formData = new FormData();
+            formData.append('topic', currentTopic);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            // Step 1: Start course generation (async)
+            const response = await fetch('{% url "generate_course" %}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.task_id) {
+                // Step 2: Poll for task completion
+                pollTaskStatus(data.task_id);
+            } else {
+                progressContainer.classList.add('hidden');
+                addMessage('{% trans "Error generating course: " %}' + (data.error || 'Unknown error'), false);
+            }
+        } catch (error) {
+            progressContainer.classList.add('hidden');
+            addMessage('{% trans "Error generating course. Please try again." %}', false);
+        }
+    });
+
+    // Poll task status every 2 seconds
+    function pollTaskStatus(taskId) {
+        const pollInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`/task-status/${taskId}/`);
+                const result = await response.json();
+
+                // Update progress bar based on status
+                if (result.status === 'STARTED') {
+                    progressBar.style.width = '50%';
+                } else if (result.status === 'SUCCESS') {
+                    clearInterval(pollInterval);
+                    progressBar.style.width = '100%';
+
+                    // Clear chat history (optional)
+                    await clearChatHistory();
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = result.redirect_url + '?t=' + new Date().getTime();
+                    }, 500);
+                } else if (result.status === 'FAILURE') {
+                    clearInterval(pollInterval);
+                    progressContainer.classList.add('hidden');
+                    addMessage('{% trans "Error generating course: " %}' + result.message, false);
+                } else if (result.status === 'RETRY') {
+                    progressBar.style.width = '30%';
+                }
+                // Continue polling for PENDING state
+            } catch (error) {
+                clearInterval(pollInterval);
+                progressContainer.classList.add('hidden');
+                addMessage('{% trans "Error checking task status. Please try again." %}', false);
+            }
+        }, 2000); // Poll every 2 seconds
+
+        // Safety timeout: stop polling after 5 minutes
+        setTimeout(() => {
+            clearInterval(pollInterval);
+            progressContainer.classList.add('hidden');
+            addMessage('{% trans "Course generation timed out. Please try again." %}', false);
+        }, 300000); // 5 minutes
+    }
+
+    // Clear chat history after successful course generation
+    async function clearChatHistory() {
+        try {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            await fetch('{% url "clear_chat_history" %}', {
+                method: 'POST',
+                body: formData
+            });
+        } catch (error) {
+            console.error('Failed to clear chat history:', error);
+        }
+    }
+
+    scrollToBottom();
+</script>
+{% endblock %}

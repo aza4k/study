@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<style>
+    /* Custom Scrollbar for the table container */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Animation for glowing effects */
+    @keyframes glow {
+
+        0%,
+        100% {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        50% {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+        }
+    }
+
+    .glow-effect {
+        animation: glow 3s infinite ease-in-out;
+    }
+
+    /* Glassmorphism utilities */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .dark .glass-panel {
+        background: rgba(17, 24, 39, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<div class="min-h-[80vh] flex flex-col gap-8">
+    <!-- Header Section with Stats -->
+    <div
+        class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white shadow-2xl p-8 md:p-12">
+        <!-- Decorative background elements -->
+        <div
+            class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+        </div>
+
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="text-center md:text-left">
+                <h1
+                    class="text-4xl md:text-6xl font-black tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
+                    {% trans "Leaderboard" %}
+                </h1>
+                <p class="text-lg text-indigo-200 font-medium max-w-md">
+                    {% trans "Rise through the ranks and become a legend in the Universal Learning Platform." %}
+                </p>
+            </div>
+
+            <!-- Current User Stats Card -->
+            <div
+                class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 flex items-center gap-6 min-w-[300px] transform hover:scale-105 transition duration-300 shadow-xl">
+                <div class="relative">
+                    <div
+                        class="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-bolt text-3xl text-white"></i>
+                    </div>
+                    <div
+                        class="absolute -bottom-2 -right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-indigo-900">
+                        #{{ leaderboard|length }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-indigo-200 uppercase tracking-wider font-bold mb-1">{% trans "Your Score"%}</div>
+                    <div class="text-4xl font-black text-white">{{ current_user_xp }} <span
+                            class="text-lg font-medium text-indigo-300">XP</span></div>
+                    <div class="text-sm text-indigo-100 mt-1 flex items-center gap-1">
+                        {% if xp_to_next_league > 0 %}
+                        <i class="fa-solid fa-arrow-trend-up text-green-400"></i>
+                        <span>{{ xp_to_next_league }} {% trans "XP to" %} {% if current_user_xp < 100 %}{% trans "Bronze" %}{% elif current_user_xp < 500 %}{% trans "Silver" %}{% else %}{% trans "Gold" %}{% endif %}</span>
+                                {% else %}
+                                <i class="fa-solid fa-crown text-yellow-400"></i>
+                                <span>{% trans "Max League Reached!" %}</span>
+                                {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Podium Section (Top 3) -->
+    {% if leaderboard %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-8">
+        <!-- 2nd Place -->
+        {% if leaderboard.1 %}
+        <div class="order-2 md:order-1 relative group">
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500">
+            </div>
+            <div
+                class="relative bg-white rounded-3xl shadow-xl border border-gray-100 p-6 flex flex-col items-center text-center transform hover:-translate-y-2 transition duration-300">
+                <div class="absolute -top-6">
+                    <div
+                        class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white">
+                        2
+                    </div>
+                </div>
+                <div class="mt-6 mb-3">
+                    <div
+                        class="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-inner">
+                        {{ leaderboard.1.user.username|slice:":1"|upper }}
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ leaderboard.1.user.username }}</h3>
+                <div class="text-sm font-semibold text-gray-500 mb-4">{{ leaderboard.1.league }} {% trans "League" %}
+                </div>
+                <div class="bg-gray-50 rounded-xl px-4 py-2 w-full">
+                    <span class="text-2xl font-black text-gray-700">{{ leaderboard.1.total_xp }}</span> <span
+                        class="text-xs text-gray-400 font-bold">XP</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 1st Place -->
+        {% if leaderboard.0 %}
+        <div class="order-1 md:order-2 relative group z-10 -mt-12 md:-mt-0">
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-yellow-300 to-yellow-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-500">
+            </div>
+            <div
+                class="relative bg-white rounded-3xl shadow-2xl border-t-4 border-yellow-400 p-8 flex flex-col items-center text-center transform hover:-translate-y-3 transition duration-300">
+                <div class="absolute -top-8">
+                    <i class="fa-solid fa-crown text-5xl text-yellow-400 drop-shadow-md animate-bounce"></i>
+                </div>
+                <div class="mt-8 mb-4 relative">
+                    <div class="absolute inset-0 bg-yellow-400 rounded-full blur opacity-50 animate-pulse"></div>
+                    <div
+                        class="relative w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-inner border-4 border-white">
+                        {{ leaderboard.0.user.username|slice:":1"|upper }}
+                    </div>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 mb-1">{{ leaderboard.0.user.username }}</h3>
+                <div
+                    class="text-sm font-bold text-yellow-600 mb-6 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-100">
+                    {{ leaderboard.0.league }} {% trans "League" %}
+                </div>
+                <div
+                    class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl px-6 py-3 w-full shadow-lg shadow-orange-200">
+                    <span class="text-3xl font-black">{{ leaderboard.0.total_xp }}</span> <span
+                        class="text-sm font-bold opacity-80">XP</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 3rd Place -->
+        {% if leaderboard.2 %}
+        <div class="order-3 relative group">
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-orange-300 to-orange-400 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500">
+            </div>
+            <div
+                class="relative bg-white rounded-3xl shadow-xl border border-orange-100 p-6 flex flex-col items-center text-center transform hover:-translate-y-2 transition duration-300">
+                <div class="absolute -top-6">
+                    <div
+                        class="w-12 h-12 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white">
+                        3
+                    </div>
+                </div>
+                <div class="mt-6 mb-3">
+                    <div
+                        class="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-inner">
+                        {{ leaderboard.2.user.username|slice:":1"|upper }}
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ leaderboard.2.user.username }}</h3>
+                <div class="text-sm font-semibold text-orange-500 mb-4">{{ leaderboard.2.league }} {% trans "League" %}
+                </div>
+                <div class="bg-orange-50 rounded-xl px-4 py-2 w-full">
+                    <span class="text-2xl font-black text-gray-700">{{ leaderboard.2.total_xp }}</span> <span
+                        class="text-xs text-gray-400 font-bold">XP</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard List -->
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-list-ol text-indigo-500"></i> {% trans "Full Rankings" %}
+            </h2>
+            <div class="text-sm text-gray-500">
+                {% trans "Top 100 Learners" %}
+            </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{% trans "Rank" %}
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{% trans "Learner" %}
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{% trans "League" %}
+                        </th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{% trans "Total XP" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-50">
+                    {% for entry in leaderboard %}
+                    <tr
+                        class="group transition-colors duration-200 {% if entry.is_current_user %}bg-indigo-50/60{% else %}hover:bg-gray-50{% endif %}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {% if entry.rank <= 3 %} <div
+                                    class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-sm {% if entry.rank == 1 %}bg-yellow-400{% elif entry.rank == 2 %}bg-gray-400{% else %}bg-orange-400{% endif %}">
+                                    {{ entry.rank }}
+                            </div>
+                            {% else %}
+                            <span class="text-gray-500 font-bold w-8 text-center">{{ entry.rank }}</span>
+                            {% endif %}
+        </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200 group-hover:scale-110 transition-transform duration-200">
+                    {{ entry.user.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <div class="font-bold text-gray-900 flex items-center gap-2">
+                        {{ entry.user.username }}
+                        {% if entry.is_current_user %}
+                        <span
+                            class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wide">{% trans "You" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border {% if entry.league == 'Gold' %}bg-yellow-50 text-yellow-700 border-yellow-200{% elif entry.league == 'Silver' %}bg-gray-50 text-gray-700 border-gray-200{% elif entry.league == 'Bronze' %}bg-orange-50 text-orange-700 border-orange-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                <i class="fa-solid fa-trophy text-[10px]"></i> {{ entry.league }}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right">
+            <span class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                {{ entry.total_xp }}</span>
+            <span class="text-xs text-gray-400 font-medium ml-1">XP</span>
+        </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="px-6 py-24 text-center text-gray-500">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-users-slash text-4xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">{% trans "No Rankings Yet" %}</h3>
+                    <p class="text-gray-500">{% trans "Be the first to complete a lesson and earn XP!" %}</p>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</div>
+</div>
+{% endblock %}

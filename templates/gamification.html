@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Gamification - StuDy" %}{% endblock %}
+
+{% block content %}
+<style>
+    /* Animated Gradient Background */
+    .animated-gradient {
+        background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe, #00f2fe, #667eea);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* Floating decorations */
+    .decoration-blob {
+        position: absolute;
+        filter: blur(80px);
+        opacity: 0.3;
+        animation: float 20s infinite ease-in-out;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        33% {
+            transform: translate(50px, -70px) scale(1.2);
+        }
+
+        66% {
+            transform: translate(-40px, 40px) scale(0.9);
+        }
+    }
+
+    /* XP Card animations */
+    .xp-card {
+        transition: all 0.3s ease;
+    }
+
+    .xp-card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Progress bar animation */
+    .progress-fill {
+        transition: width 1s ease-out;
+    }
+
+    /* Tier card */
+    .tier-card {
+        transition: all 0.3s ease;
+    }
+
+    .tier-card:hover {
+        transform: scale(1.05);
+    }
+
+    .tier-locked {
+        opacity: 0.6;
+        filter: grayscale(50%);
+    }
+
+    .tier-unlocked {
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="animated-gradient text-white py-20 relative overflow-hidden">
+    <div class="decoration-blob w-96 h-96 bg-purple-500 top-10 left-10"></div>
+    <div class="decoration-blob w-80 h-80 bg-blue-500 bottom-10 right-10"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl md:text-6xl font-black mb-4">
+                <i class="fas fa-trophy mr-3"></i>{% trans "Gamification" %}
+            </h1>
+            <p class="text-xl md:text-2xl text-white/90">
+                {% trans "Track your progress, earn rewards, and level up your learning!" %}
+            </p>
+        </div>
+
+        <!-- XP Display -->
+        <div class="max-w-md mx-auto bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
+            <div class="text-center">
+                <div class="text-6xl font-black mb-4">{{ user_xp|default:0 }}</div>
+                <div class="text-2xl text-white/80 mb-6">XP</div>
+                <h2 class="text-3xl font-bold mb-2">{% trans "Keep Learning!" %}</h2>
+                <p class="text-white/80">{% trans "Complete activities to earn more XP" %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How to Earn XP -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+                {% trans "How to Earn XP" %}
+            </h2>
+            <p class="text-xl text-gray-600">
+                {% trans "Complete activities to gain experience points and unlock rewards" %}
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Complete Lesson -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Complete a Lesson" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "Read through a lesson to gain knowledge" %}</p>
+                        <div class="text-2xl font-black text-blue-600">+10 XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pass Quiz -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Pass a Quiz" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "Test your knowledge and pass quizzes" %}</p>
+                        <div class="text-2xl font-black text-green-600">+20 XP</div>
+                        <div class="text-sm text-green-600 mt-1">{% trans "+5 XP bonus for perfect score" %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finish Course -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Finish a Course" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "Complete all lessons and quizzes in a course" %}</p>
+                        <div class="text-2xl font-black text-purple-600">+100 XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Streak -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Daily Login Streak" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "Log in every day to maintain your streak" %}</p>
+                        <div class="text-2xl font-black text-orange-600">+5 XP/day</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- First Course -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Create First Course" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "One-time bonus for creating your first course" %}</p>
+                        <div class="text-2xl font-black text-pink-600">+50 XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Share -->
+            <div class="xp-card bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{% trans "Share on Social Media" %}</h3>
+                        <p class="text-gray-600 mb-3">{% trans "Share your achievements with friends" %}</p>
+                        <div class="text-2xl font-black text-indigo-600">+25 XP</div>
+                        <div class="text-sm text-indigo-600 mt-1">{% trans "Once per week" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reward Tiers -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+                {% trans "Reward Tiers" %}
+            </h2>
+            <p class="text-xl text-gray-600">
+                {% trans "Unlock premium subscription trials by earning XP" %}
+            </p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Bronze Tier -->
+            <div
+                class="tier-card {% if user_xp >= 100 %}tier-unlocked{% else %}tier-locked{% endif %} bg-gradient-to-r from-orange-100 to-orange-50 rounded-2xl p-6 border-2 border-orange-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">🥉</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{% trans "Bronze Tier" %}</h3>
+                            <p class="text-gray-600">100 XP</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-orange-600">{% trans "1-Day Plus Trial" %}</div>
+                        {% if user_xp >= 100 %}
+                        <div class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>{% trans "Unlocked!" %}</div>
+                        {% else %}
+                        <div class="text-gray-500">{{ 100|add:"-"|add:user_xp }} XP {% trans "to unlock" %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-fill bg-gradient-to-r from-orange-500 to-orange-600 h-full rounded-full"
+                        style="width: {% widthratio user_xp 100 100 %}%"></div>
+                </div>
+            </div>
+
+            <!-- Silver Tier -->
+            <div
+                class="tier-card {% if user_xp >= 500 %}tier-unlocked{% else %}tier-locked{% endif %} bg-gradient-to-r from-gray-100 to-gray-50 rounded-2xl p-6 border-2 border-gray-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">🥈</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{% trans "Silver Tier" %}</h3>
+                            <p class="text-gray-600">500 XP</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-gray-600">{% trans "1-Week Plus Trial" %}</div>
+                        {% if user_xp >= 500 %}
+                        <div class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>{% trans "Unlocked!" %}</div>
+                        {% else %}
+                        <div class="text-gray-500">{{ 500|add:"-"|add:user_xp }} XP {% trans "to unlock" %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-fill bg-gradient-to-r from-gray-400 to-gray-500 h-full rounded-full"
+                        style="width: {% widthratio user_xp 500 100 %}%"></div>
+                </div>
+            </div>
+
+            <!-- Gold Tier -->
+            <div
+                class="tier-card {% if user_xp >= 1000 %}tier-unlocked{% else %}tier-locked{% endif %} bg-gradient-to-r from-yellow-100 to-yellow-50 rounded-2xl p-6 border-2 border-yellow-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">🥇</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{% trans "Gold Tier" %}</h3>
+                            <p class="text-gray-600">1,000 XP</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-yellow-600">{% trans "1-Week Pro Trial" %}</div>
+                        {% if user_xp >= 1000 %}
+                        <div class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>{% trans "Unlocked!" %}</div>
+                        {% else %}
+                        <div class="text-gray-500">{{ 1000|add:"-"|add:user_xp }} XP {% trans "to unlock" %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-fill bg-gradient-to-r from-yellow-400 to-yellow-500 h-full rounded-full"
+                        style="width: {% widthratio user_xp 1000 100 %}%"></div>
+                </div>
+            </div>
+
+            <!-- Platinum Tier -->
+            <div
+                class="tier-card {% if user_xp >= 2500 %}tier-unlocked{% else %}tier-locked{% endif %} bg-gradient-to-r from-cyan-100 to-cyan-50 rounded-2xl p-6 border-2 border-cyan-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">💎</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{% trans "Platinum Tier" %}</h3>
+                            <p class="text-gray-600">2,500 XP</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-cyan-600">{% trans "1-Month Plus Trial" %}</div>
+                        {% if user_xp >= 2500 %}
+                        <div class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>{% trans "Unlocked!" %}</div>
+                        {% else %}
+                        <div class="text-gray-500">{{ 2500|add:"-"|add:user_xp }} XP {% trans "to unlock" %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-fill bg-gradient-to-r from-cyan-400 to-cyan-500 h-full rounded-full"
+                        style="width: {% widthratio user_xp 2500 100 %}%"></div>
+                </div>
+            </div>
+
+            <!-- Diamond Tier -->
+            <div
+                class="tier-card {% if user_xp >= 5000 %}tier-unlocked{% else %}tier-locked{% endif %} bg-gradient-to-r from-purple-100 to-purple-50 rounded-2xl p-6 border-2 border-purple-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">👑</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{% trans "Diamond Tier" %}</h3>
+                            <p class="text-gray-600">5,000 XP</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-purple-600">{% trans "1-Month Pro Trial" %}</div>
+                        {% if user_xp >= 5000 %}
+                        <div class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>{% trans "Unlocked!" %}</div>
+                        {% else %}
+                        <div class="text-gray-500">{{ 5000|add:"-"|add:user_xp }} XP {% trans "to unlock" %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-fill bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full"
+                        style="width: {% widthratio user_xp 5000 100 %}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Leaderboard Preview -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+                {% trans "Top Learners" %}
+            </h2>
+            <p class="text-xl text-gray-600">
+                {% trans "See how you rank against other students" %}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-6 space-y-4">
+                {% for leader in top_users %}
+                <div
+                    class="flex items-center gap-4 p-4 rounded-xl {% if forloop.counter <= 3 %}bg-gradient-to-r from-indigo-50 to-purple-50{% else %}bg-gray-50{% endif %}">
+                    <div
+                        class="text-3xl font-black {% if forloop.counter == 1 %}text-yellow-500{% elif forloop.counter == 2 %}text-gray-400{% elif forloop.counter == 3 %}text-orange-600{% else %}text-gray-400{% endif %}">
+                        #{{ forloop.counter }}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-gray-900">{{ leader.username }}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-black text-indigo-600">{{ leader.xp }}</div>
+                        <div class="text-sm text-gray-500">XP</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8 text-gray-500">
+                    {% trans "No leaderboard data yet. Be the first to earn XP!" %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="{% url 'leaderboard' %}"
+                class="inline-block px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-bold shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+                {% trans "View Full Leaderboard" %}
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 animated-gradient text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-4xl md:text-5xl font-black mb-6">
+            {% trans "Start Earning XP Today!" %}
+        </h2>
+        <p class="text-xl md:text-2xl text-white/90 mb-10">
+            {% trans "Complete lessons, pass quizzes, and unlock amazing rewards" %}
+        </p>
+        <a href="{% url 'chatbot' %}"
+            class="inline-block px-12 py-5 bg-white text-indigo-600 rounded-full text-xl font-bold shadow-2xl hover:bg-gray-100 transition transform hover:-translate-y-1">
+            <i class="fas fa-rocket mr-2"></i>{% trans "Create Your First Course" %}
+        </a>
+    </div>
+</section>
+{% endblock %}
