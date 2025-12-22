@@ -8,6 +8,7 @@ class CustomUser(AbstractUser):
         ('kaa', _('Qaraqalpaqsha')),
         ('en', _('English')),
         ('ru', _('Russian')),
+        ('uz', _('Uzbek')),
     ]
 
     phone_number = models.CharField(max_length=20, blank=True, verbose_name=_("Phone Number"))

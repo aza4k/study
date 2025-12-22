@@ -84,30 +84,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 CSRF_TRUSTED_ORIGINS = [
     'https://study.pythonanywhere.com/',
 ]
-#DATABASES = {
- #   'default': {
- #       'ENGINE': 'django.db.backends.sqlite3',
- #       'NAME': BASE_DIR / 'db.sqlite3',
- #   }
-#}
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'study_db'),
-        'USER': os.getenv('DB_USER', 'azmtx'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'Azamat0603'),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        # Gevent-friendly settings
-        'CONN_MAX_AGE': 0,  # Don't persist connections (important for gevent)
-        'ATOMIC_REQUESTS': False,  # Disable automatic transactions
-        'OPTIONS': {
-            'connect_timeout': 10,
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME', 'study_db'),
+#         'USER': os.getenv('DB_USER', 'azmtx'),
+#         'PASSWORD': os.getenv('DB_PASSWORD', 'Azamat0603'),
+#         'HOST': os.getenv('DB_HOST', 'db'),
+#         'PORT': os.getenv('DB_PORT', '5432'),
+#         # Gevent-friendly settings
+#         'CONN_MAX_AGE': 0,  # Don't persist connections (important for gevent)
+#         'ATOMIC_REQUESTS': False,  # Disable automatic transactions
+#         'OPTIONS': {
+#             'connect_timeout': 10,
+#         }
+#     }
+# }
 
 
 # Password validation
@@ -148,6 +147,7 @@ LANGUAGES = [
     ('en', _('English')),
     ('ru', _('Russian')),
     ('kaa', _('Qaraqalpaqsha')),
+    ('uz', _('Uzbek')),
 ]
 
 LOCALE_PATHS = [
@@ -178,73 +178,76 @@ LOGOUT_REDIRECT_URL = '/'
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # ============================================================================
-# CELERY CONFIGURATION
+# CELERY CONFIGURATION (Optional - only for VPS deployments with Redis)
 # ============================================================================
+# Set USE_CELERY=True in .env to enable Celery (requires Redis)
+USE_CELERY = os.getenv('USE_CELERY', 'False') == 'True'
 
-# Celery Broker (Redis)
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+if USE_CELERY:
+    # Celery Broker (Redis)
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
 
-# Celery Result Backend (Redis)
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+    # Celery Result Backend (Redis)
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
 
-# Celery accepts JSON serialization only (more secure)
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+    # Celery accepts JSON serialization only (more secure)
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
 
-# Timezone configuration
-CELERY_TIMEZONE = 'UTC'
-CELERY_ENABLE_UTC = True
+    # Timezone configuration
+    CELERY_TIMEZONE = 'UTC'
+    CELERY_ENABLE_UTC = True
 
-# Task result expiration (1 hour)
-CELERY_RESULT_EXPIRES = 3600
+    # Task result expiration (1 hour)
+    CELERY_RESULT_EXPIRES = 3600
 
-# Task routing - route heavy tasks to separate queue
-CELERY_TASK_ROUTES = {
-    'core.tasks.generate_course_task': {
-        'queue': 'heavy_tasks',
-        'routing_key': 'heavy_tasks',
-    },
-    # All other tasks go to default queue (including chatbot)
-    'core.tasks.chatbot_response_task': {
-        'queue': 'default',
-        'routing_key': 'default',
-    },
-}
+    # Task routing - route heavy tasks to separate queue
+    CELERY_TASK_ROUTES = {
+        'core.tasks.generate_course_task': {
+            'queue': 'heavy_tasks',
+            'routing_key': 'heavy_tasks',
+        },
+        # All other tasks go to default queue (including chatbot)
+        'core.tasks.chatbot_response_task': {
+            'queue': 'default',
+            'routing_key': 'default',
+        },
+    }
 
-# Default queue configuration
-CELERY_TASK_DEFAULT_QUEUE = 'default'
-CELERY_TASK_DEFAULT_EXCHANGE = 'default'
-CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
+    # Default queue configuration
+    CELERY_TASK_DEFAULT_QUEUE = 'default'
+    CELERY_TASK_DEFAULT_EXCHANGE = 'default'
+    CELERY_TASK_DEFAULT_ROUTING_KEY = 'default'
 
-# Task execution settings
-CELERY_TASK_ACKS_LATE = True  # Acknowledge task after execution
-CELERY_WORKER_PREFETCH_MULTIPLIER = 4  # Prefetch 4 tasks per worker (CRITICAL for parallel execution)
-CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restart worker after 1000 tasks
+    # Task execution settings
+    CELERY_TASK_ACKS_LATE = True  # Acknowledge task after execution
+    CELERY_WORKER_PREFETCH_MULTIPLIER = 4  # Prefetch 4 tasks per worker (CRITICAL for parallel execution)
+    CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restart worker after 1000 tasks
 
-# Task time limits (in seconds)
-CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes soft limit
-CELERY_TASK_TIME_LIMIT = 360  # 6 minutes hard limit
+    # Task time limits (in seconds)
+    CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes soft limit
+    CELERY_TASK_TIME_LIMIT = 360  # 6 minutes hard limit
 
-# Retry configuration
-CELERY_TASK_RETRY_BACKOFF = True
-CELERY_TASK_RETRY_BACKOFF_MAX = 600  # Max 10 minutes between retries
-CELERY_TASK_RETRY_JITTER = True  # Add randomness to retry delays
+    # Retry configuration
+    CELERY_TASK_RETRY_BACKOFF = True
+    CELERY_TASK_RETRY_BACKOFF_MAX = 600  # Max 10 minutes between retries
+    CELERY_TASK_RETRY_JITTER = True  # Add randomness to retry delays
 
-# Worker pool configuration (Gevent for non-blocking I/O)
-# This is set via command line: --pool=gevent --concurrency=N
-# But we can set defaults here
-CELERY_WORKER_POOL = 'gevent'
-CELERY_WORKER_CONCURRENCY = 100  # Default for chat workers
+    # Worker pool configuration (Gevent for non-blocking I/O)
+    # This is set via command line: --pool=gevent --concurrency=N
+    # But we can set defaults here
+    CELERY_WORKER_POOL = 'gevent'
+    CELERY_WORKER_CONCURRENCY = 100  # Default for chat workers
 
-# Gevent-specific settings for database connections
-# Close database connections after each task to prevent blocking
-CELERY_WORKER_SEND_TASK_EVENTS = True
-CELERY_TASK_SEND_SENT_EVENT = True
+    # Gevent-specific settings for database connections
+    # Close database connections after each task to prevent blocking
+    CELERY_WORKER_SEND_TASK_EVENTS = True
+    CELERY_TASK_SEND_SENT_EVENT = True
 
-# Logging
-CELERY_WORKER_LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(processName)s] %(message)s'
-CELERY_WORKER_TASK_LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s'
+    # Logging
+    CELERY_WORKER_LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(processName)s] %(message)s'
+    CELERY_WORKER_TASK_LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s'
 
-# Beat scheduler (if needed for periodic tasks in the future)
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+    # Beat scheduler (if needed for periodic tasks in the future)
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

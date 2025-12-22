@@ -136,8 +136,8 @@ def send_message(request):
 @login_required
 @require_POST
 def generate_course_view(request):
-    """Handle course generation asynchronously using Celery"""
-    from .tasks import generate_course_task
+    """Handle course generation - async with Celery or sync without"""
+    from django.conf import settings
     
     topic = request.POST.get('topic', '').strip()
 
@@ -145,19 +145,33 @@ def generate_course_view(request):
         return JsonResponse({'error': 'Topic cannot be empty'}, status=400)
 
     try:
-        # Trigger async task (non-blocking)
-        task = generate_course_task.delay(
-            topic=topic,
-            language=request.user.preferred_language,
-            user_id=request.user.id
-        )
-
-        return JsonResponse({
-            'success': True,
-            'task_id': task.id,
-            'message': 'Course generation started! This may take 10-30 seconds.',
-            'status_url': f'/task-status/{task.id}/'
-        })
+        # Check if Celery is enabled
+        if getattr(settings, 'USE_CELERY', False):
+            # Async mode with Celery
+            from .tasks import generate_course_task
+            task = generate_course_task.delay(
+                topic=topic,
+                language=request.user.preferred_language,
+                user_id=request.user.id
+            )
+            return JsonResponse({
+                'success': True,
+                'task_id': task.id,
+                'message': 'Course generation started! This may take 10-30 seconds.',
+                'status_url': f'/task-status/{task.id}/'
+            })
+        else:
+            # Sync mode without Celery (for PythonAnywhere)
+            from .services import generate_course_from_ai
+            course = generate_course_from_ai(topic, request.user.preferred_language, request.user)
+            return JsonResponse({
+                'success': True,
+                'course_id': course.id,
+                'title': course.title,
+                'message': f'Course "{course.title}" generated successfully!',
+                'redirect_url': '/dashboard/',
+                'sync': True  # Flag to indicate synchronous completion
+            })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
@@ -417,7 +431,6 @@ def download_certificate(request, course_id):
 
     return response
 
-@login_required
 @require_POST
 def change_language(request):
     """Handle language change requests"""
@@ -426,13 +439,17 @@ def change_language(request):
     language_code = request.POST.get('language')
 
     # Validate language code
-    valid_languages = dict(CustomUser.LANGUAGE_CHOICES).keys()
+    # Ensure all languages in settings are valid
+    from django.conf import settings
+    valid_languages = [lang[0] for lang in settings.LANGUAGES]
+    
     if language_code not in valid_languages:
         return JsonResponse({'error': 'Invalid language code'}, status=400)
 
-    # Update user's preferred language
-    request.user.preferred_language = language_code
-    request.user.save()
+    # Update user's preferred language if authenticated
+    if request.user.is_authenticated:
+        request.user.preferred_language = language_code
+        request.user.save()
 
     # Activate the new language for the current session
     translation.activate(language_code)

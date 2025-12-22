@@ -1,0 +1,941 @@
+# Uzbek translations for StuDy platform
+# Copyright (C) 2025 StuDy
+# This file is distributed under the same license as the StuDy package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StuDy 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-22 17:00+0500\n"
+"PO-Revision-Date: 2025-12-22 17:00+0500\n"
+"Last-Translator: StuDy Team\n"
+"Language-Team: Uzbek\n"
+"Language: uz\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: config/settings.py
+msgid "English"
+msgstr "Inglizcha"
+
+#: config/settings.py
+msgid "Russian"
+msgstr "Ruscha"
+
+#: config/settings.py
+msgid "Qaraqalpaqsha"
+msgstr "Qoraqalpoqcha"
+
+#: config/settings.py
+msgid "Uzbek"
+msgstr "O'zbekcha"
+
+#: core/models.py
+msgid "Phone Number"
+msgstr "Telefon raqami"
+
+#: core/models.py
+msgid "Age"
+msgstr "Yosh"
+
+#: core/models.py
+msgid "Preferred Language"
+msgstr "Afzal til"
+
+#: core/models.py
+msgid "Title"
+msgstr "Sarlavha"
+
+#: core/models.py
+msgid "Description"
+msgstr "Tavsif"
+
+#: templates/base.html templates/register.html
+msgid "Language"
+msgstr "Til"
+
+#: core/models.py
+msgid "Created At"
+msgstr "Yaratilgan vaqt"
+
+#: core/models.py
+msgid "Order"
+msgstr "Tartib"
+
+#: core/models.py
+msgid "Markdown content"
+msgstr "Markdown kontent"
+
+#: core/models.py
+msgid "Content"
+msgstr "Kontent"
+
+#: core/models.py
+msgid "Question"
+msgstr "Savol"
+
+#: core/models.py
+msgid "List of options"
+msgstr "Variantlar ro'yxati"
+
+#: core/models.py
+msgid "Options"
+msgstr "Variantlar"
+
+#: core/models.py
+msgid "Correct Answer"
+msgstr "To'g'ri javob"
+
+#: templates/base.html templates/landing.html
+msgid "Universal Learning Platform"
+msgstr "Universal O'quv Platformasi"
+
+#: templates/base.html templates/dashboard.html
+msgid "Courses"
+msgstr "Kurslar"
+
+#: templates/base.html templates/landing.html templates/leaderboard.html
+msgid "Leaderboard"
+msgstr "Peshqadamlar"
+
+#: templates/base.html
+msgid "View Gamification"
+msgstr "Yutuqlarni ko'rish"
+
+#: templates/base.html
+msgid "View"
+msgstr "Ko'rish"
+
+#: templates/base.html
+msgid "Logout"
+msgstr "Chiqish"
+
+#: templates/base.html templates/landing.html
+msgid "Login"
+msgstr "Kirish"
+
+#: templates/base.html templates/landing.html
+msgid "Dashboard"
+msgstr "Boshqaruv paneli"
+
+#: templates/base.html templates/dashboard.html templates/landing.html
+msgid "New Course"
+msgstr "Yangi kurs"
+
+#: templates/base.html templates/landing.html
+msgid "The world's most advanced AI-powered learning platform. Empowering education for everyone, everywhere."
+msgstr "Dunyodagi eng ilg'or sun'iy intellektli o'quv platformasi. Hamma uchun, hamma joyda ta'limni rivojlantirish."
+
+#: templates/base.html templates/landing.html
+msgid "Platform"
+msgstr "Platforma"
+
+#: templates/base.html templates/landing.html
+msgid "About"
+msgstr "Biz haqimizda"
+
+#: templates/base.html templates/landing.html
+msgid "Developed by"
+msgstr "Ishlab chiqaruvchi"
+
+#: templates/base.html templates/landing.html
+msgid "Making education accessible through AI"
+msgstr "Sun'iy intellekt orqali ta'limni hammabop qilish"
+
+#: templates/base.html templates/landing.html
+msgid "All rights reserved."
+msgstr "Barcha huquqlar himoyalangan."
+
+#: templates/chatbot.html
+msgid "AI Learning Assistant - StuDy"
+msgstr "AI O'quv Yordamchisi - StuDy"
+
+#: templates/chatbot.html
+msgid "AI Learning Assistant"
+msgstr "AI O'quv Yordamchisi"
+
+#: templates/chatbot.html
+msgid "Ask me anything to generate a course"
+msgstr "Kurs yaratish uchun menga istalgan savol bering"
+
+#: templates/chatbot.html
+msgid "Hello"
+msgstr "Salom"
+
+#: templates/chatbot.html
+msgid "What would you like to learn today?"
+msgstr "Bugun nimani o'rganmoqchisiz?"
+
+#: templates/chatbot.html
+msgid "Generating your personalized course..."
+msgstr "Sizga moslashtirilgan kurs yaratilmoqda..."
+
+#: templates/chatbot.html
+msgid "This may take 20-30 seconds"
+msgstr "Bu 20-30 soniya vaqt olishi mumkin"
+
+#: templates/chatbot.html
+msgid "Generate Course"
+msgstr "Kurs yaratish"
+
+#: templates/chatbot.html
+msgid "Type your message..."
+msgstr "Xabaringizni yozing..."
+
+#: templates/chatbot.html
+msgid "Sorry, something went wrong. Please try again."
+msgstr "Kechirasiz, xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
+
+#: templates/chatbot.html
+msgid "Error generating course: "
+msgstr "Kurs yaratishda xatolik: "
+
+#: templates/chatbot.html
+msgid "Error generating course. Please try again."
+msgstr "Kurs yaratishda xatolik. Iltimos, qaytadan urinib ko'ring."
+
+#: templates/course_detail.html
+msgid "Back to Dashboard"
+msgstr "Boshqaruv paneliga qaytish"
+
+#: templates/course_detail.html
+msgid "Course Completed!"
+msgstr "Kurs yakunlandi!"
+
+#: templates/course_detail.html
+msgid "Congratulations! You've mastered this course. Download your official certificate now."
+msgstr "Tabriklaymiz! Siz bu kursni muvaffaqiyatli tugatdingiz. Rasmiy sertifikatingizni hozir yuklab oling."
+
+#: templates/course_detail.html
+msgid "Download Certificate"
+msgstr "Sertifikatni yuklab olish"
+
+#: templates/course_detail.html templates/dashboard.html
+msgid "Completed"
+msgstr "Tugallangan"
+
+#: templates/dashboard.html
+msgid "My Dashboard - StuDy"
+msgstr "Mening panelim - StuDy"
+
+#: templates/dashboard.html
+msgid "Welcome back,"
+msgstr "Qaytganingiz bilan,"
+
+#: templates/dashboard.html templates/login.html
+msgid "Continue your learning journey"
+msgstr "O'qishingizni davom ettiring"
+
+#: templates/dashboard.html
+msgid "Your Courses"
+msgstr "Kurslaringiz"
+
+#: templates/dashboard.html
+msgid "modules"
+msgstr "modullar"
+
+#: templates/dashboard.html
+msgid "Progress"
+msgstr "Jarayon"
+
+#: templates/dashboard.html
+msgid "Review Course"
+msgstr "Kursni ko'rib chiqish"
+
+#: templates/dashboard.html
+msgid "Continue Learning"
+msgstr "O'qishni davom ettirish"
+
+#: templates/dashboard.html
+msgid "No Courses Yet"
+msgstr "Hali kurs yo'q"
+
+#: templates/dashboard.html
+msgid "Start your learning journey by creating your first AI-powered course!"
+msgstr "Birinchi AI-kurs yaratish orqali o'quv sayohatingizni boshlang!"
+
+#: templates/dashboard.html templates/gamification.html
+msgid "Create Your First Course"
+msgstr "Birinchi kursingizni yarating"
+
+#: templates/gamification.html
+msgid "Gamification - StuDy"
+msgstr "Gamifikatsiya - StuDy"
+
+#: templates/gamification.html
+msgid "Gamification"
+msgstr "Gamifikatsiya"
+
+#: templates/gamification.html
+msgid "Track your progress, earn rewards, and level up your learning!"
+msgstr "Jarayoningizni kuzating, mukofotlar oling va o'qish darajangizni oshiring!"
+
+#: templates/gamification.html
+msgid "Keep Learning!"
+msgstr "O'qishni davom ettiring!"
+
+#: templates/gamification.html
+msgid "Complete activities to earn more XP"
+msgstr "Ko'proq XP olish uchun faoliyatlarni bajaring"
+
+#: templates/gamification.html
+msgid "How to Earn XP"
+msgstr "XP qanday olish mumkin"
+
+#: templates/gamification.html
+msgid "Complete activities to gain experience points and unlock rewards"
+msgstr "Tajriba ballari olish va mukofotlarni ochish uchun faoliyatlarni bajaring"
+
+#: templates/gamification.html
+msgid "Complete a Lesson"
+msgstr "Darsni tugatish"
+
+#: templates/gamification.html
+msgid "Read through a lesson to gain knowledge"
+msgstr "Bilim olish uchun darsni o'qing"
+
+#: templates/gamification.html
+msgid "Pass a Quiz"
+msgstr "Testdan o'tish"
+
+#: templates/gamification.html
+msgid "Test your knowledge and pass quizzes"
+msgstr "Bilimingizni tekshiring va testlardan o'ting"
+
+#: templates/gamification.html
+msgid "+5 XP bonus for perfect score"
+msgstr "Mukammal ball uchun +5 XP bonus"
+
+#: templates/gamification.html
+msgid "Finish a Course"
+msgstr "Kursni tugatish"
+
+#: templates/gamification.html
+msgid "Complete all lessons and quizzes in a course"
+msgstr "Kursdagi barcha darslar va testlarni bajaring"
+
+#: templates/gamification.html
+msgid "Daily Login Streak"
+msgstr "Kunlik kirish seriyasi"
+
+#: templates/gamification.html
+msgid "Log in every day to maintain your streak"
+msgstr "Seriyangizni saqlab qolish uchun har kuni kiring"
+
+#: templates/gamification.html
+msgid "Create First Course"
+msgstr "Birinchi kurs yaratish"
+
+#: templates/gamification.html
+msgid "One-time bonus for creating your first course"
+msgstr "Birinchi kursingizni yaratish uchun bir martalik bonus"
+
+#: templates/gamification.html
+msgid "Share on Social Media"
+msgstr "Ijtimoiy tarmoqlarda ulashish"
+
+#: templates/gamification.html
+msgid "Share your achievements with friends"
+msgstr "Yutuqlaringizni do'stlaringiz bilan baham ko'ring"
+
+#: templates/gamification.html
+msgid "Once per week"
+msgstr "Haftada bir marta"
+
+#: templates/gamification.html
+msgid "Reward Tiers"
+msgstr "Mukofot darajalari"
+
+#: templates/gamification.html
+msgid "Unlock premium subscription trials by earning XP"
+msgstr "XP yig'ib premium obunalarni oching"
+
+#: templates/gamification.html
+msgid "Bronze Tier"
+msgstr "Bronza daraja"
+
+#: templates/gamification.html
+msgid "1-Day Plus Trial"
+msgstr "1 kunlik Plus sinov"
+
+#: templates/gamification.html
+msgid "Unlocked!"
+msgstr "Ochildi!"
+
+#: templates/gamification.html
+msgid "to unlock"
+msgstr "ochish uchun"
+
+#: templates/gamification.html
+msgid "Silver Tier"
+msgstr "Kumush daraja"
+
+#: templates/gamification.html
+msgid "1-Week Plus Trial"
+msgstr "1 haftalik Plus sinov"
+
+#: templates/gamification.html
+msgid "Gold Tier"
+msgstr "Oltin daraja"
+
+#: templates/gamification.html
+msgid "1-Week Pro Trial"
+msgstr "1 haftalik Pro sinov"
+
+#: templates/gamification.html
+msgid "Platinum Tier"
+msgstr "Platina daraja"
+
+#: templates/gamification.html
+msgid "1-Month Plus Trial"
+msgstr "1 oylik Plus sinov"
+
+#: templates/gamification.html
+msgid "Diamond Tier"
+msgstr "Olmos daraja"
+
+#: templates/gamification.html
+msgid "1-Month Pro Trial"
+msgstr "1 oylik Pro sinov"
+
+#: templates/gamification.html
+msgid "Top Learners"
+msgstr "Eng yaxshi o'quvchilar"
+
+#: templates/gamification.html
+msgid "See how you rank against other students"
+msgstr "Boshqa talabalar orasida o'rningizni ko'ring"
+
+#: templates/gamification.html
+msgid "No leaderboard data yet. Be the first to earn XP!"
+msgstr "Hali peshqadamlar ro'yxati yo'q. XP olgan birinchi bo'ling!"
+
+#: templates/gamification.html
+msgid "View Full Leaderboard"
+msgstr "To'liq ro'yxatni ko'rish"
+
+#: templates/gamification.html
+msgid "Start Earning XP Today!"
+msgstr "Bugundan XP yig'ishni boshlang!"
+
+#: templates/gamification.html
+msgid "Complete lessons, pass quizzes, and unlock amazing rewards"
+msgstr "Darslarni tugatib, testlardan o'ting va ajoyib mukofotlarni oching"
+
+#: templates/landing.html
+msgid "AI-Powered Education"
+msgstr "AI bilan ta'lim"
+
+#: templates/landing.html
+msgid "Features"
+msgstr "Imkoniyatlar"
+
+#: templates/landing.html
+msgid "How It Works"
+msgstr "Qanday ishlaydi"
+
+#: templates/landing.html
+msgid "Pricing"
+msgstr "Narxlar"
+
+#: templates/landing.html templates/pricing.html
+msgid "Get Started"
+msgstr "Boshlash"
+
+#: templates/landing.html
+msgid "AI-Powered Learning Revolution"
+msgstr "AI bilan o'qish inqilobi"
+
+#: templates/landing.html
+msgid "Master Any Skill with"
+msgstr "Istalgan ko'nikmani egallang"
+
+#: templates/landing.html
+msgid "Personalized AI Courses"
+msgstr "Shaxsiy AI kurslar bilan"
+
+#: templates/landing.html
+msgid "Generate custom courses on any topic in seconds. Learn in your preferred language, track your progress, and earn certificates."
+msgstr "Ixtiyoriy mavzuda maxsus kurslarni soniyalarda yarating. O'zingizga qulay tilda o'rganing, jarayoningizni kuzating va sertifikatlar oling."
+
+#: templates/landing.html
+msgid "Start Learning Free"
+msgstr "Bepul o'qishni boshlash"
+
+#: templates/landing.html
+msgid "See How It Works"
+msgstr "Qanday ishlashini ko'ring"
+
+#: templates/landing.html
+msgid "Topics"
+msgstr "Mavzular"
+
+#: templates/landing.html
+msgid "Languages"
+msgstr "Tillar"
+
+#: templates/landing.html
+msgid "Students"
+msgstr "Talabalar"
+
+#: templates/landing.html
+msgid "Rating"
+msgstr "Reyting"
+
+#: templates/landing.html
+msgid "Why Choose StuDy?"
+msgstr "Nega StuDy'ni tanlash kerak?"
+
+#: templates/landing.html
+msgid "Experience the future of education with our cutting-edge features."
+msgstr "Ilg'or imkoniyatlarimiz bilan ta'limning kelajagini his qiling."
+
+#: templates/landing.html
+msgid "AI-Powered Curriculum"
+msgstr "AI bilan dastur"
+
+#: templates/landing.html
+msgid "Our advanced AI analyzes your request and builds a structured, comprehensive course tailored just for you."
+msgstr "Bizning ilg'or AI so'rovingizni tahlil qiladi va aynan siz uchun moslashtirilgan tuzilmali, keng qamrovli kurs yaratadi."
+
+#: templates/landing.html
+msgid "Multi-Language Support"
+msgstr "Ko'p tilni qo'llab-quvvatlash"
+
+#: templates/landing.html
+msgid "Learn in English, Russian, Uzbek, or any other language. The AI adapts the content to your native tongue."
+msgstr "Ingliz, rus, o'zbek yoki boshqa tillarda o'rganing. AI kontentni ona tilingizga moslaydi."
+
+#: templates/landing.html
+msgid "Gamified Learning"
+msgstr "O'yinlashtirilgan o'qish"
+
+#: templates/landing.html
+msgid "Earn XP, climb the leaderboard, and unlock achievements. Learning has never been this addictive."
+msgstr "XP yig'ing, peshqadamlar ro'yxatida ko'tariling va yutuqlarni oching. O'qish hech qachon bunday qiziqarli bo'lmagan."
+
+#: templates/landing.html
+msgid "Official Certificates"
+msgstr "Rasmiy sertifikatlar"
+
+#: templates/landing.html
+msgid "Complete courses and earn beautiful, shareable certificates to showcase your achievements."
+msgstr "Kurslarni tugatib, yutuqlaringizni namoyish qilish uchun chiroyli, ulashiladigan sertifikatlar oling."
+
+#: templates/landing.html
+msgid "Progress Tracking"
+msgstr "Jarayonni kuzatish"
+
+#: templates/landing.html
+msgid "Monitor your learning journey with detailed analytics and progress reports for every course."
+msgstr "Har bir kurs uchun batafsil tahlil va jarayon hisobotlari bilan o'quv sayohatingizni kuzating."
+
+#: templates/landing.html
+msgid "Instant Generation"
+msgstr "Tezkor yaratish"
+
+#: templates/landing.html
+msgid "Get your personalized course in under 30 seconds. No waiting, just learning."
+msgstr "Shaxsiy kursingizni 30 soniyadan kam vaqtda oling. Kutish yo'q, faqat o'qish."
+
+#: templates/landing.html
+msgid "Start your learning journey in three simple steps."
+msgstr "O'quv sayohatingizni uch oddiy qadamda boshlang."
+
+#: templates/landing.html
+msgid "Choose a Topic"
+msgstr "Mavzu tanlang"
+
+#: templates/landing.html
+msgid "Tell our AI chatbot what you want to learn, from Python to Pottery."
+msgstr "AI chatbotimizga Python'dan kulolchilikka qadar nimani o'rganmoqchi ekanligingizni ayting."
+
+#: templates/landing.html
+msgid "Get Your Course"
+msgstr "Kursingizni oling"
+
+#: templates/landing.html
+msgid "The AI instantly generates modules, lessons, and quizzes for you."
+msgstr "AI siz uchun darhol modullar, darslar va testlarni yaratadi."
+
+#: templates/landing.html
+msgid "Start Learning"
+msgstr "O'qishni boshlang"
+
+#: templates/landing.html
+msgid "Read lessons, take quizzes, earn XP, and get certified!"
+msgstr "Darslarni o'qing, testlardan o'ting, XP oling va sertifikat oling!"
+
+#: templates/landing.html templates/pricing.html
+msgid "Simple, Affordable Pricing"
+msgstr "Oddiy, arzon narxlar"
+
+#: templates/landing.html templates/pricing.html
+msgid "Choose the plan that fits your learning goals"
+msgstr "O'quv maqsadlaringizga mos rejani tanlang"
+
+#: templates/landing.html templates/pricing.html
+msgid "Free"
+msgstr "Bepul"
+
+#: templates/landing.html templates/pricing.html
+msgid "per month"
+msgstr "oyiga"
+
+#: templates/landing.html templates/pricing.html
+msgid "3 AI-generated courses per month"
+msgstr "Oyiga 3 ta AI kurs"
+
+#: templates/landing.html templates/pricing.html
+msgid "Basic progress tracking"
+msgstr "Oddiy jarayon kuzatish"
+
+#: templates/landing.html templates/pricing.html
+msgid "Community support"
+msgstr "Jamiyat yordami"
+
+#: templates/landing.html templates/pricing.html
+msgid "Course certificates"
+msgstr "Kurs sertifikatlari"
+
+#: templates/landing.html templates/pricing.html
+msgid "Plus"
+msgstr "Plus"
+
+#: templates/landing.html templates/pricing.html
+msgid "Unlimited AI-generated courses"
+msgstr "Cheksiz AI kurslar"
+
+#: templates/landing.html templates/pricing.html
+msgid "Advanced analytics & insights"
+msgstr "Kengaytirilgan tahlil va tushunchalar"
+
+#: templates/landing.html templates/pricing.html
+msgid "Priority AI generation"
+msgstr "Ustuvor AI yaratish"
+
+#: templates/landing.html templates/pricing.html
+msgid "Premium certificates"
+msgstr "Premium sertifikatlar"
+
+#: templates/landing.html templates/pricing.html
+msgid "Email support"
+msgstr "Email yordami"
+
+#: templates/landing.html templates/pricing.html
+msgid "Start Plus Trial"
+msgstr "Plus sinovini boshlash"
+
+#: templates/landing.html templates/pricing.html
+msgid "Pro"
+msgstr "Pro"
+
+#: templates/landing.html templates/pricing.html
+msgid "Everything in Plus"
+msgstr "Plus'dagi hamma narsa"
+
+#: templates/landing.html templates/pricing.html
+msgid "AI Learning Assistant for every lesson"
+msgstr "Har bir dars uchun AI yordamchi"
+
+#: templates/landing.html templates/pricing.html
+msgid "Custom course templates"
+msgstr "Maxsus kurs shablonlari"
+
+#: templates/landing.html templates/pricing.html
+msgid "Offline course downloads"
+msgstr "Oflayn kurs yuklash"
+
+#: templates/landing.html templates/pricing.html
+msgid "Priority 24/7 support"
+msgstr "Ustuvor 24/7 yordam"
+
+#: templates/landing.html templates/pricing.html
+msgid "Early access to new features"
+msgstr "Yangi imkoniyatlarga erta kirish"
+
+#: templates/landing.html templates/pricing.html
+msgid "Start Pro Trial"
+msgstr "Pro sinovini boshlash"
+
+#: templates/landing.html templates/pricing.html
+msgid "30-day money-back guarantee. Cancel anytime."
+msgstr "30 kunlik pul qaytarish kafolati. Istalgan vaqtda bekor qilish."
+
+#: templates/landing.html
+msgid "Frequently Asked Questions"
+msgstr "Ko'p so'raladigan savollar"
+
+#: templates/landing.html
+msgid "Everything you need to know about StuDy"
+msgstr "StuDy haqida bilishingiz kerak bo'lgan hamma narsa"
+
+#: templates/landing.html
+msgid "How does the AI generate courses?"
+msgstr "AI kurslarni qanday yaratadi?"
+
+#: templates/landing.html
+msgid "Our advanced AI analyzes your topic request and creates a comprehensive curriculum with modules, lessons, and quizzes tailored to your learning needs."
+msgstr "Bizning ilg'or AI mavzu so'rovingizni tahlil qiladi va o'quv ehtiyojlaringizga moslashtirilgan modullar, darslar va testlar bilan keng qamrovli dastur yaratadi."
+
+#: templates/landing.html
+msgid "Can I really learn in any language?"
+msgstr "Haqiqatan ham istalgan tilda o'rgana olamanmi?"
+
+#: templates/landing.html
+msgid "Yes! Our AI supports 50+ languages including English, Russian, Uzbek, Karakalpak, and many more. Just specify your preferred language."
+msgstr "Ha! Bizning AI 50+ tilni qo'llab-quvvatlaydi, jumladan ingliz, rus, o'zbek, qoraqalpoq va boshqa ko'plab tillar. Faqat afzal tilingizni ko'rsating."
+
+#: templates/landing.html
+msgid "Are the certificates recognized?"
+msgstr "Sertifikatlar tan olinadimi?"
+
+#: templates/landing.html
+msgid "Our certificates showcase your achievement and can be shared on LinkedIn, resumes, and portfolios to demonstrate your skills."
+msgstr "Bizning sertifikatlar yutuqlaringizni namoyish etadi va ko'nikmalaringizni ko'rsatish uchun LinkedIn, rezyume va portfoliolarda ulashilishi mumkin."
+
+#: templates/landing.html
+msgid "Can I cancel my subscription anytime?"
+msgstr "Obunani istalgan vaqtda bekor qila olamanmi?"
+
+#: templates/landing.html
+msgid "Absolutely! You can cancel your Plus or Pro subscription at any time with no questions asked. We also offer a 30-day money-back guarantee."
+msgstr "Albatta! Plus yoki Pro obunangizni istalgan vaqtda hech qanday savolsiz bekor qilishingiz mumkin. Shuningdek, 30 kunlik pul qaytarish kafolatini taklif qilamiz."
+
+#: templates/landing.html
+msgid "Ready to Start Your Journey?"
+msgstr "Sayohatingizni boshlashga tayyormisiz?"
+
+#: templates/landing.html
+msgid "Join thousands of learners and master new skills today. It's free to get started."
+msgstr "Minglab o'quvchilarga qo'shiling va bugun yangi ko'nikmalarni o'rganing. Boshlash bepul."
+
+#: templates/landing.html
+msgid "Create Free Account"
+msgstr "Bepul hisob yaratish"
+
+#: templates/landing.html
+msgid "No credit card required"
+msgstr "Kredit karta talab qilinmaydi"
+
+#: templates/landing.html
+msgid "Start learning in 30 seconds"
+msgstr "30 soniyada o'qishni boshlang"
+
+#: templates/leaderboard.html
+msgid "Rise through the ranks and become a legend in the Universal Learning Platform."
+msgstr "Darajalardan ko'tariling va Universal O'quv Platformasida afsonaga aylaning."
+
+#: templates/leaderboard.html
+msgid "Your Score"
+msgstr "Sizning balingiz"
+
+#: templates/leaderboard.html
+msgid "XP to"
+msgstr "XP kerak:"
+
+#: templates/leaderboard.html
+msgid "Bronze"
+msgstr "Bronza"
+
+#: templates/leaderboard.html
+msgid "Silver"
+msgstr "Kumush"
+
+#: templates/leaderboard.html
+msgid "Gold"
+msgstr "Oltin"
+
+#: templates/leaderboard.html
+msgid "Max League Reached!"
+msgstr "Maksimal liga erishildi!"
+
+#: templates/leaderboard.html
+msgid "League"
+msgstr "Liga"
+
+#: templates/leaderboard.html
+msgid "Full Rankings"
+msgstr "To'liq reyting"
+
+#: templates/leaderboard.html
+msgid "Top 100 Learners"
+msgstr "Eng yaxshi 100 o'quvchi"
+
+#: templates/leaderboard.html
+msgid "Rank"
+msgstr "O'rin"
+
+#: templates/leaderboard.html
+msgid "Learner"
+msgstr "O'quvchi"
+
+#: templates/leaderboard.html
+msgid "Total XP"
+msgstr "Jami XP"
+
+#: templates/leaderboard.html templates/lesson.html
+msgid "You"
+msgstr "Siz"
+
+#: templates/leaderboard.html
+msgid "No Rankings Yet"
+msgstr "Hali reyting yo'q"
+
+#: templates/leaderboard.html
+msgid "Be the first to complete a lesson and earn XP!"
+msgstr "Dars tugatib XP olgan birinchi bo'ling!"
+
+#: templates/lesson.html
+msgid "Back to Course"
+msgstr "Kursga qaytish"
+
+#: templates/lesson.html
+msgid "Quiz Time!"
+msgstr "Test vaqti!"
+
+#: templates/lesson.html
+msgid "You have already completed this lesson!"
+msgstr "Siz allaqachon bu darsni tugatgansiz!"
+
+#: templates/lesson.html
+msgid "Previous Lesson"
+msgstr "Oldingi dars"
+
+#: templates/lesson.html
+msgid "Next Lesson"
+msgstr "Keyingi dars"
+
+#: templates/lesson.html
+msgid "Complete Module"
+msgstr "Modulni tugatish"
+
+#: templates/lesson.html
+msgid "Check Answer"
+msgstr "Javobni tekshirish"
+
+#: templates/lesson.html
+msgid "No quizzes for this lesson."
+msgstr "Bu dars uchun testlar yo'q."
+
+#: templates/lesson.html
+msgid "Lesson Complete!"
+msgstr "Dars tugadi!"
+
+#: templates/lesson.html
+msgid "Great job! You've answered all questions correctly."
+msgstr "Ajoyib! Barcha savollarga to'g'ri javob berdingiz."
+
+#: templates/lesson.html
+msgid "Lesson Assistant"
+msgstr "Dars yordamchisi"
+
+#: templates/lesson.html
+msgid "Ask me about this lesson"
+msgstr "Bu dars haqida so'rang"
+
+#: templates/lesson.html
+msgid "Hi! I'm here to help you understand this lesson. Feel free to ask me questions about the content!"
+msgstr "Salom! Men sizga bu darsni tushunishga yordam berish uchun keldim. Kontent haqida bemalol savol bering!"
+
+#: templates/lesson.html
+msgid "Note: I can't help with quiz answers, but I'll explain concepts to help you learn!"
+msgstr "Eslatma: Test javoblari bilan yordam bera olmayman, lekin o'rganishingizga yordam berish uchun tushunchalarni tushuntiraman!"
+
+#: templates/lesson.html
+msgid "Ask about this lesson..."
+msgstr "Bu dars haqida so'rang..."
+
+#: templates/lesson.html
+msgid "Ask AI Helper"
+msgstr "AI yordamchidan so'rang"
+
+#: templates/login.html
+msgid "Login - Universal Learning Platform"
+msgstr "Kirish - Universal O'quv Platformasi"
+
+#: templates/login.html templates/register.html
+msgid "Back to Home"
+msgstr "Bosh sahifaga"
+
+#: templates/login.html
+msgid "Welcome Back"
+msgstr "Qaytganingiz bilan"
+
+#: templates/login.html templates/register.html
+msgid "Username"
+msgstr "Foydalanuvchi nomi"
+
+#: templates/login.html templates/register.html
+msgid "Password"
+msgstr "Parol"
+
+#: templates/login.html templates/register.html
+msgid "Sign In"
+msgstr "Kirish"
+
+#: templates/login.html
+msgid "Don't have an account?"
+msgstr "Hisobingiz yo'qmi?"
+
+#: templates/login.html templates/register.html
+msgid "Create Account"
+msgstr "Hisob yaratish"
+
+#: templates/partials/lesson_chatbot_message.html
+msgid "AI Assistant"
+msgstr "AI yordamchi"
+
+#: templates/partials/quiz_result.html
+msgid "Correct!"
+msgstr "To'g'ri!"
+
+#: templates/partials/quiz_result.html
+msgid "Great job! You earned 10 XP."
+msgstr "Ajoyib! 10 XP oldingiz."
+
+#: templates/partials/quiz_result.html
+msgid "Incorrect"
+msgstr "Noto'g'ri"
+
+#: templates/partials/quiz_result.html
+msgid "You lost 5 XP."
+msgstr "5 XP yo'qotdingiz."
+
+#: templates/partials/quiz_result.html
+msgid "Correct answer:"
+msgstr "To'g'ri javob:"
+
+#: templates/pricing.html
+msgid "Pricing - StuDy"
+msgstr "Narxlar - StuDy"
+
+#: templates/register.html
+msgid "Register - Universal Learning Platform"
+msgstr "Ro'yxatdan o'tish - Universal O'quv Platformasi"
+
+#: templates/register.html
+msgid "Start your learning journey today"
+msgstr "Bugun o'quv sayohatingizni boshlang"
+
+#: templates/register.html
+msgid "First Name"
+msgstr "Ism"
+
+#: templates/register.html
+msgid "Last Name"
+msgstr "Familiya"
+
+#: templates/register.html
+msgid "Phone"
+msgstr "Telefon"
+
+#: templates/register.html
+msgid "Confirm Password"
+msgstr "Parolni tasdiqlang"
+
+#: templates/register.html
+msgid "Already have an account?"
+msgstr "Allaqachon hisobingiz bormi?"
