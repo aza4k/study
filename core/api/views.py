@@ -322,7 +322,7 @@ class LeaderboardView(views.APIView):
 
         # 2. Retrieve leaderboard in a single optimized SQL query (JOIN and Sum on DB level)
         users = User.objects.annotate(
-            progress_xp=Coalesce(Sum('userprogress__score'), Value(0))
+            progress_xp=Coalesce(Sum('progress__score'), Value(0))
         ).annotate(
             total_xp=F('progress_xp') + F('bonus_xp')
         ).filter(
