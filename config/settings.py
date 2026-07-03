@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 ]
 
@@ -272,6 +273,11 @@ REST_FRAMEWORK = {
 
 # CORS Configuration for API access from Flutter
 CORS_ALLOW_ALL_ORIGINS = True  # For dev only, restrict in production
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-app-signature',
+]
 
 # SimpleJWT settings
 from datetime import timedelta

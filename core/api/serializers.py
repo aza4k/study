@@ -5,17 +5,26 @@ from core.models import Course, Module, Lesson, Quiz, UserProgress, UserCourse, 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 
+            'id', 'username', 'password', 'first_name', 'last_name', 'email', 'phone_number', 
             'age', 'preferred_language', 'subscription_type', 'energy', 
             'is_annual', 'redeemed_xp', 'last_bonus_claimed', 'bonus_xp'
         )
-        extra_kwargs = {'password': {'write_only': True}}
+        read_only_fields = (
+            'subscription_type', 'energy', 'is_annual', 'redeemed_xp', 
+            'last_bonus_claimed', 'bonus_xp'
+        )
 
     def create(self, validated_data):
+        password = validated_data.pop('password', None)
         user = User.objects.create_user(**validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
         return user
 
 class UserStreakSerializer(serializers.ModelSerializer):
