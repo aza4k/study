@@ -199,6 +199,23 @@ if USE_CELERY:
     # Celery Result Backend (Redis)
     CELERY_RESULT_BACKEND = REDIS_URL or 'redis://localhost:6379/0'
 
+# ============================================================================
+# REDIS CACHE & SESSION CONFIGURATION (For high performance)
+# ============================================================================
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'client_class': 'django.core.cache.backends.redis.RedisClient',
+            }
+        }
+    }
+    # Store sessions in Redis for lightning-fast auth checks
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
     # Celery accepts JSON serialization only (more secure)
     CELERY_ACCEPT_CONTENT = ['json']
     CELERY_TASK_SERIALIZER = 'json'
