@@ -33,7 +33,7 @@ class StreakMiddleware:
         response = self.get_response(request)
         return response
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 class AppSignatureMiddleware:
     """Only allow requests to /api/ containing the mobile app signature header"""
@@ -44,9 +44,13 @@ class AppSignatureMiddleware:
     def __call__(self, request):
         # Filter all /api/ endpoints (exclude Django Admin, static files, etc.)
         if request.path.startswith('/api/'):
-            # Always allow OPTIONS requests (CORS preflight)
+            # Direct successful response to all OPTIONS preflight requests
             if request.method == 'OPTIONS':
-                return self.get_response(request)
+                response = HttpResponse(status=200)
+                response['Access-Control-Allow-Origin'] = '*'
+                response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+                response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-App-Signature'
+                return response
 
             signature = request.headers.get('X-App-Signature') or request.META.get('HTTP_X_APP_SIGNATURE')
             if signature != 'StuDyAppKeySignature2026!':
