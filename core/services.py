@@ -239,9 +239,27 @@ def chatbot_response(user_message, chat_history, language='en'):
         print(f"Error in chatbot: {e}")
         return "Sorry, I encountered an error. Please try again."
 
-def generate_course_from_ai(topic, language='en', user=None):
+def extract_text_from_pdf(pdf_file):
+    """
+    Extracts text content from a PDF file using pypdf.
+    """
+    import pypdf
+    try:
+        reader = pypdf.PdfReader(pdf_file)
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+        return text.strip()
+    except Exception as e:
+        print(f"Error parsing PDF: {e}")
+        raise ValueError(f"Failed to parse PDF file: {str(e)}")
+
+def generate_course_from_ai(topic, language='en', user=None, pdf_text=None):
     """
     Generates a course structure using Google Gemini API.
+    Deducts user energy based on subscription tier and PDF usage.
     """
     if not GENAI_AVAILABLE:
         raise ImportError(
@@ -249,21 +267,116 @@ def generate_course_from_ai(topic, language='en', user=None):
             "Install it with: pip install google-generativeai"
         )
     
+    # 1. Determine cost, module count, and Gemini model based on user tier & PDF usage
+    sub_type = 'free'
+    if user:
+        sub_type = user.subscription_type
+
+    if pdf_text:
+        if sub_type != 'ultra':
+            raise ValueError("PDF course generation is only available for Ultra subscribers.")
+        cost = 4.0
+        modules_count = 3
+        model_name = 'gemini-2.5-pro'
+    else:
+        if sub_type == 'free':
+            cost = 1.0
+            modules_count = 1
+            model_name = 'gemini-2.5-flash'
+        elif sub_type == 'pro':
+            cost = 2.0
+            modules_count = 2
+            model_name = 'gemini-2.5-flash'
+        else: # ultra
+            cost = 3.0
+            modules_count = 3
+            model_name = 'gemini-2.5-pro'
+
+    # 2. Check and deduct energy
+    if user:
+        if user.energy < cost:
+            raise ValueError(
+                f"Not enough Energy! You need {cost} Energy to generate this course, "
+                f"but you only have {user.energy}."
+            )
+        # Deduct energy
+        user.energy = float(user.energy) - float(cost)
+        user.save()
+
+    # 3. Build dynamic prompt based on module count and language
+    # Custom instructions for modules
+    module_instruction = f"Generate exactly {modules_count} modules."
+    if modules_count == 1:
+        module_instruction += " The module must have exactly 5 lessons, and each lesson must have 1-2 quizzes."
+    elif modules_count == 2:
+        module_instruction += " Modules 1 and 2 must have exactly 5 lessons each, and each lesson must have 2-3 quizzes."
+    else:
+        module_instruction += " Modules 1 and 2 must have exactly 5 lessons each, and each lesson must have 2-3 quizzes. " \
+                             "Module 3 must be named 'Final Exam' and contain exactly 1 lesson named 'Final Assessment' " \
+                             "with at least 10 quizzes covering the entire course."
+
+    # Language matching
+    lang_name = "English"
+    if language == 'uz':
+        lang_name = "Uzbek (in Latin script)"
+    elif language == 'kaa':
+        lang_name = "Karakalpak (in Latin script)"
+    elif language == 'ru':
+        lang_name = "Russian"
+
+    source_material = f"on the topic: \"{topic}\""
+    if pdf_text:
+        source_material = f"based strictly on the following source text (summarize and structure it into a course):\n\n{pdf_text[:4000]}"
+
+    prompt = f"""You are a professional curriculum developer.
+Create a comprehensive course {source_material}.
+
+The output must be a valid JSON object with this structure:
+{{
+    "title": "Course Title",
+    "description": "Course Description",
+    "modules": [
+        {{
+            "title": "Module Title",
+            "order": 1,
+            "lessons": [
+                {{
+                    "title": "Lesson Title",
+                    "content": "Detailed lesson content in Markdown format (at least 150 words)...",
+                    "quizzes": [
+                        {{
+                            "question": "Quiz Question?",
+                            "options": ["Option A", "Option B", "Option C", "Option D"],
+                            "correct_answer": 0
+                        }}
+                    ]
+                }}
+            ]
+        }}
+    ]
+}}
+
+{module_instruction}
+Ensure the JSON is valid and strictly follows the schema.
+All content (titles, lessons, quizzes, options) must be in {lang_name}."""
+
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash')
-
-    prompt_template = COURSE_GENERATION_PROMPTS.get(language, COURSE_GENERATION_PROMPTS['en'])
-    prompt = prompt_template.format(topic=topic)
-
+    
+    # Try premium model for Ultra, fallback to flash if it fails
     try:
-        # Try to use JSON mode if available (works with newer models/SDKs)
+        model = genai.GenerativeModel(model_name)
+        generation_config = {'response_mime_type': 'application/json'}
+        response = model.generate_content(prompt, generation_config=generation_config)
+    except Exception as e:
+        print(f"Failed to use model {model_name}: {e}. Falling back to gemini-2.5-flash.")
+        model = genai.GenerativeModel('gemini-2.5-flash')
         generation_config = {'response_mime_type': 'application/json'}
         try:
             response = model.generate_content(prompt, generation_config=generation_config)
         except:
-            # Fallback for older SDK versions
             response = model.generate_content(prompt)
 
+    try:
         # Clean up the response to ensure it's valid JSON
         text = response.text.strip()
         
@@ -282,18 +395,11 @@ def generate_course_from_ai(topic, language='en', user=None):
         if match:
             text = match.group(0)
         
-        # Fix common JSON escape sequence issues
-        # Replace invalid escape sequences that Gemini sometimes generates
-        text = text.replace('\\n', '\\n')  # Ensure newlines are properly escaped
-        text = text.replace('\\"', '"')   # Fix double-escaped quotes
-        
         try:
             course_data = json.loads(text)
         except json.JSONDecodeError as e:
-            # Attempt to fix common JSON errors by removing problematic backslashes
             print(f"JSON Decode Error: {e}. Attempting to repair...")
             try:
-                # Try to fix by replacing single backslashes with double backslashes
                 text_fixed = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
                 course_data = json.loads(text_fixed)
                 print("JSON repair successful!")
@@ -305,7 +411,8 @@ def generate_course_from_ai(topic, language='en', user=None):
             course = Course.objects.create(
                 title=course_data['title'],
                 description=course_data['description'],
-                language=language
+                language=language,
+                creator=user
             )
 
             for mod_data in course_data['modules']:
@@ -325,14 +432,17 @@ def generate_course_from_ai(topic, language='en', user=None):
 
                     # Handle multiple quizzes
                     quizzes_data = lesson_data.get('quizzes', [])
-                    # Fallback for singular 'quiz' if AI messes up
                     if 'quiz' in lesson_data:
                         quizzes_data.append(lesson_data['quiz'])
 
                     for quiz_data in quizzes_data:
-                        # Convert correct_answer index to actual answer text
                         correct_answer_index = quiz_data['correct_answer']
-                        correct_answer_text = quiz_data['options'][correct_answer_index]
+                        # Handle string/integer index variations safely
+                        try:
+                            idx = int(correct_answer_index)
+                            correct_answer_text = quiz_data['options'][idx]
+                        except:
+                            correct_answer_text = str(correct_answer_index)
                         
                         Quiz.objects.create(
                             lesson=lesson,
@@ -348,5 +458,9 @@ def generate_course_from_ai(topic, language='en', user=None):
         return course
 
     except Exception as e:
+        # Refund energy in case of complete generation failure
+        if user:
+            user.energy = float(user.energy) + float(cost)
+            user.save()
         print(f"Error generating course: {e}")
         raise e

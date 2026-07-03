@@ -32,3 +32,24 @@ class StreakMiddleware:
 
         response = self.get_response(request)
         return response
+
+from django.http import JsonResponse
+
+class AppSignatureMiddleware:
+    """Only allow requests to /api/ containing the mobile app signature header"""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Filter all /api/ endpoints (exclude Django Admin, static files, etc.)
+        if request.path.startswith('/api/'):
+            signature = request.headers.get('X-App-Signature')
+            if signature != 'StuDyAppKeySignature2026!':
+                return JsonResponse(
+                    {"detail": "Unauthorized request origin."}, 
+                    status=403
+                )
+
+        response = self.get_response(request)
+        return response

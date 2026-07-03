@@ -21,7 +21,8 @@ from .models import UserStreak
 User = get_user_model()
 # Helper to get user XP
 def get_user_xp(user):
-    return UserProgress.objects.filter(user=user).aggregate(Sum('score'))['score__sum'] or 0
+    progress_xp = UserProgress.objects.filter(user=user).aggregate(Sum('score'))['score__sum'] or 0
+    return progress_xp + getattr(user, 'bonus_xp', 0)
 
 # Helper to check if course is completed
 def is_course_completed(user, course):

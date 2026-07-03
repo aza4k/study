@@ -1,0 +1,39 @@
+Biznes modelni quradigan vaqt bo'ldi.
+3 xil obuna turini berishimiz kerak:
+Free
+Pro
+Ultra
+
+Freeda 1ta modullik kurslar yaratish imkoni bo'lsin. Va token yoki coin o'rniga "Energy" nomli narsadan foydalanamiz.
+Yani kurs yaratish uchun va chat bilan muloqot uchun Energy sarf qilinishi kerak.
+Energy Freeda Ozgina bo'lishi kerak 1 Energy 1ta kurs yaratib berishi kerak.
+Freeda foydalanayotgan odam faqat 1ta kurs yaratib foydalanib ko'ra olishi va ai tutor bilan 10 marta yozisha olishi kerak.
+10 marta yozish 1 Energyga teng bo'ladi. yani biz freega 2ta Energy berib qo'yamiz.
+Bepul yaratilgan darslar bazada faqat 7 kun saqlansin. Keyin ular muzlatiladi.
+Bepul foydalanayotganlarga har doyim reklama ko'rsatilib turiladi.
+Obuna sotib olsa umuman reklamasiz dasturdan foydalanish imkoniga ega bo'lishadilar.
+
+Pro obunada 2ta modullik 2ta yoki 3ta savollik va sertifikat beruv tizmi bilan ko'proq Energy bo'lishi kerak.
+Va pro egalari boshqalar yaratgan kurslarini qidirib topib yoki trend bo'limidan tanlab o'zlari o'qish imkoni ham bo'lsin.
+Prodagilar har bir kursi uchun 2 Energy sarflaydi.
+Proga 10ta kurs yaratish imkoni berilsin! Va 100 chat imkoni. Va text to speech o'qib berish librarylar qo'shilsin.
+narxi 4.99$ oyiga komissiyalarni hisobga olmaganda.
+
+Ultra obunada narx 15.99$ bo'lsin va prodan 3x ko'proq limitlar bilan.
+Ultra obuna egalari 3 modul yaratildagan bo'ladi. Va rasmlar misollari bilan.
+Va kurs uchun 3 Energy sarflanadi. Shu Energyga mos kuchliroq modellar foydalanamiz.
+Va Energylarni aniq hisoblab chiq qaysisiga qancha berish kerakligini.
+Ultra egalari o'zlarining pdf fayldagi darsligi asosida o'zlarining shaxsiy kursini yaratish imkoni bo'lsin.
+Pdf asosida kurs yaratish 4Energy turishi kerak.
+
+Alohida Energy paketlarini sotishni yo'lga qo'yish.
++5 Energy = $0.99
++15 Energy = $1.99
+
+Har kuni saytga kirganda foydalanuvchiga 0.1 Energy yoki ma'lum miqdorda XP beriladi.
+
+Foydalanuvchi darslarni faol o'qib, juda ko'p XP yig'sa, masalan, har 5000 XP uchun 1 Energy sotib olish imkoniyatiga ega bo'lsin.
+Bu bepul foydalanuvchilarga ko'proq dars o'qish va harakat qilish uchun kuchli motivatsiya beradi.
+
+Yillik to'lov qilganlarga 20% yoki 30% chegirma bering.
+Masalan, PRO tarifini oyiga $4.99 emas, yillik olganda oyiga $3.49 qilib hisoblang

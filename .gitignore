@@ -127,3 +127,6 @@ dump.rdb
 # Secrets
 secrets/
 *.secret
+
+# Mobile App
+mobile_app/

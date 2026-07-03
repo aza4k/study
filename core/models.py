@@ -15,6 +15,19 @@ class CustomUser(AbstractUser):
     age = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Age"))
     preferred_language = models.CharField(max_length=3, choices=LANGUAGE_CHOICES, default='en', verbose_name=_("Preferred Language"))
 
+    # Business Model Fields
+    subscription_type = models.CharField(
+        max_length=10,
+        choices=[('free', 'Free'), ('pro', 'Pro'), ('ultra', 'Ultra')],
+        default='free',
+        verbose_name=_("Subscription Type")
+    )
+    energy = models.DecimalField(max_digits=6, decimal_places=2, default=2.00, verbose_name=_("Energy"))
+    is_annual = models.BooleanField(default=False, verbose_name=_("Is Annual"))
+    redeemed_xp = models.PositiveIntegerField(default=0, verbose_name=_("Redeemed XP"))
+    last_bonus_claimed = models.DateField(null=True, blank=True, verbose_name=_("Last Daily Bonus Claimed"))
+    bonus_xp = models.PositiveIntegerField(default=0, verbose_name=_("Bonus XP"))
+
     def __str__(self):
         return self.username
 
@@ -23,6 +36,14 @@ class Course(models.Model):
     description = models.TextField(verbose_name=_("Description"))
     language = models.CharField(max_length=3, default='en', verbose_name=_("Language"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    creator = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_courses',
+        verbose_name=_("Creator")
+    )
 
     def __str__(self):
         return self.title
@@ -64,6 +85,7 @@ class UserProgress(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     score = models.IntegerField(default=0)
+    completed_quizzes = models.JSONField(default=list, help_text=_("List of completed quiz IDs"))
     completed_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -97,17 +119,11 @@ class ChatMessage(models.Model):
     def __str__(self):
         return f"{self.user.username} - {'User' if self.is_user else 'Bot'}: {self.message[:50]}"
 
-
-from django.db import models
-from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 
-# ... boshqa modellaringiz (Course, Lesson va h.k.) ...
-
 class UserStreak(models.Model):
-    # User so'zini settings.AUTH_USER_MODEL ga almashtiramiz
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='streak')
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='streak')
     current_streak = models.IntegerField(default=0)
     last_activity = models.DateField(default=timezone.now)
     max_streak = models.IntegerField(default=0)
@@ -115,22 +131,14 @@ class UserStreak(models.Model):
     def update_streak(self):
         today = timezone.now().date()
 
-        # Agar bugun allaqachon kirgan bo'lsa, hech narsa qilmaymiz
         if self.last_activity == today:
             return
 
-        # Agar oxirgi faollik kecha bo'lsa, streakni davom ettiramiz
         if self.last_activity == today - timedelta(days=1):
             self.current_streak += 1
         else:
-            # Agar bir kundan ko'p o'tkazib yuborgan bo'lsa (va bu yangi user bo'lmasa)
-            # Yangi userlar uchun (default=now) bo'lgani uchun tekshiramiz:
-            if self.current_streak > 0:
-                self.current_streak = 1
-            else:
-                self.current_streak = 1 # Birinchi marta boshlash
+            self.current_streak = 1 
 
-        # Rekordni yangilash
         if self.current_streak > self.max_streak:
             self.max_streak = self.current_streak
 
@@ -139,3 +147,14 @@ class UserStreak(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.current_streak} kun"
+
+class Certificate(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='certificates')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='certificates')
+    issued_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'course']
+
+    def __str__(self):
+        return f"Certificate: {self.user.username} - {self.course.title}"
