@@ -46,6 +46,23 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'content', 'order', 'quizzes', 'user_progress')
 
     def get_user_progress(self, obj):
+        # 1. Read from in-memory prefetch if available (to solve N+1 queries)
+        if hasattr(obj, 'user_progresses'):
+            progresses = obj.user_progresses
+            if progresses:
+                progress = progresses[0]
+                return {
+                    'is_completed': progress.is_completed,
+                    'score': progress.score,
+                    'completed_quizzes': progress.completed_quizzes
+                }
+            return {
+                'is_completed': False,
+                'score': 0,
+                'completed_quizzes': []
+            }
+
+        # 2. Fallback to direct DB query if not pre-fetched
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             progress = UserProgress.objects.filter(user=request.user, lesson=obj).first()

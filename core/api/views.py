@@ -62,12 +62,52 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = CourseSerializer
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return CourseListSerializer
+        return CourseSerializer
+
     def get_queryset(self):
+        from django.db.models import Prefetch
         user = self.request.user
-        if user.subscription_type in ['pro', 'ultra']:
-            return Course.objects.all()
-        # Free users only see their own enrolled courses
-        return Course.objects.filter(enrolled_users__user=user)
+        queryset = Course.objects.all()
+        if user.subscription_type not in ['pro', 'ultra']:
+            # Free users only see their own enrolled courses
+            queryset = Course.objects.filter(enrolled_users__user=user)
+        
+        return queryset.prefetch_related(
+            'modules',
+            'modules__lessons',
+            'modules__lessons__quizzes',
+            Prefetch(
+                'modules__lessons__userprogress_set',
+                queryset=UserProgress.objects.filter(user=user),
+                to_attr='user_progresses'
+            )
+        )
+
+    def list(self, request, *args, **kwargs):
+        from django.core.cache import cache
+        user = request.user
+        
+        # Determine cache key based on subscription type (or user ID for free tier)
+        cache_key = f"courses_list_{user.subscription_type}"
+        if user.subscription_type not in ['pro', 'ultra']:
+            cache_key = f"courses_list_free_{user.id}"
+
+        # Try to read from cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # Retrieve and serialize
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+
+        # Cache in Redis for 15 seconds
+        cache.set(cache_key, data, 15)
+        return Response(data)
 
     def retrieve(self, request, *args, **kwargs):
         # Prevent access if course is frozen
@@ -271,20 +311,39 @@ class LeaderboardView(views.APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        users_with_xp = []
-        for user in User.objects.all():
-            progress_xp = UserProgress.objects.filter(user=user).aggregate(Sum('score'))['score__sum'] or 0
-            total_xp = progress_xp + user.bonus_xp
-            if total_xp > 0:
-                users_with_xp.append({
-                    'id': user.id,
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'xp': total_xp,
-                })
-        users_with_xp.sort(key=lambda x: x['xp'], reverse=True)
-        return Response(users_with_xp[:100])
+        from django.core.cache import cache
+        from django.db.models import Sum, F, Value
+        from django.db.models.functions import Coalesce
+
+        # 1. Try to get cached leaderboard from Redis
+        cached_data = cache.get('api_leaderboard_cache')
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # 2. Retrieve leaderboard in a single optimized SQL query (JOIN and Sum on DB level)
+        users = User.objects.annotate(
+            progress_xp=Coalesce(Sum('userprogress__score'), Value(0))
+        ).annotate(
+            total_xp=F('progress_xp') + F('bonus_xp')
+        ).filter(
+            total_xp__gt=0
+        ).order_by('-total_xp')[:100]
+
+        # 3. Format result
+        data = []
+        for user in users:
+            data.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'xp': user.total_xp,
+            })
+
+        # 4. Cache in Redis for 15 seconds
+        cache.set('api_leaderboard_cache', data, 15)
+
+        return Response(data)
 
 class RedeemXPView(views.APIView):
     permission_classes = [IsAuthenticated]
