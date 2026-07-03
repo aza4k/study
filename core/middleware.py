@@ -44,7 +44,11 @@ class AppSignatureMiddleware:
     def __call__(self, request):
         # Filter all /api/ endpoints (exclude Django Admin, static files, etc.)
         if request.path.startswith('/api/'):
-            signature = request.headers.get('X-App-Signature')
+            # Always allow OPTIONS requests (CORS preflight)
+            if request.method == 'OPTIONS':
+                return self.get_response(request)
+
+            signature = request.headers.get('X-App-Signature') or request.META.get('HTTP_X_APP_SIGNATURE')
             if signature != 'StuDyAppKeySignature2026!':
                 return JsonResponse(
                     {"detail": "Unauthorized request origin."}, 
