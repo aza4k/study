@@ -185,14 +185,15 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # CELERY CONFIGURATION (Optional - only for VPS deployments with Redis)
 # ============================================================================
 # Set USE_CELERY=True in .env to enable Celery (requires Redis)
-USE_CELERY = os.getenv('USE_CELERY', 'False') == 'True'
+REDIS_URL = os.getenv('REDIS_URL') or os.getenv('REDISURL') or os.getenv('CELERY_BROKER_URL')
+USE_CELERY = os.getenv('USE_CELERY', 'True' if REDIS_URL else 'False') == 'True'
 
 if USE_CELERY:
     # Celery Broker (Redis)
-    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+    CELERY_BROKER_URL = REDIS_URL or 'redis://localhost:6379/0'
 
     # Celery Result Backend (Redis)
-    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+    CELERY_RESULT_BACKEND = REDIS_URL or 'redis://localhost:6379/0'
 
     # Celery accepts JSON serialization only (more secure)
     CELERY_ACCEPT_CONTENT = ['json']
