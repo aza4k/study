@@ -177,7 +177,7 @@ class ChatbotView(views.APIView):
         ChatMessage.objects.create(user=user, message=user_message, is_user=True)
         chat_history = ChatMessage.objects.filter(user=user).order_by('created_at')
         
-        bot_reply = chatbot_response(user_message, chat_history, user.preferred_language)
+        bot_reply = chatbot_response(user_message, chat_history, user.preferred_language, user=user)
         
         topic_clear = False
         topic = None

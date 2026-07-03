@@ -547,7 +547,18 @@ MÁNISLI QÁǴIDELER:
             from django.conf import settings
 
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            
+            sub_type = 'free'
+            if request.user.is_authenticated:
+                sub_type = request.user.subscription_type
+            
+            model_map = {
+                'free': 'gemini-2.5-flash-lite',
+                'pro': 'gemini-2.5-flash',
+                'ultra': 'gemini-3-flash-preview',
+            }
+            model_name = model_map.get(sub_type, 'gemini-2.5-flash-lite')
+            model = genai.GenerativeModel(model_name)
 
             full_prompt = f"{system_prompt}\n\nStudent question: {user_message}\n\nYour response:"
             response = model.generate_content(full_prompt)

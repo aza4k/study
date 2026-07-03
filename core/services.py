@@ -207,15 +207,26 @@ Natija faqat quyidagi sxemaga mos keladigan valid JSON bo'lishi kerak (boshqa so
 """
 }
 
-def chatbot_response(user_message, chat_history, language='en'):
+def chatbot_response(user_message, chat_history, language='en', user=None):
     """
     Generate chatbot response using Gemini API
     """
     if not GENAI_AVAILABLE:
         return "Sorry, the AI service is not available. Please install google-generativeai package."
     
+    sub_type = 'free'
+    if user:
+        sub_type = user.subscription_type
+
+    model_map = {
+        'free': 'gemini-2.5-flash-lite',
+        'pro': 'gemini-2.5-flash',
+        'ultra': 'gemini-3-flash-preview',
+    }
+    model_name = model_map.get(sub_type, 'gemini-2.5-flash-lite')
+
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel(model_name)
     
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
     
@@ -277,12 +288,12 @@ def generate_course_from_ai(topic, language='en', user=None, pdf_text=None):
             raise ValueError("PDF course generation is only available for Ultra subscribers.")
         cost = 4.0
         modules_count = 3
-        model_name = 'gemini-2.5-pro'
+        model_name = 'gemini-3-flash-preview'
     else:
         if sub_type == 'free':
             cost = 1.0
             modules_count = 1
-            model_name = 'gemini-2.5-flash'
+            model_name = 'gemini-2.5-flash-lite'
         elif sub_type == 'pro':
             cost = 2.0
             modules_count = 2
@@ -290,7 +301,7 @@ def generate_course_from_ai(topic, language='en', user=None, pdf_text=None):
         else: # ultra
             cost = 3.0
             modules_count = 3
-            model_name = 'gemini-2.5-pro'
+            model_name = 'gemini-3-flash-preview'
 
     # 2. Check and deduct energy
     if user:
