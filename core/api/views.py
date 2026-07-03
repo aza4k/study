@@ -110,8 +110,32 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(data)
 
     def retrieve(self, request, *args, **kwargs):
-        # Prevent access if course is frozen
         instance = self.get_object()
+        user = request.user
+        
+        # Enforce subscription access limits:
+        is_creator = (instance.creator == user)
+        is_enrolled = UserCourse.objects.filter(user=user, course=instance).exists()
+        
+        # Check if it's one of the top 10 starred courses
+        from django.db.models import Count
+        top_10_ids = Course.objects.annotate(star_count=Count('stars')).order_by('-star_count')[:10].values_list('id', flat=True)
+        is_top_10 = instance.id in top_10_ids
+        
+        if user.subscription_type == 'free':
+            # Free users can only view their own courses, NOT other people's courses
+            if not is_creator and not is_enrolled:
+                return Response({'error': 'Free users cannot access this course. Upgrade to PRO or ULTRA.'}, status=status.HTTP_403_FORBIDDEN)
+            # Free users cannot view top 10 details either
+            if not is_creator and is_top_10:
+                return Response({'error': 'PRO subscription required to open this course.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        elif user.subscription_type == 'pro':
+            # Pro users can view their own courses OR any of the top 10 starred courses
+            if not is_creator and not is_enrolled and not is_top_10:
+                return Response({'error': 'PRO users can only access their own courses or Top 10 courses. Upgrade to ULTRA to access all courses.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if frozen
         serializer = self.get_serializer(instance)
         data = serializer.data
         if data.get('is_frozen'):
@@ -119,6 +143,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 'error': 'This course has expired and is frozen. Upgrade to PRO or ULTRA to unfreeze it.',
                 'is_frozen': True
             }, status=status.HTTP_403_FORBIDDEN)
+            
         return Response(data)
 
 class LessonViewSet(viewsets.ReadOnlyModelViewSet):
@@ -305,6 +330,147 @@ class ClearChatView(views.APIView):
     def post(self, request):
         ChatMessage.objects.filter(user=request.user).delete()
         return Response({'success': True})
+
+class ExploreCoursesView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.db.models import Count
+        from django.core.paginator import Paginator
+        user = request.user
+        
+        # Prefetch creator relationship
+        courses_qs = Course.objects.annotate(star_count=Count('stars')).select_related('creator')
+        
+        # 1. Access logic by subscription
+        if user.subscription_type in ['free', 'pro']:
+            # Free and Pro only see Top 10 starred courses
+            courses = courses_qs.order_by('-star_count')[:10]
+            total_pages = 1
+            current_page = 1
+            has_next = False
+        else:
+            # Ultra users see all courses with search and pagination!
+            search_query = request.query_params.get('search', '').strip()
+            lang_query = request.query_params.get('language', '').strip()
+            
+            if search_query:
+                courses_qs = courses_qs.filter(title__icontains=search_query)
+            if lang_query:
+                courses_qs = courses_qs.filter(language=lang_query)
+                
+            courses_qs = courses_qs.order_by('-star_count', '-created_at')
+            
+            page_size = 10
+            paginator = Paginator(courses_qs, page_size)
+            page_number = request.query_params.get('page', 1)
+            
+            try:
+                page_obj = paginator.get_page(page_number)
+            except Exception:
+                return Response({'error': 'Invalid page number'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            courses = page_obj.object_list
+            total_pages = paginator.num_pages
+            current_page = page_obj.number
+            has_next = page_obj.has_next()
+
+        # Prefetch user's star and enrollment lists to avoid N+1 queries
+        from core.models import CourseStar, UserCourse
+        starred_course_ids = set(CourseStar.objects.filter(user=user).values_list('course_id', flat=True))
+        enrolled_course_ids = set(UserCourse.objects.filter(user=user).values_list('course_id', flat=True))
+
+        data = []
+        for course in courses:
+            data.append({
+                'id': course.id,
+                'title': course.title,
+                'description': course.description,
+                'language': course.language,
+                'created_at': course.created_at,
+                'creator_username': course.creator.username if course.creator else 'AI System',
+                'star_count': course.star_count,
+                'is_starred': course.id in starred_course_ids,
+                'is_enrolled': course.id in enrolled_course_ids,
+            })
+
+        return Response({
+            'courses': data,
+            'total_pages': total_pages,
+            'current_page': current_page,
+            'has_next': has_next,
+        })
+
+class ToggleStarCourseView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        user = request.user
+        if user.subscription_type == 'free':
+            return Response({'error': 'PRO subscription required to star courses.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        from core.models import CourseStar
+        star_record = CourseStar.objects.filter(user=user, course=course).first()
+        if star_record:
+            star_record.delete()
+            starred = False
+        else:
+            CourseStar.objects.create(user=user, course=course)
+            starred = True
+
+        star_count = CourseStar.objects.filter(course=course).count()
+
+        # Invalidate course list cache
+        from django.core.cache import cache
+        cache.clear()
+        
+        return Response({
+            'success': True,
+            'starred': starred,
+            'star_count': star_count
+        })
+
+class ToggleEnrollCourseView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        user = request.user
+        if user.subscription_type == 'free':
+            return Response({'error': 'PRO subscription required to enroll in courses.'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Pro users can only enroll in top 10 starred courses
+        if user.subscription_type == 'pro':
+            from django.db.models import Count
+            top_10_ids = Course.objects.annotate(star_count=Count('stars')).order_by('-star_count')[:10].values_list('id', flat=True)
+            if course.id not in top_10_ids and course.creator != user:
+                return Response({'error': 'PRO subscription is limited to enrolling in Top 10 courses. Upgrade to ULTRA to enroll in any course.'}, status=status.HTTP_403_FORBIDDEN)
+
+        from core.models import UserCourse
+        enroll_record = UserCourse.objects.filter(user=user, course=course).first()
+        if enroll_record:
+            enroll_record.delete()
+            enrolled = False
+        else:
+            UserCourse.objects.create(user=user, course=course)
+            enrolled = True
+
+        from django.core.cache import cache
+        cache.clear()
+
+        return Response({
+            'success': True,
+            'enrolled': enrolled
+        })
 
 # --- Gamification & Business Model API ---
 class LeaderboardView(views.APIView):

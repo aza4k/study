@@ -158,3 +158,14 @@ class Certificate(models.Model):
 
     def __str__(self):
         return f"Certificate: {self.user.username} - {self.course.title}"
+
+class CourseStar(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='course_stars')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='stars')
+    starred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'course']
+
+    def __str__(self):
+        return f"{self.user.username} starred {self.course.title}"

@@ -14,6 +14,11 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/profile/', views.UserProfileView.as_view(), name='api_profile'),
 
+    # Explore & Custom Courses
+    path('courses/explore/', views.ExploreCoursesView.as_view(), name='api_explore_courses'),
+    path('courses/<int:course_id>/star/', views.ToggleStarCourseView.as_view(), name='api_star_course'),
+    path('courses/<int:course_id>/enroll/', views.ToggleEnrollCourseView.as_view(), name='api_enroll_course'),
+
     # Viewsets
     path('', include(router.urls)),
 
