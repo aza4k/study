@@ -3,7 +3,11 @@ asgiref==3.11.0
 cachetools==6.2.2
 certifi==2025.11.12
 charset-normalizer==3.4.4
+colorama==0.4.6
 Django==5.2.8
+django-cors-headers==4.9.0
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
 google-ai-generativelanguage==0.6.10
 google-api-core==2.28.1
 google-api-python-client==2.187.0
@@ -21,13 +25,15 @@ packaging==25.0
 pillow==10.4.0
 proto-plus==1.26.1
 protobuf==5.29.5
+psycopg2-binary==2.9.12
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pydantic==2.12.5
 pydantic_core==2.41.5
+PyJWT==2.13.0
 pyparsing==3.2.5
+pypdf==6.14.2
 python-dotenv==1.0.0
-psycopg2-binary>=2.9
 reportlab==4.4.5
 requests==2.32.5
 rsa==4.9.1
@@ -35,6 +41,6 @@ sqlparse==0.5.4
 tqdm==4.67.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
+tzdata==2026.2
 uritemplate==4.2.0
 urllib3==2.6.0
-
