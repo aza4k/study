@@ -546,7 +546,7 @@ MÁNISLI QÁǴIDELER:
             import google.generativeai as genai
             from django.conf import settings
 
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+            genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
             
             sub_type = 'free'
             if request.user.is_authenticated:

@@ -225,7 +225,7 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
     }
     model_name = model_map.get(sub_type, 'gemini-2.5-flash-lite')
 
-    genai.configure(api_key=settings.GEMINI_API_KEY)
+    genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
     model = genai.GenerativeModel(model_name)
     
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
@@ -371,7 +371,7 @@ The output must be a valid JSON object with this structure:
 Ensure the JSON is valid and strictly follows the schema.
 All content (titles, lessons, quizzes, options) must be in {lang_name}."""
 
-    genai.configure(api_key=settings.GEMINI_API_KEY)
+    genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
     
     # Try premium model for Ultra, fallback to flash if it fails
     try:
