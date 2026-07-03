@@ -87,7 +87,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 CSRF_TRUSTED_ORIGINS = [
-    'https://study.pythonanywhere.com/',
+    'https://study.pythonanywhere.com',
+    'https://*.up.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
 ]
 import urllib.parse
 
