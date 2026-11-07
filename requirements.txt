@@ -46,3 +46,4 @@ uritemplate==4.2.0
 urllib3==2.6.0
 gevent
 redis
+google-genai>=2.7.0

@@ -232,6 +232,13 @@ class LessonView(LoginRequiredMixin, DetailView):
     template_name = 'lesson.html'
     context_object_name = 'lesson'
 
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset=queryset)
+        if len(obj.content.strip()) < 80 or not obj.quizzes.exists():
+            from core.services import get_or_generate_lesson_content
+            obj = get_or_generate_lesson_content(obj, obj.module.course.language)
+        return obj
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['user_xp'] = get_user_xp(self.request.user)
@@ -541,28 +548,23 @@ MÁNISLI QÁǴIDELER:
     if is_quiz_question:
         response_text = prompt_data['refusal']
     else:
-        # Generate AI response
+        # Generate AI response using modern Gemini API
         try:
-            import google.generativeai as genai
-            from django.conf import settings
-
-            genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
+            from core.services import get_gemini_client
+            client = get_gemini_client()
             
             sub_type = 'free'
             if request.user.is_authenticated:
-                sub_type = request.user.subscription_type
+                sub_type = getattr(request.user, 'subscription_type', 'free')
             
-            model_map = {
-                'free': 'gemini-2.5-flash-lite',
-                'pro': 'gemini-2.5-flash',
-                'ultra': 'gemini-3-flash-preview',
-            }
-            model_name = model_map.get(sub_type, 'gemini-2.5-flash-lite')
-            model = genai.GenerativeModel(model_name)
-
+            model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
             full_prompt = f"{system_prompt}\n\nStudent question: {user_message}\n\nYour response:"
-            response = model.generate_content(full_prompt)
-            response_text = response.text.strip()
+            
+            interaction = client.interactions.create(
+                model=model_name,
+                input=full_prompt
+            )
+            response_text = (interaction.output_text or "").strip()
         except Exception as e:
             print(f"Error in lesson chatbot: {e}")
             response_text = "Sorry, I encountered an error. Please try again." if course_language == 'en' else \

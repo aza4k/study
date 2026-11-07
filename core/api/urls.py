@@ -25,6 +25,7 @@ urlpatterns = [
     # Interactive endpoints
     path('lessons/<int:lesson_id>/submit-quiz/', views.SubmitQuizView.as_view(), name='api_submit_quiz'),
     path('chatbot/', views.ChatbotView.as_view(), name='api_chatbot'),
+    path('chatbot/stream/', views.ChatbotStreamView.as_view(), name='api_chatbot_stream'),
     path('chatbot/clear/', views.ClearChatView.as_view(), name='api_clear_chat'),
     path('chatbot/generate-course/', views.GenerateCourseView.as_view(), name='api_generate_course'),
     path('chatbot/generate-pdf-course/', views.UploadPDFCourseView.as_view(), name='api_generate_pdf_course'),

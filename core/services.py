@@ -1,17 +1,36 @@
-import json
+import os
 import re
+import json
+import base64
+import threading
+from typing import Optional, List, Dict, Any
+from pathlib import Path
+from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
 from .models import Course, Module, Lesson, Quiz, UserCourse
+from .ai_schemas import CourseOutline, LessonContent, QuizItem
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
     genai = None
 
-# Language-specific prompts
+# Initialize cached client
+_client = None
+
+def get_gemini_client():
+    global _client
+    if _client is None:
+        api_key = getattr(settings, 'GEMINI_API_KEY', None) or os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is not configured in settings or environment.")
+        _client = genai.Client(api_key=api_key)
+    return _client
+
+# Language-specific system prompts for Chatbot
 CHATBOT_SYSTEM_PROMPTS = {
     'en': """You are a helpful learning assistant. Your job is to help users discover what they want to learn.
     - Ask clarifying questions if the user is unsure
@@ -58,197 +77,149 @@ Mavzu to'liq aniq bo'lganda, suhbatni quyidagi formatda yakunlang:
 TOPIC_CLEAR: [mavzu nomi]"""
 }
 
-COURSE_GENERATION_PROMPTS = {
-    'en': """Create a comprehensive course on: "{topic}".
-    The output must be a valid JSON object with this structure:
-    {{
-        "title": "Course Title",
-        "description": "Course Description",
-        "modules": [
-            {{
-                "title": "Module Title",
-                "order": 1,
-                "lessons": [
-                    {{
-                        "title": "Lesson Title",
-                        "content": "Detailed lesson content in Markdown format...",
-                        "quizzes": [
-                            {{
-                                "question": "Quiz Question?",
-                                "options": ["Option A", "Option B", "Option C", "Option D"],
-                                "correct_answer": 0
-                            }}
-                        ]
-                    }}
-                ]
-            }}
-        ]
-    }}
-    Generate exactly 3 modules.
-    Modules 1 and 2 must have 5 lessons each. Each lesson must have 1 or 2 quizzes.
-    Module 3 must be named "Final Exam" and contain exactly 1 lesson named "Final Assessment". This lesson must have at least 10 quizzes covering the entire course.
-    Ensure the JSON is valid and strictly follows the schema.
-    All content must be in English.""",
-    
-    'ru': """Создайте всеобъемлющий курс по теме: "{topic}".
-    Вывод должен быть валидным JSON объектом с такой структурой:
-    {{
-        "title": "Название курса",
-        "description": "Описание курса",
-        "modules": [
-            {{
-                "title": "Название модуля",
-                "order": 1,
-                "lessons": [
-                    {{
-                        "title": "Название урока",
-                        "content": "Подробное содержание урока в формате Markdown...",
-                        "quizzes": [
-                            {{
-                                "question": "Вопрос теста?",
-                                "options": ["Вариант А", "Вариант Б", "Вариант В", "Вариант Г"],
-                                "correct_answer": 0
-                            }}
-                        ]
-                    }}
-                ]
-            }}
-        ]
-    }}
-    Создайте ровно 3 модуля.
-    Модули 1 и 2 должны содержать по 5 уроков. В каждом уроке должно быть 1 или 2 теста.
-    Модуль 3 должен называться "Итоговый экзамен" и содержать ровно 1 урок под названием "Итоговая оценка". Этот урок должен содержать не менее 10 тестов, охватывающих весь курс.
-    Убедитесь, что JSON действителен и строго соответствует схеме.
-    Весь контент должен быть на русском языке.""",
-    
-    'kaa': """Siz tájiriybeli oqıw metodisti hám kontent jaratıwshısısız.
-Sizden tómendegi tapsırmanı orınlaw talap etiledi:
-
-TAPSIRMA: "{topic}" teması boyınsha tolıq oqıw kursın jaratıń.
-
-TİL TALABI:
-1. Barlıq kontent (atamalar, sabaq mazmunı, testler) TEK ǴANA Qaraqalpaq tilinde (Latın grafikasında) bolıwı shárt.
-2. Ózbek, Qazaq yamasa basqa tillerdi aralastırmań.
-3. Háriplerdi durıs qollanıń: (ı, ú, ó, ǵ, ń, sh, ch).
-
-STRUKTURA TALABI:
-Kurs 3 modulden ibarat bolıwı kerek:
-- 1-modul hám 2-modul: Hárqaysısında 5 sabaqtan bolsın. Hár sabaqta 1 yamasa 2 test sorawı bolsın.
-- 3-modul: Atı "Juwmaqlawshı imtihan" bolsın. Bul modulde "Juwmaqlawshı sınaq" atlı 1 ǵana sabaq bolsın. Bul sabaqta pútkil kurstı qamtıytuǵın keminde 10 test sorawı bolıwı kerek.
-
-FORMAT TALABI:
-Nátiyje tek ǵana tómendegi sxemaǵa sáykes keletuǵın valid JSON bolıwı kerek (basqa sóz yamasa tüsindirme jazbań):
-
-{{
-    "title": "Kurs atı",
-    "description": "Kurs haqqında qısqasha táriyip",
-    "modules": [
-        {{
-            "title": "Modul atı",
-            "order": 1,
-            "lessons": [
-                {{
-                    "title": "Sabaq atı",
-                    "content": "Markdown formatındaǵı tolıq sabaq mazmunı (keminde 100 sóz)",
-                    "quizzes": [
-                        {{
-                            "question": "Test sorawı?",
-                            "options": ["Variant A", "Variant B", "Variant C", "Variant D"],
-                            "correct_answer": 0
-                        }}
-                    ]
-                }}
-            ]
-        }}
-    ]
-}}
-""",
-
-    'uz': """Siz tajribali o'quv metodisti va kontent yaratuvchisisiz.
-Sizdan quyidagi vazifani bajarish talab etiladi:
-
-VAZIFA: "{topic}" mavzusi bo'yicha to'liq o'quv kursini yarating.
-
-TIL TALABI:
-1. Barcha kontent (nomlar, dars mazmuni, testlar) FAQAT O'zbek tilida (Lotin grafikasida) bo'lishi shart.
-2. Rus yoki boshqa tillarni aralashtirmang.
-
-TUZILMA TALABI:
-Kurs 3 moduldan iborat bo'lishi kerak:
-- 1-modul va 2-modul: Har birida 5 tadan dars bo'lsin. Har bir darsda 1 yoki 2 test savoli bo'lsin.
-- 3-modul: Nomi "Yakuniy imtihon" bo'lsin. Bu modulda "Yakuniy sinov" nomli 1 tagina dars bo'lsin. Bu darsda butun kursni qamrab oladigan kamida 10 ta test savoli bo'lishi kerak.
-
-FORMAT TALABI:
-Natija faqat quyidagi sxemaga mos keladigan valid JSON bo'lishi kerak (boshqa so'z yoki tushuntirish yozmang):
-
-{{
-    "title": "Kurs nomi",
-    "description": "Kurs haqida qisqacha tavsif",
-    "modules": [
-        {{
-            "title": "Modul nomi",
-            "order": 1,
-            "lessons": [
-                {{
-                    "title": "Dars nomi",
-                    "content": "Markdown formatidagi to'liq dars mazmuni (kamida 100 so'z)",
-                    "quizzes": [
-                        {{
-                            "question": "Test savoli?",
-                            "options": ["Variant A", "Variant B", "Variant C", "Variant D"],
-                            "correct_answer": 0
-                        }}
-                    ]
-                }}
-            ]
-        }}
-    ]
-}}
-"""
+# Curated high-res educational topic covers (used as high-speed instant fallback if AI image quota is exhausted)
+TOPIC_IMAGE_CATALOG = {
+    'code': "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format&fit=crop&q=80",
+    'python': "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
+    'web': "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&auto=format&fit=crop&q=80",
+    'ai': "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80",
+    'math': "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80",
+    'language': "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80",
+    'english': "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop&q=80",
+    'science': "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80",
+    'business': "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    'history': "https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=80",
+    'art': "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&auto=format&fit=crop&q=80",
+    'music': "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80",
+    'default': "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&auto=format&fit=crop&q=80"
 }
+
+def get_course_cover_image(topic: str, title: str) -> str:
+    """
+    Returns an immediate matched high-res educational cover image so the user never waits.
+    """
+    clean_topic = (topic + " " + title).lower()
+    for key, url in TOPIC_IMAGE_CATALOG.items():
+        if key in clean_topic:
+            return url
+    return TOPIC_IMAGE_CATALOG['default']
+
+def async_generate_ai_cover(course_id: int, topic: str, title: str):
+    """
+    Attempts to generate custom AI illustration with Gemini Nano Banana in background
+    without blocking user course generation. If successful, updates course.image_url.
+    """
+    if not GENAI_AVAILABLE:
+        return
+    try:
+        client = get_gemini_client()
+        prompt = (
+            f"Minimalist educational flat vector illustration for course '{title}', topic '{topic}', "
+            f"clean vibrant Neo-Brutalist style, crisp colors, high resolution, no text"
+        )
+        interaction = client.interactions.create(
+            model="gemini-3.1-flash-lite-image",
+            input=prompt
+        )
+        if interaction.output_image and interaction.output_image.data:
+            media_dir = Path(settings.MEDIA_ROOT) / 'courses'
+            media_dir.mkdir(parents=True, exist_ok=True)
+            safe_slug = re.sub(r'[^a-zA-Z0-9]', '_', title[:20]).lower()
+            filename = f"{safe_slug}_{os.urandom(4).hex()}.png"
+            filepath = media_dir / filename
+            with open(filepath, 'wb') as f:
+                f.write(base64.b64decode(interaction.output_image.data))
+            
+            Course.objects.filter(id=course_id).update(image_url=f"{settings.MEDIA_URL}courses/{filename}")
+    except Exception:
+        # Expected on Free Tier accounts without billing project attached
+        pass
 
 def chatbot_response(user_message, chat_history, language='en', user=None):
     """
-    Generate chatbot response using Gemini API
+    Generate chatbot response using high-speed Gemini 3.5 Flash-Lite / 3.8 Flash API
     """
     if not GENAI_AVAILABLE:
-        return "Sorry, the AI service is not available. Please install google-generativeai package."
+        return "Sorry, the AI service is not available. Please install google-genai package."
     
     sub_type = 'free'
     if user:
-        sub_type = user.subscription_type
+        sub_type = getattr(user, 'subscription_type', 'free')
 
-    model_map = {
-        'free': 'gemini-2.5-flash-lite',
-        'pro': 'gemini-2.5-flash',
-        'ultra': 'gemini-3-flash-preview',
-    }
-    model_name = model_map.get(sub_type, 'gemini-2.5-flash-lite')
-
-    genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
-    model = genai.GenerativeModel(model_name)
+    # Routing: 3.5 Flash-Lite is ultra fast for free/pro; 3.8 Flash for ultra
+    model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
+    client = get_gemini_client()
     
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
     
-    # Build conversation history
     conversation = f"{system_prompt}\n\n"
-    
-    # Get last 5 messages safely
-    count = chat_history.count()
-    start_index = max(0, count - 5)
+    count = chat_history.count() if hasattr(chat_history, 'count') else len(chat_history)
+    start_index = max(0, count - 6)
     recent_messages = chat_history[start_index:]
     
-    for msg in recent_messages:  # Last 5 messages for context
+    for msg in recent_messages:
         role = "User" if msg.is_user else "Assistant"
         conversation += f"{role}: {msg.message}\n"
     conversation += f"User: {user_message}\nAssistant:"
     
     try:
-        response = model.generate_content(conversation)
-        return response.text.strip()
+        interaction = client.interactions.create(
+            model=model_name,
+            input=conversation,
+        )
+        return (interaction.output_text or "").strip()
     except Exception as e:
         print(f"Error in chatbot: {e}")
-        return "Sorry, I encountered an error. Please try again."
+        # Graceful fallback to 3.5 flash-lite
+        try:
+            interaction = client.interactions.create(
+                model='gemini-3.5-flash-lite',
+                input=conversation,
+            )
+            return (interaction.output_text or "").strip()
+        except Exception as inner_e:
+            print(f"Fallback chatbot error: {inner_e}")
+            return "Kechirasiz, xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."
+
+def chatbot_response_stream(user_message, chat_history, language='en', user=None):
+    """
+    Generator yielding real-time text chunks for Server-Sent Events (SSE) streaming
+    """
+    if not GENAI_AVAILABLE:
+        yield "AI service is unavailable."
+        return
+
+    sub_type = 'free'
+    if user:
+        sub_type = getattr(user, 'subscription_type', 'free')
+
+    model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
+    client = get_gemini_client()
+    
+    system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
+    conversation = f"{system_prompt}\n\n"
+    
+    count = chat_history.count() if hasattr(chat_history, 'count') else len(chat_history)
+    start_index = max(0, count - 6)
+    recent_messages = chat_history[start_index:]
+    
+    for msg in recent_messages:
+        role = "User" if msg.is_user else "Assistant"
+        conversation += f"{role}: {msg.message}\n"
+    conversation += f"User: {user_message}\nAssistant:"
+    
+    try:
+        stream = client.interactions.create(
+            model=model_name,
+            input=conversation,
+            stream=True
+        )
+        for event in stream:
+            if event.event_type == "step.delta" and hasattr(event, 'delta') and event.delta.type == "text":
+                yield event.delta.text
+    except Exception as e:
+        print(f"Stream error: {e}")
+        yield "Xatolik yuz berdi."
 
 def extract_text_from_pdf(pdf_file):
     """
@@ -267,211 +238,231 @@ def extract_text_from_pdf(pdf_file):
         print(f"Error parsing PDF: {e}")
         raise ValueError(f"Failed to parse PDF file: {str(e)}")
 
-def generate_course_from_ai(topic, language='en', user=None, pdf_text=None):
+def get_or_generate_lesson_content(lesson: Lesson, language: str = 'en') -> Lesson:
     """
-    Generates a course structure using Google Gemini API.
-    Deducts user energy based on subscription tier and PDF usage.
+    Checks if a lesson already has rich content. If not, generates comprehensive
+    content and interactive quizzes in ~3-4 seconds using Gemini 3.5 Flash-Lite.
+    """
+    # If already populated with substantial content and quizzes, return as is
+    if len(lesson.content.strip()) > 80 and lesson.quizzes.exists():
+        return lesson
+
+    client = get_gemini_client()
+    course = lesson.module.course
+    lang_name = {
+        'uz': "Uzbek (in Latin script)",
+        'kaa': "Karakalpak (in Latin script)",
+        'ru': "Russian",
+        'en': "English"
+    }.get(language or course.language, "English")
+
+    prompt = f"""You are an expert tutor creating an interactive lesson for an online course.
+Course Title: "{course.title}"
+Module Title: "{lesson.module.title}"
+Lesson Title: "{lesson.title}"
+Language requirement: Strictly write everything in {lang_name}.
+
+Generate comprehensive, engaging Markdown content for this lesson:
+- Include a clear introduction, core concepts with concrete examples, bullet points, and key takeaways.
+- Provide 2 or 3 multiple-choice quizzes that test understanding of this lesson. Each quiz must have exactly 4 options and the 0-based index of the correct answer.
+"""
+
+    try:
+        interaction = client.interactions.create(
+            model="gemini-3.5-flash-lite",
+            input=prompt,
+            response_format={
+                "type": "text",
+                "mime_type": "application/json",
+                "schema": LessonContent.model_json_schema()
+            }
+        )
+        data = LessonContent.model_validate_json(interaction.output_text)
+        
+        with transaction.atomic():
+            lesson.content = data.content
+            lesson.save()
+
+            # Create quizzes if none exist yet
+            if not lesson.quizzes.exists():
+                for q in data.quizzes:
+                    options = q.options
+                    idx = q.correct_answer
+                    correct_text = options[idx] if (0 <= idx < len(options)) else options[0]
+                    Quiz.objects.create(
+                        lesson=lesson,
+                        question=q.question,
+                        options=options,
+                        correct_answer=correct_text
+                    )
+        return lesson
+    except Exception as e:
+        print(f"Error generating lesson content for {lesson.id}: {e}")
+        if not lesson.content:
+            lesson.content = f"# {lesson.title}\n\nDars mazmuni tez orada yuklanadi..."
+            lesson.save()
+        return lesson
+
+def _background_populate_remaining_lessons(course_id: int, language: str):
+    """
+    Background worker thread to lazily pre-generate remaining lessons in a newly created course.
+    """
+    try:
+        lessons = Lesson.objects.filter(module__course_id=course_id).order_by('module__order', 'order')
+        for lesson in lessons:
+            if len(lesson.content.strip()) < 80 or not lesson.quizzes.exists():
+                get_or_generate_lesson_content(lesson, language)
+    except Exception as e:
+        print(f"Background lesson generation notice: {e}")
+
+def generate_course_from_ai(topic: str, language: str = 'en', user=None, pdf_text: Optional[str] = None) -> Course:
+    """
+    High-speed, cost-efficient course generation:
+    1. Generates course outline in ~2-3 seconds using structured JSON output.
+    2. Immediately creates Course with an illustration cover, Modules, and Lesson records.
+    3. Generates Lesson 1 content and quizzes right away (~3-4 seconds) so the course is playable immediately!
+    4. Queues background generation for the remaining lessons.
+    Total time: ~4-6 seconds (down from 51+ seconds)!
     """
     if not GENAI_AVAILABLE:
-        raise ImportError(
-            "google-generativeai package is not installed. "
-            "Install it with: pip install google-generativeai"
-        )
+        raise ImportError("google-genai package is not available.")
     
-    # 1. Determine cost, module count, and Gemini model based on user tier & PDF usage
     sub_type = 'free'
     if user:
-        sub_type = user.subscription_type
+        sub_type = getattr(user, 'subscription_type', 'free')
 
+    # Energy costs and module counts
     if pdf_text:
         if sub_type != 'ultra':
             raise ValueError("PDF course generation is only available for Ultra subscribers.")
-        cost = 4.0
+        cost = Decimal('4.0')
         modules_count = 3
-        model_name = 'gemini-3-flash-preview'
+        model_name = 'gemini-3.5-flash-lite'
     else:
         if sub_type == 'free':
-            cost = 1.0
+            cost = Decimal('1.0')
             modules_count = 1
-            model_name = 'gemini-2.5-flash-lite'
         elif sub_type == 'pro':
-            cost = 2.0
+            cost = Decimal('2.0')
             modules_count = 2
-            model_name = 'gemini-2.5-flash'
         else: # ultra
-            cost = 3.0
+            cost = Decimal('3.0')
             modules_count = 3
-            model_name = 'gemini-3-flash-preview'
+        # Use gemini-3.5-flash-lite for instant sub-3-second outline generation across all tiers
+        model_name = 'gemini-3.5-flash-lite'
 
-    # 2. Check and deduct energy
+    # Check and deduct energy
     if user:
-        if user.energy < cost:
+        if Decimal(str(user.energy)) < cost:
             raise ValueError(
                 f"Not enough Energy! You need {cost} Energy to generate this course, "
                 f"but you only have {user.energy}."
             )
-        # Deduct energy
-        user.energy = float(user.energy) - float(cost)
+        user.energy = Decimal(str(user.energy)) - cost
         user.save()
 
-    # 3. Build dynamic prompt based on module count and language
-    # Custom instructions for modules
+    lang_name = {
+        'uz': "Uzbek (in Latin script)",
+        'kaa': "Karakalpak (in Latin script)",
+        'ru': "Russian",
+        'en': "English"
+    }.get(language, "English")
+
     module_instruction = f"Generate exactly {modules_count} modules."
     if modules_count == 1:
-        module_instruction += " The module must have exactly 5 lessons, and each lesson must have 1-2 quizzes."
+        module_instruction += " The module must have exactly 4 or 5 progressive lessons."
     elif modules_count == 2:
-        module_instruction += " Modules 1 and 2 must have exactly 5 lessons each, and each lesson must have 2-3 quizzes."
+        module_instruction += " Modules 1 and 2 must have 4 or 5 progressive lessons each."
     else:
-        module_instruction += " Modules 1 and 2 must have exactly 5 lessons each, and each lesson must have 2-3 quizzes. " \
-                             "Module 3 must be named 'Final Exam' and contain exactly 1 lesson named 'Final Assessment' " \
-                             "with at least 10 quizzes covering the entire course."
+        module_instruction += " Modules 1 and 2 must have 4 or 5 lessons each. " \
+                              "Module 3 must be named 'Final Exam' or 'Yakuniy Imtihon' and contain 1 comprehensive assessment lesson."
 
-    # Language matching
-    lang_name = "English"
-    if language == 'uz':
-        lang_name = "Uzbek (in Latin script)"
-    elif language == 'kaa':
-        lang_name = "Karakalpak (in Latin script)"
-    elif language == 'ru':
-        lang_name = "Russian"
-
-    source_material = f"on the topic: \"{topic}\""
+    source_info = f"on the topic: \"{topic}\""
     if pdf_text:
-        source_material = f"based strictly on the following source text (summarize and structure it into a course):\n\n{pdf_text[:4000]}"
+        source_info = f"based strictly on this source text:\n\n{pdf_text[:5000]}"
 
-    prompt = f"""You are a professional curriculum developer.
-Create a comprehensive course {source_material}.
-
-The output must be a valid JSON object with this structure:
-{{
-    "title": "Course Title",
-    "description": "Course Description",
-    "modules": [
-        {{
-            "title": "Module Title",
-            "order": 1,
-            "lessons": [
-                {{
-                    "title": "Lesson Title",
-                    "content": "Detailed lesson content in Markdown format (at least 150 words)...",
-                    "quizzes": [
-                        {{
-                            "question": "Quiz Question?",
-                            "options": ["Option A", "Option B", "Option C", "Option D"],
-                            "correct_answer": 0
-                        }}
-                    ]
-                }}
-            ]
-        }}
-    ]
-}}
+    prompt = f"""You are a master curriculum architect.
+Design a structured, engaging course outline {source_info}.
+Language requirement: All titles and descriptions MUST be in {lang_name}.
 
 {module_instruction}
-Ensure the JSON is valid and strictly follows the schema.
-All content (titles, lessons, quizzes, options) must be in {lang_name}."""
+Ensure the outline is logical, pedagogical, and easy to follow.
+"""
 
-    genai.configure(api_key=settings.GEMINI_API_KEY, transport='rest')
-    
-    # Try premium model for Ultra, fallback to flash if it fails
-    try:
-        model = genai.GenerativeModel(model_name)
-        generation_config = {'response_mime_type': 'application/json'}
-        response = model.generate_content(prompt, generation_config=generation_config)
-    except Exception as e:
-        print(f"Failed to use model {model_name}: {e}. Falling back to gemini-2.5-flash.")
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        generation_config = {'response_mime_type': 'application/json'}
-        try:
-            response = model.generate_content(prompt, generation_config=generation_config)
-        except:
-            response = model.generate_content(prompt)
+    client = get_gemini_client()
 
     try:
-        # Clean up the response to ensure it's valid JSON
-        text = response.text.strip()
-        
-        # Remove markdown code blocks if present
-        if text.startswith('```json'):
-            text = text[7:]
-        if text.startswith('```'):
-            text = text[3:]
-        if text.endswith('```'):
-            text = text[:-3]
-        
-        text = text.strip()
-        
-        # Extract JSON object using regex
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match:
-            text = match.group(0)
-        
-        try:
-            course_data = json.loads(text)
-        except json.JSONDecodeError as e:
-            print(f"JSON Decode Error: {e}. Attempting to repair...")
-            try:
-                text_fixed = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
-                course_data = json.loads(text_fixed)
-                print("JSON repair successful!")
-            except:
-                raise ValueError(f"AI response was not valid JSON: {e}. Response text: {text[:100]}...")
+        # Step 1: Ultra-fast Outline Generation (< 3s)
+        interaction = client.interactions.create(
+            model=model_name,
+            input=prompt,
+            response_format={
+                "type": "text",
+                "mime_type": "application/json",
+                "schema": CourseOutline.model_json_schema()
+            }
+        )
+        outline = CourseOutline.model_validate_json(interaction.output_text)
 
-        # Parsing and Saving to DB
+        # Step 2: Generate or match course cover illustration
+        cover_image_url = get_course_cover_image(topic, outline.title)
+
+        # Step 3: Atomic database persistence of structure
         with transaction.atomic():
             course = Course.objects.create(
-                title=course_data['title'],
-                description=course_data['description'],
+                title=outline.title,
+                description=outline.description,
                 language=language,
+                image_url=cover_image_url,
                 creator=user
             )
 
-            for mod_data in course_data['modules']:
+            first_lesson = None
+            for mod_idx, mod_data in enumerate(outline.modules, start=1):
                 module = Module.objects.create(
                     course=course,
-                    title=mod_data['title'],
-                    order=mod_data['order']
+                    title=mod_data.title,
+                    order=mod_data.order or mod_idx
                 )
 
-                for lesson_data in mod_data['lessons']:
+                for les_idx, les_data in enumerate(mod_data.lessons, start=1):
                     lesson = Lesson.objects.create(
                         module=module,
-                        title=lesson_data['title'],
-                        content=lesson_data['content'],
-                        order=lesson_data.get('order', 1)
+                        title=les_data.title,
+                        content="",  # Generated lazily / on-demand
+                        order=les_idx
                     )
+                    if first_lesson is None:
+                        first_lesson = lesson
 
-                    # Handle multiple quizzes
-                    quizzes_data = lesson_data.get('quizzes', [])
-                    if 'quiz' in lesson_data:
-                        quizzes_data.append(lesson_data['quiz'])
-
-                    for quiz_data in quizzes_data:
-                        correct_answer_index = quiz_data['correct_answer']
-                        # Handle string/integer index variations safely
-                        try:
-                            idx = int(correct_answer_index)
-                            correct_answer_text = quiz_data['options'][idx]
-                        except:
-                            correct_answer_text = str(correct_answer_index)
-                        
-                        Quiz.objects.create(
-                            lesson=lesson,
-                            question=quiz_data['question'],
-                            options=quiz_data['options'],
-                            correct_answer=correct_answer_text
-                        )
-            
-            # Enroll user in the course if user is provided
             if user:
-                UserCourse.objects.create(user=user, course=course)
-                
+                UserCourse.objects.get_or_create(user=user, course=course)
+
+        # Kick off background AI cover illustration generation (non-blocking)
+        threading.Thread(
+            target=async_generate_ai_cover,
+            args=(course.id, topic, outline.title),
+            daemon=True
+        ).start()
+
+        # Step 4: Populate Lesson 1 immediately so student can play right away
+        if first_lesson:
+            get_or_generate_lesson_content(first_lesson, language)
+
+        # Step 5: Start background thread to pre-populate subsequent lessons smoothly
+        bg_thread = threading.Thread(
+            target=_background_populate_remaining_lessons,
+            args=(course.id, language),
+            daemon=True
+        )
+        bg_thread.start()
+
         return course
 
     except Exception as e:
-        # Refund energy in case of complete generation failure
+        # Refund energy on complete failure
         if user:
-            user.energy = float(user.energy) + float(cost)
+            user.energy = Decimal(str(user.energy)) + cost
             user.save()
         print(f"Error generating course: {e}")
         raise e

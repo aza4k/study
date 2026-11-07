@@ -35,6 +35,7 @@ class Course(models.Model):
     title = models.CharField(max_length=200, verbose_name=_("Title"))
     description = models.TextField(verbose_name=_("Description"))
     language = models.CharField(max_length=3, default='en', verbose_name=_("Language"))
+    image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_("Image URL"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     creator = models.ForeignKey(
         CustomUser,
@@ -63,6 +64,7 @@ class Lesson(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200, verbose_name=_("Title"))
     content = models.TextField(help_text=_("Markdown content"), verbose_name=_("Content"))
+    image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_("Image URL"))
     order = models.PositiveIntegerField(verbose_name=_("Order"))
 
     class Meta:

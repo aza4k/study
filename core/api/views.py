@@ -167,6 +167,14 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
             return Lesson.objects.filter(module__course_id=course_id)
         return Lesson.objects.all()
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if len(instance.content.strip()) < 80 or not instance.quizzes.exists():
+            from core.services import get_or_generate_lesson_content
+            instance = get_or_generate_lesson_content(instance, instance.module.course.language)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 class SubmitQuizView(views.APIView):
     permission_classes = [IsAuthenticated]
 
@@ -265,6 +273,56 @@ class ChatbotView(views.APIView):
             'topic': topic,
             'current_energy': user.energy
         })
+
+class ChatbotStreamView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        from decimal import Decimal
+        from django.http import StreamingHttpResponse
+
+        if user.subscription_type == 'free':
+            msg_count = ChatMessage.objects.filter(user=user, is_user=True).count()
+            if msg_count >= 10:
+                return Response({'error': 'Free tier limit of 10 chat messages reached. Please upgrade to Pro.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.energy < Decimal('0.1'):
+            return Response({'error': 'Not enough Energy! Chat messages cost 0.1 Energy.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_message = request.data.get('message', '').strip()
+        if not user_message:
+            return Response({'error': 'Message required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ChatMessage.objects.create(user=user, message=user_message, is_user=True)
+        chat_history = ChatMessage.objects.filter(user=user).order_by('created_at')
+
+        def event_stream():
+            collected = []
+            from core.services import chatbot_response_stream
+            for chunk in chatbot_response_stream(user_message, chat_history, user.preferred_language, user=user):
+                collected.append(chunk)
+                yield f"data: {json.dumps({'delta': chunk})}\n\n"
+
+            full_reply = "".join(collected)
+            topic_clear = False
+            topic = None
+            if 'TOPIC_CLEAR:' in full_reply:
+                topic_clear = True
+                match = re.search(r'TOPIC_CLEAR:\s*(.+)', full_reply)
+                if match:
+                    topic = match.group(1).strip()
+                    full_reply = re.sub(r'TOPIC_CLEAR:.+', '', full_reply).strip()
+
+            ChatMessage.objects.create(user=user, message=full_reply, is_user=False)
+            user.energy = Decimal(str(user.energy)) - Decimal('0.1')
+            user.save()
+            yield f"data: {json.dumps({'done': True, 'topic_clear': topic_clear, 'topic': topic, 'current_energy': str(user.energy)})}\n\n"
+
+        response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'
+        return response
 
 class GenerateCourseView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -387,6 +445,7 @@ class ExploreCoursesView(views.APIView):
                 'title': course.title,
                 'description': course.description,
                 'language': course.language,
+                'image_url': course.image_url,
                 'created_at': course.created_at,
                 'creator_username': course.creator.username if course.creator else 'AI System',
                 'star_count': course.star_count,

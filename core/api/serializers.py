@@ -43,7 +43,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = ('id', 'title', 'content', 'order', 'quizzes', 'user_progress')
+        fields = ('id', 'title', 'content', 'image_url', 'order', 'quizzes', 'user_progress')
 
     def get_user_progress(self, obj):
         # 1. Read from in-memory prefetch if available (to solve N+1 queries)
@@ -90,7 +90,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id', 'title', 'description', 'language', 'created_at', 'modules', 'is_frozen')
+        fields = ('id', 'title', 'description', 'language', 'image_url', 'created_at', 'modules', 'is_frozen')
 
     def get_is_frozen(self, obj):
         if obj.creator and obj.creator.subscription_type == 'free':
@@ -102,7 +102,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ('id', 'title', 'description', 'language', 'created_at')
+        fields = ('id', 'title', 'description', 'language', 'image_url', 'created_at')
 
 class UserProgressSerializer(serializers.ModelSerializer):
     class Meta:
