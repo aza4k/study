@@ -1,0 +1,14 @@
+[Unit]
+Description=StuDy AI Celery Worker Daemon
+After=network.target postgresql.service redis.service
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/study
+ExecStart=/var/www/study/.venv/bin/celery -A config worker --loglevel=info --concurrency=4
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

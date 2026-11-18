@@ -1,0 +1,21 @@
+[Unit]
+Description=StuDy AI Gunicorn Daemon
+After=network.target postgresql.service redis.service
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/study
+ExecStart=/var/www/study/.venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 2 \
+    --threads 4 \
+    --worker-class gthread \
+    --timeout 120 \
+    --access-logfile /var/log/study/access.log \
+    --error-logfile /var/log/study/error.log
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
