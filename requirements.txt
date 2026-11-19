@@ -17,3 +17,4 @@ requests>=2.31
 Markdown>=3.6
 sqlparse>=0.5
 asgiref>=3.8
+packaging>=24.0
