@@ -29,23 +29,13 @@ else
     echo "[1/5] Docker is already installed."
 fi
 
-# 2. Check & Generate .env file
+# 2. Check .env file
 if [ ! -f .env ]; then
-    echo "[2/5] Creating .env from .env.example..."
-    cp .env.example .env
-    
-    # Generate random 50-character SECRET_KEY
-    RANDOM_KEY=$(openssl rand -base64 36 | tr -dc 'a-zA-Z0-9!@#$%^&*(-_=+)' | head -c 50)
-    sed -i "s|SECRET_KEY=replace_with_a_secure_random_key_min_50_chars_for_production_2026|SECRET_KEY=$RANDOM_KEY|g" .env
-    
-    # Generate random DB password
-    RANDOM_DB_PASS=$(openssl rand -hex 16)
-    sed -i "s|study_secure_password_2026|$RANDOM_DB_PASS|g" .env
-    
-    echo "Generated secure SECRET_KEY and Database password in .env."
-    echo "IMPORTANT: Open .env and add your GEMINI_API_KEY and domain/IP before proceeding!"
-    echo "Run: nano .env"
-    exit 0
+    echo "ERROR: .env file not found!"
+    echo "Please copy .env.example to .env and configure your secrets:"
+    echo "  cp .env.example .env"
+    echo "  nano .env"
+    exit 1
 else
     echo "[2/5] .env file detected."
 fi

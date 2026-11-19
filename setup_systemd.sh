@@ -24,42 +24,14 @@ echo "[2/6] Enabling Redis..."
 sudo systemctl enable redis-server
 sudo systemctl start redis-server
 
-# 3. Configure PostgreSQL
-echo "[3/6] Setting up PostgreSQL..."
-DB_NAME="study_db"
-DB_USER="study_user"
-DB_PASS=$(openssl rand -hex 16)
-
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;" || true
-sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;" || true
-sudo -u postgres psql -c "ALTER DATABASE $DB_NAME OWNER TO $DB_USER;" || true
-
-# 4. Copy project files to /var/www/study if running outside
-if [ "$(pwd)" != "$APP_DIR" ]; then
-    echo "[4/6] Setting up project directory at $APP_DIR..."
-    sudo mkdir -p $APP_DIR /var/log/study
-    sudo cp -r . $APP_DIR/
-    sudo chown -R $USER:www-data $APP_DIR /var/log/study
-fi
-
-cd $APP_DIR
-
-# 5. Setup Python Virtual Environment
-echo "[5/6] Creating Python virtual environment..."
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Create .env
+# 3. Check .env configuration
+echo "[3/6] Checking .env configuration..."
 if [ ! -f .env ]; then
-    cp .env.example .env
-    RANDOM_KEY=$(openssl rand -base64 36 | tr -dc 'a-zA-Z0-9!@#$%^&*(-_=+)' | head -c 50)
-    sed -i "s|SECRET_KEY=replace_with_a_secure_random_key_min_50_chars_for_production_2026|SECRET_KEY=$RANDOM_KEY|g" .env
-    sed -i "s|DATABASE_URL=postgresql://study_user:study_secure_password_2026@db:5432/study_db|DATABASE_URL=postgresql://$DB_USER:$DB_PASS@127.0.0.1:5432/$DB_NAME|g" .env
-    sed -i "s|REDIS_URL=redis://redis:6379/0|REDIS_URL=redis://127.0.0.1:6379/0|g" .env
-    echo "Generated .env with local PostgreSQL credentials."
+    echo "ERROR: .env file not found!"
+    echo "Please copy .env.example to .env and configure your secrets before proceeding:"
+    echo "  cp .env.example .env"
+    echo "  nano .env"
+    exit 1
 fi
 
 # Migrations & Static files

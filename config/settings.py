@@ -25,15 +25,20 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-krv#ae$oed5229%c5ttb(dwn#2%g16!sap$*u+x2vgeojkgnik-prod-secured-key-min-64-bytes')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes'):
+        SECRET_KEY = 'django-insecure-dev-only-secret-key-study-ai'
+    else:
+        raise ValueError("SECRET_KEY environment variable must be set in production!")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
-# CSRF Trusted Origins
-csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://185.133.49.211:8001,http://127.0.0.1:8001,http://localhost:8001')
+# CSRF Trusted Origins (loaded dynamically from environment)
+csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000')
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins.split(',') if o.strip()]
 
 # Reverse proxy (Nginx) SSL header support
