@@ -153,9 +153,7 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
     
     conversation = f"{system_prompt}\n\n"
-    count = chat_history.count() if hasattr(chat_history, 'count') else len(chat_history)
-    start_index = max(0, count - 6)
-    recent_messages = chat_history[start_index:]
+    recent_messages = list(chat_history)[-6:]
     
     for msg in recent_messages:
         role = "User" if msg.is_user else "Assistant"
@@ -199,9 +197,7 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
     conversation = f"{system_prompt}\n\n"
     
-    count = chat_history.count() if hasattr(chat_history, 'count') else len(chat_history)
-    start_index = max(0, count - 6)
-    recent_messages = chat_history[start_index:]
+    recent_messages = list(chat_history)[-6:]
     
     for msg in recent_messages:
         role = "User" if msg.is_user else "Assistant"
