@@ -25,17 +25,26 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-krv#ae$oed5229%c5ttb(dwn#2%g16!sap$*u+x2vgeojkgnik')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-krv#ae$oed5229%c5ttb(dwn#2%g16!sap$*u+x2vgeojkgnik-prod-secured-key-min-64-bytes')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+
+# CSRF Trusted Origins
+csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://185.133.49.211:8001,http://127.0.0.1:8001,http://localhost:8001')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins.split(',') if o.strip()]
 
 # Reverse proxy (Nginx) SSL header support
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
+
+# Production security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
 
 # Application definition
@@ -314,5 +323,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'SIGNING_KEY': SECRET_KEY,
+    'ALGORITHM': 'HS256',
 }
 
