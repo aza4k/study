@@ -146,8 +146,8 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
     if user:
         sub_type = getattr(user, 'subscription_type', 'free')
 
-    # Routing: 3.5 Flash-Lite is ultra fast for free/pro; 3.8 Flash for ultra
-    model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
+    # High-speed responsive model with sub-second latency
+    model_name = 'gemini-3.5-flash-lite'
     client = get_gemini_client()
     
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
@@ -191,7 +191,8 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
     if user:
         sub_type = getattr(user, 'subscription_type', 'free')
 
-    model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
+    # High-speed responsive model with sub-second latency
+    model_name = 'gemini-3.5-flash-lite'
     client = get_gemini_client()
     
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
