@@ -28,9 +28,18 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class UserStreakSerializer(serializers.ModelSerializer):
+    last_activity = serializers.SerializerMethodField()
+
     class Meta:
         model = UserStreak
         fields = ('current_streak', 'max_streak', 'last_activity')
+
+    def get_last_activity(self, obj):
+        if not obj.last_activity:
+            return None
+        if hasattr(obj.last_activity, 'date'):
+            return str(obj.last_activity.date())
+        return str(obj.last_activity)
 
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:

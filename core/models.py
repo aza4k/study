@@ -127,11 +127,11 @@ from datetime import timedelta
 class UserStreak(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='streak')
     current_streak = models.IntegerField(default=0)
-    last_activity = models.DateField(default=timezone.now)
+    last_activity = models.DateField(default=timezone.localdate)
     max_streak = models.IntegerField(default=0)
 
     def update_streak(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         if self.last_activity == today:
             return
