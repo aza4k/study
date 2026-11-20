@@ -22,18 +22,24 @@ urlpatterns = [
     # Viewsets
     path('', include(router.urls)),
 
-    # Interactive endpoints
+    # Interactive Lesson Endpoints
     path('lessons/<int:lesson_id>/submit-quiz/', views.SubmitQuizView.as_view(), name='api_submit_quiz'),
+    path('lessons/<int:lesson_id>/evaluate-practice/', views.EvaluatePracticeView.as_view(), name='api_evaluate_practice'),
+    path('lessons/<int:lesson_id>/ask-ai/', views.LessonAskAIView.as_view(), name='api_lesson_ask_ai'),
+
+    # Chatbot & Generation
     path('chatbot/', views.ChatbotView.as_view(), name='api_chatbot'),
     path('chatbot/stream/', views.ChatbotStreamView.as_view(), name='api_chatbot_stream'),
     path('chatbot/clear/', views.ClearChatView.as_view(), name='api_clear_chat'),
     path('chatbot/generate-course/', views.GenerateCourseView.as_view(), name='api_generate_course'),
     path('chatbot/generate-pdf-course/', views.UploadPDFCourseView.as_view(), name='api_generate_pdf_course'),
-    
+
     # Gamification & Business Model
     path('leaderboard/', views.LeaderboardView.as_view(), name='api_leaderboard'),
     path('profile/redeem-xp/', views.RedeemXPView.as_view(), name='api_redeem_xp'),
     path('profile/claim-bonus/', views.ClaimDailyBonusView.as_view(), name='api_claim_bonus'),
+    path('profile/claim-quest/', views.ClaimQuestRewardView.as_view(), name='api_claim_quest'),
+    path('profile/certificates/', views.CertificatesListView.as_view(), name='api_certificates_list'),
     path('profile/mock-purchase/', views.PurchaseEnergyView.as_view(), name='api_mock_purchase'),
     path('profile/mock-subscribe/', views.SubscribeView.as_view(), name='api_mock_subscribe'),
     path('courses/<int:course_id>/certificate/', views.CertificateView.as_view(), name='api_certificate'),

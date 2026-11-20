@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Course, Module, Lesson, Quiz, UserProgress, UserCourse, ChatMessage
+from .models import CustomUser, Course, Module, Lesson, Quiz, UserProgress, UserCourse, ChatMessage, DailyActivity
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -56,3 +56,9 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def message_preview(self, obj):
         return obj.message[:50] + '...' if len(obj.message) > 50 else obj.message
     message_preview.short_description = 'Message'
+
+
+@admin.register(DailyActivity)
+class DailyActivityAdmin(admin.ModelAdmin):
+    list_display = ['user', 'date', 'lessons_completed', 'quizzes_correct', 'chats_sent', 'practice_completed']
+    list_filter = ['date']

@@ -22,7 +22,7 @@ class CustomUser(AbstractUser):
         default='free',
         verbose_name=_("Subscription Type")
     )
-    energy = models.DecimalField(max_digits=6, decimal_places=2, default=2.00, verbose_name=_("Energy"))
+    energy = models.DecimalField(max_digits=8, decimal_places=2, default=30.00, verbose_name=_("Energy"))
     is_annual = models.BooleanField(default=False, verbose_name=_("Is Annual"))
     redeemed_xp = models.PositiveIntegerField(default=0, verbose_name=_("Redeemed XP"))
     last_bonus_claimed = models.DateField(null=True, blank=True, verbose_name=_("Last Daily Bonus Claimed"))
@@ -32,9 +32,25 @@ class CustomUser(AbstractUser):
         return self.username
 
 class Course(models.Model):
+    CATEGORY_CHOICES = [
+        ('coding', _('Programming & Tech')),
+        ('language', _('Languages')),
+        ('business', _('Business & Marketing')),
+        ('science', _('Math & Science')),
+        ('creative', _('Design & Creative')),
+        ('general', _('General Knowledge')),
+    ]
+    DIFFICULTY_CHOICES = [
+        ('beginner', _('Beginner')),
+        ('intermediate', _('Intermediate')),
+        ('advanced', _('Advanced')),
+    ]
+
     title = models.CharField(max_length=200, verbose_name=_("Title"))
     description = models.TextField(verbose_name=_("Description"))
     language = models.CharField(max_length=3, default='en', verbose_name=_("Language"))
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general', verbose_name=_("Category"))
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='beginner', verbose_name=_("Difficulty"))
     image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_("Image URL"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     creator = models.ForeignKey(
@@ -61,9 +77,19 @@ class Module(models.Model):
         return f"{self.course.title} - {self.title}"
 
 class Lesson(models.Model):
+    LESSON_TYPE_CHOICES = [
+        ('general', _('General')),
+        ('coding', _('Coding & Interactive Lab')),
+        ('language', _('Language & Dialogue')),
+        ('science', _('Math & Science')),
+        ('business', _('Business & Strategy')),
+    ]
+
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200, verbose_name=_("Title"))
     content = models.TextField(help_text=_("Markdown content"), verbose_name=_("Content"))
+    lesson_type = models.CharField(max_length=20, choices=LESSON_TYPE_CHOICES, default='general', verbose_name=_("Lesson Type"))
+    interactive_data = models.JSONField(default=dict, blank=True, help_text=_("Structured visual diagrams, flashcards, and practice lab"))
     image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_("Image URL"))
     order = models.PositiveIntegerField(verbose_name=_("Order"))
 
@@ -78,6 +104,7 @@ class Quiz(models.Model):
     question = models.TextField(verbose_name=_("Question"))
     options = models.JSONField(help_text=_("List of options"), verbose_name=_("Options"))
     correct_answer = models.CharField(max_length=200, verbose_name=_("Correct Answer"))
+    explanation = models.TextField(blank=True, default='', verbose_name=_("Explanation"))
 
     def __str__(self):
         return f"Quiz for {self.lesson.title}"
@@ -133,13 +160,15 @@ class UserStreak(models.Model):
     def update_streak(self):
         today = timezone.localdate()
 
-        if self.last_activity == today:
+        if self.last_activity == today and self.current_streak > 0:
             return
 
-        if self.last_activity == today - timedelta(days=1):
+        if self.current_streak == 0:
+            self.current_streak = 1
+        elif self.last_activity == today - timedelta(days=1):
             self.current_streak += 1
         else:
-            self.current_streak = 1 
+            self.current_streak = 1
 
         if self.current_streak > self.max_streak:
             self.max_streak = self.current_streak
@@ -171,3 +200,21 @@ class CourseStar(models.Model):
 
     def __str__(self):
         return f"{self.user.username} starred {self.course.title}"
+
+
+class DailyActivity(models.Model):
+    """Tracks daily user learning engagement for Quests, Analytics, and Fair Rate Limits."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='daily_activities')
+    date = models.DateField(default=timezone.localdate)
+    lessons_completed = models.PositiveIntegerField(default=0)
+    quizzes_correct = models.PositiveIntegerField(default=0)
+    chats_sent = models.PositiveIntegerField(default=0)
+    practice_completed = models.PositiveIntegerField(default=0)
+    claimed_quests = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        unique_together = ['user', 'date']
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}"
