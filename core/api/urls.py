@@ -13,6 +13,7 @@ urlpatterns = [
     path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/profile/', views.UserProfileView.as_view(), name='api_profile'),
+    path('auth/delete-account/', views.DeleteAccountView.as_view(), name='api_delete_account'),
 
     # Explore & Custom Courses
     path('courses/explore/', views.ExploreCoursesView.as_view(), name='api_explore_courses'),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('lessons/<int:lesson_id>/submit-quiz/', views.SubmitQuizView.as_view(), name='api_submit_quiz'),
     path('lessons/<int:lesson_id>/evaluate-practice/', views.EvaluatePracticeView.as_view(), name='api_evaluate_practice'),
     path('lessons/<int:lesson_id>/ask-ai/', views.LessonAskAIView.as_view(), name='api_lesson_ask_ai'),
+    path('practice/blitz/', views.BlitzReviewView.as_view(), name='api_blitz_review'),
 
     # Chatbot & Generation
     path('chatbot/', views.ChatbotView.as_view(), name='api_chatbot'),

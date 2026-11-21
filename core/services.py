@@ -32,9 +32,9 @@ ECONOMY_CONFIG = {
         'ultra': Decimal('35.00'),
     },
     'course_limit': {
-        'free': 2,
-        'pro': 15,
-        'ultra': 50,
+        'free': 5,
+        'pro': 50,
+        'ultra': 200,
     },
     'pdf_cost': Decimal('40.00'),
     'lab_eval_cost': {

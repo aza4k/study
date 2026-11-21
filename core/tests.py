@@ -137,3 +137,38 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
             self.assertEqual(pro_res.status_code, 200)
             self.assertTrue(pro_res.data['is_passed'])
             self.assertEqual(pro_res.data['xp_gained'], 15)
+
+    def test_blitz_review_open_preview_and_delete_account(self):
+        # Other user's course preview works for Free users (Lesson 1 unlocked, Lesson 2 locked)
+        other_user = User.objects.create_user(username='author2', password='Password123!')
+        other_course = Course.objects.create(title='Explore Course', description='Open preview', language='uz', creator=other_user)
+        mod = Module.objects.create(course=other_course, title='M1', order=1)
+        Lesson.objects.create(module=mod, title='L1', content='Free preview content', order=1)
+        Lesson.objects.create(module=mod, title='L2', content='Locked Pro content', order=2)
+
+        preview_res = self.client.get(f'/api/v1/courses/{other_course.id}/', **self.headers)
+        self.assertEqual(preview_res.status_code, 200)
+        self.assertTrue(preview_res.data['is_preview'])
+        lessons = preview_res.data['modules'][0]['lessons']
+        self.assertFalse(lessons[0]['is_locked'])
+        self.assertTrue(lessons[1]['is_locked'])
+
+        # Blitz Review loads & awards XP at 0 energy cost
+        blitz_get = self.client.get(reverse('api_blitz_review'), **self.headers)
+        self.assertEqual(blitz_get.status_code, 200)
+        self.assertEqual(blitz_get.data['energy_cost'], 0)
+        self.assertGreaterEqual(len(blitz_get.data['questions']), 1)
+
+        blitz_post = self.client.post(
+            reverse('api_blitz_review'),
+            {'correct_count': 2, 'solved_quiz_ids': [self.quiz.id]},
+            format='json',
+            **self.headers
+        )
+        self.assertEqual(blitz_post.status_code, 200)
+        self.assertEqual(blitz_post.data['xp_earned'], 10)
+
+        # Delete account endpoint removes user cleanly
+        del_res = self.client.delete(reverse('api_delete_account'), **self.headers)
+        self.assertEqual(del_res.status_code, 200)
+        self.assertFalse(User.objects.filter(id=self.user.id).exists())

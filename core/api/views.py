@@ -211,12 +211,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         top_25_ids = Course.objects.annotate(star_count=Count('stars')).order_by('-star_count')[:25].values_list('id', flat=True)
         is_top_25 = instance.id in top_25_ids
 
-        if user.subscription_type == 'free':
-            if not is_creator and not is_enrolled:
-                return Response(
-                    {'error': 'PRO subscription required to open community courses.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+        is_preview = False
+        if user.subscription_type == 'free' and not is_creator and not is_enrolled:
+            # Allow Free users to preview Lesson 1 of any Explore course instead of blocking completely
+            is_preview = True
         elif user.subscription_type == 'pro':
             if not is_creator and not is_enrolled and not is_top_25:
                 return Response(
@@ -225,7 +223,22 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 )
 
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        data = dict(serializer.data)
+        data['is_preview'] = is_preview
+
+        if is_preview:
+            first_seen = False
+            for mod in data.get('modules', []):
+                for les in mod.get('lessons', []):
+                    if not first_seen:
+                        first_seen = True
+                        les['is_locked'] = False
+                    else:
+                        les['is_locked'] = True
+                        les['content'] = ''
+                        les['quizzes'] = []
+                        les['interactive_data'] = {}
+        return Response(data)
 
 
 class LessonViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1031,3 +1044,114 @@ class CertificatesListView(views.APIView):
         certs = Certificate.objects.filter(user=request.user).select_related('course').order_by('-issued_at')
         serializer = CertificateSerializer(certs, many=True)
         return Response(serializer.data)
+
+
+class DeleteAccountView(views.APIView):
+    """Google Play Store compliance: allows authenticated user to permanently delete their account."""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        cache.delete(f"courses_list_v2_{user.id}")
+        cache.delete('api_leaderboard_cache')
+        user.delete()
+        return Response({'success': True, 'message': 'Account deleted permanently.'})
+
+
+class BlitzReviewView(views.APIView):
+    """
+    Zero-energy Active Recall & Spaced Repetition Blitz Mode.
+    Pulls quizzes from the user's courses (prioritizing unmastered/missed concepts)
+    so users retain what they learn instead of creating endless unused courses.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        import random
+        user = request.user
+        enrolled_course_ids = list(
+            UserCourse.objects.filter(user=user).values_list('course_id', flat=True)
+        )
+        quizzes_qs = Quiz.objects.select_related('lesson__module__course').filter(
+            lesson__module__course_id__in=enrolled_course_ids
+        )
+
+        # If brand new user with no course quizzes yet, offer starter quizzes in preferred language
+        if not quizzes_qs.exists():
+            quizzes_qs = Quiz.objects.select_related('lesson__module__course').filter(
+                lesson__module__course__language=user.preferred_language
+            )[:25]
+            if not quizzes_qs.exists():
+                quizzes_qs = Quiz.objects.select_related('lesson__module__course').all()[:25]
+
+        solved_ids = set()
+        for prog in UserProgress.objects.filter(user=user).only('completed_quizzes'):
+            for qid in (prog.completed_quizzes or []):
+                if isinstance(qid, int) and qid > 0:
+                    solved_ids.add(qid)
+
+        unsolved = []
+        solved = []
+        for q in quizzes_qs[:80]:
+            item = {
+                'id': q.id,
+                'lesson_id': q.lesson_id,
+                'question': q.question,
+                'options': q.options,
+                'correct_answer': q.correct_answer,
+                'explanation': q.explanation or '',
+                'lesson_title': q.lesson.title,
+                'course_title': q.lesson.module.course.title,
+                'is_review': q.id in solved_ids,
+            }
+            if q.id in solved_ids:
+                solved.append(item)
+            else:
+                unsolved.append(item)
+
+        random.shuffle(unsolved)
+        random.shuffle(solved)
+        deck = (unsolved[:6] + solved[:4])[:8]
+
+        return Response({
+            'questions': deck,
+            'total_available': len(unsolved) + len(solved),
+            'energy_cost': 0,
+        })
+
+    def post(self, request):
+        user = request.user
+        correct_count = max(0, min(20, int(request.data.get('correct_count', 0))))
+        solved_quiz_ids = request.data.get('solved_quiz_ids', [])
+
+        xp_earned = correct_count * 5
+        today = timezone.localdate()
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+
+        if isinstance(solved_quiz_ids, list) and solved_quiz_ids:
+            quizzes = Quiz.objects.filter(id__in=solved_quiz_ids).select_related('lesson')
+            for q in quizzes:
+                prog, _ = UserProgress.objects.get_or_create(user=user, lesson=q.lesson)
+                comp = list(prog.completed_quizzes or [])
+                if q.id not in comp:
+                    comp.append(q.id)
+                    prog.completed_quizzes = comp
+                    prog.save(update_fields=['completed_quizzes'])
+
+        if xp_earned > 0:
+            user.bonus_xp += xp_earned
+            user.save(update_fields=['bonus_xp'])
+            activity.quizzes_correct += correct_count
+            activity.save(update_fields=['quizzes_correct'])
+
+        streak, _ = UserStreak.objects.get_or_create(user=user)
+        streak.update_streak()
+        cache.delete('api_leaderboard_cache')
+
+        total_xp, _ = _get_total_xp(user)
+        return Response({
+            'success': True,
+            'xp_earned': xp_earned,
+            'total_xp': total_xp,
+            'current_streak': streak.current_streak,
+        })
