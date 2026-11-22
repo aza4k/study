@@ -613,13 +613,9 @@ Ensure lesson titles flow naturally from fundamentals to practical mastery.
             except Exception:
                 pass
 
-        # Populate Lesson 1 synchronously so the student can start immediately
+        # Populate ONLY Lesson 1 synchronously. Lesson 2+ starts pre-warming strictly when Lesson 1 is opened.
         if created_lessons:
             get_or_generate_lesson_content(created_lessons[0], language, tier=sub_type)
-
-        # Predictive 1+1: Pre-warm ONLY Lesson 2 in background via Celery
-        if len(created_lessons) > 1:
-            _schedule_single_lesson_prewarm(created_lessons[1].id, language, sub_type)
 
         cache.clear()
         return course

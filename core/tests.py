@@ -172,3 +172,39 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         del_res = self.client.delete(reverse('api_delete_account'), **self.headers)
         self.assertEqual(del_res.status_code, 200)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
+
+    def test_sequential_lesson_lock_and_prewarm_only_on_open(self):
+        les2 = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 2',
+            content='Content for lesson 2 that is long enough to avoid live AI generation calls in unit test.',
+            lesson_type='coding',
+            interactive_data={'flashcards': [{'front': 'A', 'back': 'B', 'example': ''}]},
+            order=2,
+        )
+        Quiz.objects.create(
+            lesson=les2,
+            question='Q2?',
+            options=['A', 'B', 'C', 'D'],
+            correct_answer='A',
+        )
+
+        # Course detail marks Lesson 1 unlocked, Lesson 2 prerequisite_locked before Lesson 1 is done
+        course_res = self.client.get(f'/api/v1/courses/{self.course.id}/', **self.headers)
+        self.assertEqual(course_res.status_code, 200)
+        lessons = course_res.data['modules'][0]['lessons']
+        self.assertFalse(lessons[0]['prerequisite_locked'])
+        self.assertTrue(lessons[1]['prerequisite_locked'])
+
+        # Direct API access to Lesson 2 blocked until Lesson 1 is completed
+        blocked_res = self.client.get(f'/api/v1/lessons/{les2.id}/', **self.headers)
+        self.assertEqual(blocked_res.status_code, 403)
+        self.assertTrue(blocked_res.data['prerequisite_locked'])
+
+        # Opening Lesson 1 succeeds and schedules pre-warming if Lesson 2 is empty
+        les2.content = ''
+        les2.save()
+        with patch('core.api.views._schedule_single_lesson_prewarm') as mock_prewarm:
+            open1 = self.client.get(f'/api/v1/lessons/{self.lesson.id}/', **self.headers)
+            self.assertEqual(open1.status_code, 200)
+            mock_prewarm.assert_called_once_with(les2.id, 'uz', 'free')

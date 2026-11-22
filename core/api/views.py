@@ -226,18 +226,26 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         data = dict(serializer.data)
         data['is_preview'] = is_preview
 
-        if is_preview:
-            first_seen = False
-            for mod in data.get('modules', []):
-                for les in mod.get('lessons', []):
-                    if not first_seen:
-                        first_seen = True
-                        les['is_locked'] = False
-                    else:
-                        les['is_locked'] = True
+        first_seen = False
+        prev_completed = True  # Lesson 1 is always unlocked
+        for mod in data.get('modules', []):
+            for les in mod.get('lessons', []):
+                if is_preview and first_seen:
+                    les['is_locked'] = True
+                    les['prerequisite_locked'] = False
+                    les['content'] = ''
+                    les['quizzes'] = []
+                    les['interactive_data'] = {}
+                else:
+                    unlocked = prev_completed
+                    les['is_locked'] = not unlocked
+                    les['prerequisite_locked'] = not unlocked
+                    if not unlocked:
                         les['content'] = ''
                         les['quizzes'] = []
                         les['interactive_data'] = {}
+                first_seen = True
+                prev_completed = bool((les.get('user_progress') or {}).get('is_completed', False))
         return Response(data)
 
 
@@ -258,11 +266,6 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
         user = request.user
         sub = getattr(user, 'subscription_type', 'free')
 
-        # Generate rich content lazily if empty or missing interactive blocks
-        if len(instance.content.strip()) < 80 or not instance.quizzes.exists() or not instance.interactive_data:
-            instance = get_or_generate_lesson_content(instance, course.language, tier=sub)
-
-        # Find adjacent lessons for seamless Prev/Next navigation + Predictive N+1 Pre-warming
         ordered_lessons = list(
             Lesson.objects.filter(module__course=course)
             .order_by('module__order', 'order')
@@ -274,12 +277,31 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
             idx = ordered_lessons.index(instance.id)
             if idx > 0:
                 prev_lesson_id = ordered_lessons[idx - 1]
+                # Enforce sequential mastery: must complete previous lesson before opening this one
+                prev_done = UserProgress.objects.filter(
+                    user=user, lesson_id=prev_lesson_id, is_completed=True
+                ).exists()
+                if not prev_done:
+                    return Response(
+                        {
+                            'error': 'Keyingi darsga o\'tish uchun avval oldingi darsni tugatishingiz kerak!',
+                            'prerequisite_locked': True,
+                            'required_lesson_id': prev_lesson_id,
+                        },
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
             if idx + 1 < len(ordered_lessons):
                 next_lesson_id = ordered_lessons[idx + 1]
-                # Pre-warm ONLY next lesson in Celery
-                next_les = Lesson.objects.filter(id=next_lesson_id).first()
-                if next_les and (len(next_les.content.strip()) < 80 or not next_les.interactive_data):
-                    _schedule_single_lesson_prewarm(next_lesson_id, course.language, sub)
+
+        # Generate rich content lazily if empty or missing interactive blocks
+        if len(instance.content.strip()) < 80 or not instance.quizzes.exists() or not instance.interactive_data:
+            instance = get_or_generate_lesson_content(instance, course.language, tier=sub)
+
+        # Trigger next-lesson background generation ONLY once this lesson has actually been opened
+        if next_lesson_id is not None:
+            next_les = Lesson.objects.filter(id=next_lesson_id).first()
+            if next_les and (len(next_les.content.strip()) < 80 or not next_les.interactive_data):
+                _schedule_single_lesson_prewarm(next_lesson_id, course.language, sub)
 
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
