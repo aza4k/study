@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIClient
-from .models import Course, Module, Lesson, Quiz, DailyActivity
+from .models import Course, Module, Lesson, Quiz, DailyActivity, UserCourse
 
 User = get_user_model()
 
@@ -32,7 +32,7 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         self.lesson = Lesson.objects.create(
             module=self.module,
             title='Variables and Loops',
-            content='## Intro\nPython is clean.',
+            content='## Intro\nPython is clean, readable, and designed for fast interactive learning and practical coding.',
             lesson_type='coding',
             interactive_data={
                 'visual_diagram': {'title': 'Flow', 'steps': ['Input', 'Process', 'Output'], 'summary': 'Core flow'},
@@ -234,3 +234,68 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         })
         self.assertEqual(ok_res.status_code, 200)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
+
+    def test_web_pages_sequential_lock_quiz_economy_and_blitz(self):
+        from django.test import Client
+        les2 = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 2 Web',
+            content='Detailed second lesson content for web sequential mastery verification.',
+            lesson_type='coding',
+            interactive_data={'flashcards': [{'front': 'X', 'back': 'Y', 'example': ''}]},
+            order=2,
+        )
+        Quiz.objects.create(lesson=les2, question='Q2?', options=['A', 'B', 'C', 'D'], correct_answer='A')
+        UserCourse.objects.get_or_create(user=self.user, course=self.course)
+
+        wc = Client(HTTP_HOST='study-ai.uz')
+        self.assertTrue(wc.login(username='testlearner', password='StrongPassword123!'))
+
+        # All primary Neo-Brutalist pages render 200
+        for name in ('dashboard', 'explore', 'blitz_web', 'chatbot', 'leaderboard', 'profile_web', 'pricing'):
+            res = wc.get(reverse(name))
+            self.assertEqual(res.status_code, 200, msg=f"Failed rendering {name}")
+
+        # Sequential lock blocks Lesson 2 before Lesson 1 is completed
+        blocked = wc.get(reverse('lesson_detail', kwargs={'pk': les2.id}))
+        self.assertEqual(blocked.status_code, 302)
+
+        # Opening Lesson 1 succeeds and pre-warms ONLY Lesson 2 if Lesson 2 needs generation
+        les2.content = ''
+        les2.save()
+        with patch('core.views._schedule_single_lesson_prewarm') as mock_prewarm:
+            ok1 = wc.get(reverse('lesson_detail', kwargs={'pk': self.lesson.id}))
+            self.assertEqual(ok1.status_code, 200)
+            mock_prewarm.assert_called_once_with(les2.id, 'uz', 'free')
+
+        # Wrong quiz answer does NOT deduct XP
+        wrong_res = wc.post(
+            reverse('submit_quiz', kwargs={'lesson_id': self.lesson.id}),
+            {'quiz_id': self.quiz.id, 'option': '0, 1, 2'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(wrong_res.status_code, 200)
+        self.assertFalse(wrong_res.json()['is_correct'])
+        self.assertEqual(wrong_res.json()['total_xp'], 0)
+
+        # Correct quiz answer grants +10 XP + 15 XP lesson completion and unlocks Lesson 2
+        right_res = wc.post(
+            reverse('submit_quiz', kwargs={'lesson_id': self.lesson.id}),
+            {'quiz_id': self.quiz.id, 'option': '1, 2, 3'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(right_res.status_code, 200)
+        self.assertTrue(right_res.json()['is_correct'])
+        self.assertTrue(right_res.json()['lesson_completed'])
+        self.assertEqual(right_res.json()['total_xp'], 25)
+
+        # Daily bonus & Blitz POST work cleanly
+        bonus = wc.post(reverse('claim_bonus_web'))
+        self.assertEqual(bonus.status_code, 200)
+        blitz_post = wc.post(
+            reverse('blitz_web'),
+            data='{"correct_count": 3, "solved_quiz_ids": []}',
+            content_type='application/json',
+        )
+        self.assertEqual(blitz_post.status_code, 200)
+        self.assertEqual(blitz_post.json()['xp_earned'], 15)

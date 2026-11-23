@@ -1,344 +1,330 @@
 <!DOCTYPE html>
-{% load i18n %}
-<html lang="en">
-
+{% load i18n static %}
+<html lang="{{ LANGUAGE_CODE|default:'uz' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% trans "Universal Learning Platform" %}{% endblock %}</title>
+    <title>{% block title %}StudyAi — AI Learning Platform{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/studyai_logo.png' %}">
+    <script>
+        (function() {
+            if (localStorage.getItem('studyai_theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
+        :root {
+            --bg-main: #FAF9F6;
+            --bg-card: #FFFFFF;
+            --bg-soft: #F1F5F9;
+            --text-main: #111827;
+            --text-sub: #4B5563;
+            --border-ink: #111827;
+            --shadow-ink: #111827;
+            --grid-line: #EAE6DC;
+            --primary: #38BDF8;
+            --secondary: #FACC15;
+            --accent: #F43F5E;
+            --success: #34D399;
+            --violet: #A78BFA;
+        }
+        html.dark {
+            --bg-main: #0B0F19;
+            --bg-card: #161C2C;
+            --bg-soft: #1E293B;
+            --text-main: #F8FAFC;
+            --text-sub: #94A3B8;
+            --border-ink: #64748B;
+            --shadow-ink: #020617;
+            --grid-line: #1E293B;
+            --primary: #0EA5E9;
+            --secondary: #EAB308;
+            --accent: #FB7185;
+            --success: #10B981;
+            --violet: #8B5CF6;
+        }
         body {
             font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            background-image:
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
-
-        ::-webkit-scrollbar {
-            width: 8px;
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .neo-card {
+            background-color: var(--bg-card);
+            border: 3px solid var(--border-ink);
+            border-radius: 20px;
+            box-shadow: 5px 5px 0px var(--shadow-ink);
         }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        .neo-card-sm {
+            background-color: var(--bg-card);
+            border: 2.5px solid var(--border-ink);
+            border-radius: 14px;
+            box-shadow: 3px 3px 0px var(--shadow-ink);
         }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+        .neo-btn {
+            border: 2.5px solid var(--border-ink);
+            border-radius: 14px;
+            box-shadow: 3.5px 3.5px 0px var(--shadow-ink);
+            font-weight: 900;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            cursor: pointer;
         }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .neo-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4.5px 4.5px 0px var(--shadow-ink);
         }
+        .neo-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--shadow-ink);
+        }
+        .neo-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2.5px solid var(--border-ink);
+            border-radius: 14px;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            font-weight: 700;
+            box-shadow: 3px 3px 0px var(--shadow-ink);
+        }
+        .neo-input:focus {
+            outline: none;
+            box-shadow: 3px 3px 0px var(--primary);
+        }
+        .prose-neo h1, .prose-neo h2, .prose-neo h3 { font-weight: 900; margin-top: 1.25rem; margin-bottom: 0.6rem; color: var(--text-main); }
+        .prose-neo h2 { font-size: 1.35rem; }
+        .prose-neo h3 { font-size: 1.15rem; }
+        .prose-neo p { margin-bottom: 0.85rem; line-height: 1.7; }
+        .prose-neo ul, .prose-neo ol { padding-left: 1.4rem; margin-bottom: 0.85rem; }
+        .prose-neo li { list-style: disc; margin-bottom: 0.35rem; }
+        .prose-neo pre { padding: 1rem; border-radius: 14px; border: 2.5px solid var(--border-ink); overflow-x: auto; margin: 1rem 0; background: #0F172A; color: #E2E8F0; }
+        .prose-neo code { padding: 0.15rem 0.4rem; border-radius: 6px; background: var(--bg-soft); font-size: 0.9em; }
+        .prose-neo pre code { padding: 0; background: transparent; }
     </style>
     {% block extra_head %}{% endblock %}
-    {% block extra_css %}{% endblock %}
 </head>
+<body class="min-h-screen flex flex-col pb-20 md:pb-0">
+    <!-- Top Navbar -->
+    <nav class="sticky top-0 z-50 border-b-[3px] border-[var(--border-ink)] bg-[var(--bg-card)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Brand -->
+            <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}" class="flex items-center gap-2.5 shrink-0">
+                <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-10 h-10 rounded-xl border-[2.5px] border-[var(--border-ink)]">
+                <span class="text-xl font-black tracking-tight">StudyAi</span>
+            </a>
 
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 group">
-                    <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}"
-                        class="flex items-center gap-2">
-                        <div
-                            class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                            <span class="text-white font-bold text-xl">S</span>
-                        </div>
-                        <span
-                            class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:opacity-80 transition-opacity">
-                            StudyAi
-                        </span>
-                    </a>
-                </div>
-
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-6">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}"
-                        class="flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">
-                        <i class="fa-solid fa-table-columns"></i> {% trans "Courses" %}
-                    </a>
-
-                    <a href="{% url 'leaderboard' %}"
-                        class="flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">
-                        <i class="fa-solid fa-trophy"></i> {% trans "Leaderboard" %}
-                    </a>
-                    <a href="{% url 'chatbot' %}"
-                        class="flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-medium transition-colors duration-200">
-                        <i class="fa-solid fa-robot"></i> Ai
-                    </a>
-                    {% endif %}
-
-                    <!-- Language Switcher -->
-                    <div class="relative group">
-                        <button
-                            class="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-indigo-600 font-medium transition rounded-lg hover:bg-gray-50">
-                            <i class="fa-solid fa-globe"></i>
-                            <span class="text-sm font-semibold uppercase">
-                                {% get_current_language as LANGUAGE_CODE %}
-                                {% if LANGUAGE_CODE == 'kaa' %}QR
-                                {% elif LANGUAGE_CODE == 'ru' %}RU
-                                {% elif LANGUAGE_CODE == 'uz' %}UZ
-                                {% else %}EN{% endif %}
-                            </span>
-                            <i class="fa-solid fa-chevron-down text-xs transition-transform group-hover:rotate-180"></i>
-                        </button>
-                        <!-- Dropdown -->
-                        <div
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
-                            <div class="p-1">
-                                <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                                    {% csrf_token %}
-                                    <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                                        {% csrf_token %}
-                                        <button type="submit" name="language" value="kaa"
-                                            class="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center gap-3 rounded-lg transition {% if LANGUAGE_CODE == 'kaa' %}bg-indigo-50 text-indigo-600{% else %}text-gray-700{% endif %}"
-                                            onclick="setTimeout(() => window.location.reload(), 100);">
-                                            <span class="text-xl">Kk</span>
-                                            <span class="font-medium">Qaraqalpaqsha</span>
-                                            {% if LANGUAGE_CODE == 'kaa' %}<i
-                                                class="fa-solid fa-check ml-auto text-indigo-600"></i>{% endif %}
-                                        </button>
-                                    </form>
-
-                                    <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                                        {% csrf_token %}
-                                        <button type="submit" name="language" value="en"
-                                            class="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center gap-3 rounded-lg transition {% if LANGUAGE_CODE == 'en' %}bg-indigo-50 text-indigo-600{% else %}text-gray-700{% endif %}"
-                                            onclick="setTimeout(() => window.location.reload(), 100);">
-                                            <span class="text-xl">En</span>
-                                            <span class="font-medium">English</span>
-                                            {% if LANGUAGE_CODE == 'en' %}<i
-                                                class="fa-solid fa-check ml-auto text-indigo-600"></i>{% endif %}
-                                        </button>
-                                    </form>
-
-                                    <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                                        {% csrf_token %}
-                                        <button type="submit" name="language" value="ru"
-                                            class="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center gap-3 rounded-lg transition {% if LANGUAGE_CODE == 'ru' %}bg-indigo-50 text-indigo-600{% else %}text-gray-700{% endif %}"
-                                            onclick="setTimeout(() => window.location.reload(), 100);">
-                                            <span class="text-xl">Ru</span>
-                                            <span class="font-medium">Русский</span>
-                                            {% if LANGUAGE_CODE == 'ru' %}<i
-                                                class="fa-solid fa-check ml-auto text-indigo-600"></i>{% endif %}
-                                        </button>
-                                    </form>
-
-                                    <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                                        {% csrf_token %}
-                                        <button type="submit" name="language" value="uz"
-                                            class="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center gap-3 rounded-lg transition {% if LANGUAGE_CODE == 'uz' %}bg-indigo-50 text-indigo-600{% else %}text-gray-700{% endif %}"
-                                            onclick="setTimeout(() => window.location.reload(), 100);">
-                                            <span class="text-xl">Uz</span>
-                                            <span class="font-medium">O'zbekcha</span>
-                                            {% if LANGUAGE_CODE == 'uz' %}<i
-                                                class="fa-solid fa-check ml-auto text-indigo-600"></i>{% endif %}
-                                        </button>
-                                    </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if user.is_authenticated %}
-                    <!-- XP & User Profile -->
-                    <div class="flex items-center gap-4 pl-4 border-l border-gray-200">
-                        <a href="{% url 'gamification' %}"
-                            class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-md hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer"
-                            title="{% trans 'View Gamification' %}">
-                            <i class="fa-solid fa-bolt text-white text-sm"></i>
-                            <span class="text-white font-bold text-sm">{{ user_xp }} XP</span>
-                        </a>
-
-                        <a href="{% url 'pricing' %}"
-                            class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-blue-500 rounded-full shadow-md hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer"
-                            title="{% trans 'View' %}">
-                            <i class="fa-solid fa-plus text-white text-sm"></i>
-                            <span class="text-white font-bold text-sm">Pro</span>
-                        </a>
-                        <!-- <a href="{% url 'chatbot' %}"
-                        class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5">
-                        <i class="fa-solid fa-plus"></i> Pro
-                    </a> -->
-
-                        <div class="flex items-center gap-3">
-                            <span class="text-gray-700 font-semibold">{{ user.first_name }}</span>
-                            <a href="{% url 'logout' %}" class="text-gray-400 hover:text-red-500 transition-colors"
-                                title="{% trans 'Logout' %}">
-                                <i class="fa-solid fa-right-from-bracket"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    {% else %}
-                    <a href="{% url 'login' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">{% trans "Login" %}</a>
-                    {% endif %}
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center">
-                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-indigo-600 focus:outline-none p-2">
-                        <i class="fa-solid fa-bars text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile Menu (Hidden by default) -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
-            <div class="px-4 pt-2 pb-4 space-y-3">
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center gap-1.5">
                 {% if user.is_authenticated %}
-                <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span class="font-semibold text-gray-700">{{ user.first_name }}</span>
-                    <span class="text-sm font-bold text-orange-500">{{ user_xp|default:0 }} XP</span>
-                </div>
-                <a href="{% url 'dashboard' %}"
-                    class="block px-3 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg font-medium">
-                    <i class="fa-solid fa-table-columns w-6"></i> {% trans "Dashboard" %}
-                </a>
-                <a href="{% url 'chatbot' %}"
-                    class="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
-                    {% trans "New Course" %}
-                </a>
-                <a href="{% url 'leaderboard' %}"
-                    class="block px-3 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg font-medium">
-                    <i class="fa-solid fa-trophy w-6"></i> {% trans "Leaderboard" %}
-                </a>
-
-                <!-- Mobile Language Switcher -->
-                <div class="border-t border-gray-100 pt-2 mt-2">
-                    <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{% trans
-                        "Language" %}</p>
-                    <div class="grid grid-cols-1 gap-2 px-3">
-                        <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                            {% csrf_token %}
-                            <button type="submit" name="language" value="kaa"
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg {% if LANGUAGE_CODE == 'kaa' %}bg-indigo-50 text-indigo-600{% else %}text-gray-600 hover:bg-gray-50{% endif %}"
-                                onclick="setTimeout(() => window.location.reload(), 100);">
-                                <span class="text-xl">🇺🇿</span> Qaraqalpaqsha
-                            </button>
-                        </form>
-                        <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                            {% csrf_token %}
-                            <button type="submit" name="language" value="en"
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg {% if LANGUAGE_CODE == 'en' %}bg-indigo-50 text-indigo-600{% else %}text-gray-600 hover:bg-gray-50{% endif %}"
-                                onclick="setTimeout(() => window.location.reload(), 100);">
-                                <span class="text-xl">🇺🇸</span> English
-                            </button>
-                        </form>
-                        <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                            {% csrf_token %}
-                            <button type="submit" name="language" value="ru"
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg {% if LANGUAGE_CODE == 'ru' %}bg-indigo-50 text-indigo-600{% else %}text-gray-600 hover:bg-gray-50{% endif %}"
-                                onclick="setTimeout(() => window.location.reload(), 100);">
-                                <span class="text-xl">🇷🇺</span> Русский
-                            </button>
-                        </form>
-                        <form hx-post="{% url 'change_language' %}" hx-swap="none" class="contents">
-                            {% csrf_token %}
-                            <button type="submit" name="language" value="uz"
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg {% if LANGUAGE_CODE == 'uz' %}bg-indigo-50 text-indigo-600{% else %}text-gray-600 hover:bg-gray-50{% endif %}"
-                                onclick="setTimeout(() => window.location.reload(), 100);">
-                                <span class="text-xl">🇺🇿</span> O'zbekcha
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <a href="{% url 'logout' %}"
-                    class="block px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg font-medium mt-2">
-                    <i class="fa-solid fa-right-from-bracket w-6"></i> {% trans "Logout" %}
-                </a>
+                    {% with url_name=request.resolver_match.url_name %}
+                    <a href="{% url 'dashboard' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-house mr-1.5"></i>Asosiy
+                    </a>
+                    <a href="{% url 'explore' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-compass mr-1.5"></i>Kashf etish
+                    </a>
+                    <a href="{% url 'blitz_web' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-bolt mr-1.5"></i>Blitz
+                    </a>
+                    <a href="{% url 'chatbot' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'chatbot' %}bg-[#A78BFA] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-robot mr-1.5"></i>AI Ustoz
+                    </a>
+                    <a href="{% url 'leaderboard' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'leaderboard' %}bg-[#F43F5E] text-white border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-trophy mr-1.5"></i>Reyting
+                    </a>
+                    {% endwith %}
                 {% else %}
-                <a href="{% url 'login' %}"
-                    class="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">{%
-                    trans "Login" %}</a>
+                    <a href="{% url 'landing' %}#features" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Imkoniyatlar</a>
+                    <a href="{% url 'pricing' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Tariflar</a>
+                    <a href="{% url 'support_page' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Yordam</a>
                 {% endif %}
+            </div>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-2">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile_web' %}" title="Energiya" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#38BDF8] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black">
+                        <img src="{% static 'images/icon_energy.png' %}" alt="E" class="w-4 h-4 rounded">
+                        <span id="nav-energy-val">{{ user.energy|floatformat:0 }}</span>
+                    </a>
+                    <a href="{% url 'profile_web' %}" title="Profil" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FACC15] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black">
+                        <i class="fa-solid fa-user"></i>
+                        <span>{{ user.username }}</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm hover:bg-[var(--bg-soft)]">Kirish</a>
+                    <a href="{% url 'register' %}" class="neo-btn px-4 py-2 bg-[#FACC15] text-[#111827] text-sm">Boshlash</a>
+                {% endif %}
+
+                <!-- Theme toggle -->
+                <button type="button" onclick="toggleTheme()" title="Mavzuni almashtirish" class="w-9 h-9 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] flex items-center justify-center text-sm hover:opacity-85">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Language Switcher -->
+                <div class="relative">
+                    <select onchange="switchWebLanguage(this.value)" aria-label="Language" class="px-2 py-1.5 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] text-xs font-black cursor-pointer">
+                        {% get_current_language as CURRENT_LANG %}
+                        <option value="uz" {% if CURRENT_LANG == 'uz' or user.preferred_language == 'uz' %}selected{% endif %}>O'Z</option>
+                        <option value="kaa" {% if CURRENT_LANG == 'kaa' or user.preferred_language == 'kaa' %}selected{% endif %}>QR</option>
+                        <option value="ru" {% if CURRENT_LANG == 'ru' or user.preferred_language == 'ru' %}selected{% endif %}>RU</option>
+                        <option value="en" {% if CURRENT_LANG == 'en' or user.preferred_language == 'en' %}selected{% endif %}>EN</option>
+                    </select>
+                </div>
             </div>
         </div>
     </nav>
 
-    {% block hero %}{% endblock %}
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+        {% for message in messages %}
+        <div class="neo-card-sm p-3.5 flex items-center justify-between gap-3 {% if message.tags == 'error' %}bg-[#F43F5E] text-white{% elif message.tags == 'warning' %}bg-[#FACC15] text-[#111827]{% else %}bg-[#34D399] text-[#111827]{% endif %} font-extrabold text-sm">
+            <span><i class="fa-solid fa-circle-info mr-2"></i>{{ message }}</span>
+            <button onclick="this.parentElement.remove()" class="font-black px-2">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {% block content %}
-        {% endblock %}
+    <!-- Toast Container -->
+    <div id="toast-box" class="fixed top-20 right-4 z-50 space-y-2 max-w-sm"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {% block content %}{% endblock %}
     </main>
 
-    <!-- Enhanced Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-12 mt-16">
+    <!-- Mobile Bottom Navigation (matches Android app) -->
+    {% if user.is_authenticated %}
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--border-ink)] bg-[var(--bg-card)] px-2 py-1.5 flex justify-around items-center">
+        {% with url_name=request.resolver_match.url_name %}
+        <a href="{% url 'dashboard' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px] font-black mt-0.5">Asosiy</span>
+        </a>
+        <a href="{% url 'explore' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-compass text-base"></i>
+            <span class="text-[10px] font-black mt-0.5">Kashf</span>
+        </a>
+        <a href="{% url 'blitz_web' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-bolt text-base"></i>
+            <span class="text-[10px] font-black mt-0.5">Blitz</span>
+        </a>
+        <a href="{% url 'chatbot' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'chatbot' %}bg-[#A78BFA] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-robot text-base"></i>
+            <span class="text-[10px] font-black mt-0.5">AI</span>
+        </a>
+        <a href="{% url 'profile_web' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'profile_web' %}bg-[#F43F5E] text-white{% endif %}">
+            <i class="fa-solid fa-user text-base"></i>
+            <span class="text-[10px] font-black mt-0.5">Profil</span>
+        </a>
+        {% endwith %}
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="border-t-[3px] border-[var(--border-ink)] bg-[#111827] text-gray-300 py-10 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-3 gap-8 mb-8">
-                <!-- Brand -->
                 <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <div
-                            class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
-                            S
-                        </div>
-                        <span class="text-xl font-bold text-white">StudyAi</span>
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-9 h-9 rounded-xl border-2 border-white/20">
+                        <span class="text-xl font-black text-white">StudyAi</span>
                     </div>
-                    <p class="text-sm">{% trans "The world's most advanced AI-powered learning platform. Empowering
-                        education for everyone, everywhere." %}</p>
+                    <p class="text-sm text-gray-400">Sun'iy intellekt yordamida istalgan fanni tez, tushunarli va interaktiv o'rganish platformasi.</p>
                 </div>
-
-                <!-- Quick Links -->
                 <div>
-                    <h4 class="text-white font-bold mb-4">{% trans "Platform" %}</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{% url 'dashboard' %}" class="hover:text-white transition">{% trans "Dashboard" %}</a></li>
-                        <li><a href="{% url 'chatbot' %}" class="hover:text-white transition">{% trans "New Course" %}</a></li>
-                        <li><a href="{% url 'leaderboard' %}" class="hover:text-white transition">{% trans "Leaderboard" %}</a></li>
-                        <li><a href="{% url 'privacy_policy' %}" class="hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="{% url 'delete_account_web' %}" class="hover:text-white transition">Delete Account</a></li>
-                        <li><a href="{% url 'terms_of_use' %}" class="hover:text-white transition">Terms of Use</a></li>
-                        <li><a href="{% url 'support_page' %}" class="hover:text-white transition">Support</a></li>
+                    <h4 class="text-white font-black mb-3">Platforma</h4>
+                    <ul class="space-y-2 text-sm font-semibold">
+                        <li><a href="{% url 'dashboard' %}" class="hover:text-[#FACC15]">Kurslarim</a></li>
+                        <li><a href="{% url 'explore' %}" class="hover:text-[#FACC15]">Kashf etish</a></li>
+                        <li><a href="{% url 'blitz_web' %}" class="hover:text-[#FACC15]">Blitz Takrorlash</a></li>
+                        <li><a href="{% url 'pricing' %}" class="hover:text-[#FACC15]">Tariflar</a></li>
                     </ul>
                 </div>
-
-                <!-- Team Info -->
                 <div>
-                    <h4 class="text-white font-bold mb-4">{% trans "About" %}</h4>
-                    <p class="text-sm mb-2">{% trans "Developed by" %} <span class="text-indigo-400 font-semibold">FunDev</span></p>
-                    <p class="text-sm mb-2">{% trans "Making education accessible through AI" %}</p>
-                    <p class="text-sm text-indigo-300">study-ai.uz &bull; aza4kf@gmail.com</p>
+                    <h4 class="text-white font-black mb-3">Huquqiy & Yordam</h4>
+                    <ul class="space-y-2 text-sm font-semibold">
+                        <li><a href="{% url 'privacy_policy' %}" class="hover:text-[#38BDF8]">Maxfiylik siyosati (Privacy)</a></li>
+                        <li><a href="{% url 'delete_account_web' %}" class="hover:text-[#F43F5E]">Akkauntni o'chirish</a></li>
+                        <li><a href="{% url 'terms_of_use' %}" class="hover:text-[#38BDF8]">Foydalanish shartlari</a></li>
+                        <li><a href="{% url 'support_page' %}" class="hover:text-[#34D399]">Yordam (aza4kf@gmail.com)</a></li>
+                    </ul>
                 </div>
             </div>
-
-            <!-- Copyright -->
-            <div class="border-t border-gray-800 pt-6 text-center text-sm">
-                <p>&copy; 2026 StudyAi by FunDev (study-ai.uz). {% trans "All rights reserved." %}</p>
+            <div class="border-t border-gray-800 pt-5 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400">
+                <p>&copy; 2026 StudyAi by <strong class="text-[#FACC15]">FunDev Uzbekistan</strong> &bull; study-ai.uz</p>
+                <p>Telegram: <a href="https://t.me/fundevuz" target="_blank" class="text-[#38BDF8] font-bold">@fundevuz</a></p>
             </div>
         </div>
     </footer>
 
     <script>
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
+        function getCsrfToken() {
+            const name = 'csrftoken=';
+            const decoded = decodeURIComponent(document.cookie);
+            for (const part of decoded.split(';')) {
+                const c = part.trim();
+                if (c.indexOf(name) === 0) return c.substring(name.length);
+            }
+            const meta = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            return meta ? meta.value : '';
+        }
 
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-                const icon = mobileMenuBtn.querySelector('i');
-                if (mobileMenu.classList.contains('hidden')) {
-                    icon.classList.remove('fa-xmark');
-                    icon.classList.add('fa-bars');
-                } else {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-xmark');
-                }
-            });
+        function showToast(msg, type = 'info') {
+            const box = document.getElementById('toast-box');
+            if (!box) return;
+            const el = document.createElement('div');
+            const bg = type === 'error' ? 'bg-[#F43F5E] text-white' : (type === 'success' ? 'bg-[#34D399] text-[#111827]' : 'bg-[#FACC15] text-[#111827]');
+            el.className = `neo-card-sm p-3.5 font-extrabold text-sm ${bg} transition`;
+            el.innerText = msg;
+            box.appendChild(el);
+            setTimeout(() => el.remove(), 4200);
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('theme-icon');
+            if (!icon) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-[#FACC15]' : 'fa-solid fa-moon';
+        }
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('studyai_theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+        updateThemeIcon();
+
+        async function switchWebLanguage(lang) {
+            const form = new FormData();
+            form.append('language', lang);
+            try {
+                const res = await fetch("{% url 'change_language' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrfToken() },
+                    body: form
+                });
+                if (res.ok) window.location.reload();
+            } catch (e) {
+                console.error(e);
+            }
         }
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
-
 </html>

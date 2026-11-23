@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profil — StudyAi{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Profile Hero Card -->
+    <div class="neo-card p-6 sm:p-8 bg-[#FACC15] text-[#111827] flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-full bg-[#F43F5E] text-white border-[3px] border-[#111827] flex items-center justify-center text-3xl font-black shadow-[4px_4px_0px_#111827]">
+                {{ user.first_name|default:user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-black">{{ user.first_name }} {{ user.last_name }}</h1>
+                    <span class="px-2.5 py-0.5 bg-[#111827] text-white rounded-lg text-xs font-black uppercase">{{ user.subscription_type }}</span>
+                </div>
+                <div class="text-sm font-extrabold opacity-80">@{{ user.username }}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 w-full sm:w-auto">
+            <div class="neo-card-sm p-3 bg-white text-center">
+                <div class="text-lg font-black">{{ total_xp }}</div>
+                <div class="text-[10px] font-black uppercase text-gray-500">XP</div>
+            </div>
+            <div class="neo-card-sm p-3 bg-white text-center">
+                <div class="text-lg font-black">{{ streak.current_streak }}</div>
+                <div class="text-[10px] font-black uppercase text-gray-500">Streak</div>
+            </div>
+            <div class="neo-card-sm p-3 bg-white text-center">
+                <div class="text-lg font-black">{{ courses_count }}</div>
+                <div class="text-[10px] font-black uppercase text-gray-500">Kurslar</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- XP Converter & Daily Bonus -->
+        <div class="neo-card p-6 space-y-4">
+            <h2 class="text-xl font-black">Energiya va XP almashtirish</h2>
+            <div class="neo-card-sm p-4 bg-[#38BDF8] text-[#111827] flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-black uppercase">Mavjud balans</div>
+                    <div class="text-2xl font-black"><span id="prof-energy">{{ user.energy|floatformat:0 }}</span> ⚡</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs font-black uppercase">Sarflanmagan XP</div>
+                    <div class="text-xl font-black"><span id="prof-avail-xp">{{ available_xp }}</span> XP</div>
+                </div>
+            </div>
+
+            <button type="button" onclick="redeemXp()" class="neo-btn w-full py-3 bg-[#FACC15] text-[#111827] text-sm">
+                {{ xp_redeem_cost }} XP &rarr; +{{ xp_redeem_reward }}⚡ Energiyaga almashtirish
+            </button>
+
+            <a href="{% url 'pricing' %}" class="neo-btn block w-full py-3 bg-[var(--bg-soft)] text-center text-sm">
+                Tariflar (Free / PRO / ULTRA) ni ko'rish
+            </a>
+        </div>
+
+        <!-- Edit Profile -->
+        <div class="neo-card p-6 space-y-4">
+            <h2 class="text-xl font-black">Profilni tahrirlash</h2>
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Ism" class="neo-input text-sm">
+                    <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Familiya" class="neo-input text-sm">
+                </div>
+                <input type="email" name="email" value="{{ user.email }}" placeholder="Email" class="neo-input text-sm">
+                <select name="preferred_language" class="neo-input text-sm">
+                    <option value="uz" {% if user.preferred_language == 'uz' %}selected{% endif %}>O'zbekcha</option>
+                    <option value="kaa" {% if user.preferred_language == 'kaa' %}selected{% endif %}>Qaraqalpaqsha</option>
+                    <option value="ru" {% if user.preferred_language == 'ru' %}selected{% endif %}>Русский</option>
+                    <option value="en" {% if user.preferred_language == 'en' %}selected{% endif %}>English</option>
+                </select>
+                <button type="submit" class="neo-btn w-full py-3 bg-[#34D399] text-[#111827] text-sm">Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Certificates -->
+    <div class="neo-card p-6 space-y-4">
+        <h2 class="text-xl font-black flex items-center gap-2">
+            <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-6 h-6 rounded">
+            <span>Mening sertifikatlarim</span>
+        </h2>
+        {% if certificates %}
+        <div class="grid sm:grid-cols-2 gap-3">
+            {% for cert in certificates %}
+            <div class="neo-card-sm p-4 flex items-center justify-between gap-3">
+                <div>
+                    <div class="font-black text-sm">{{ cert.course.title }}</div>
+                    <div class="text-xs font-bold text-[var(--text-sub)]">{{ cert.issued_at|date:"d.m.Y" }}</div>
+                </div>
+                <a href="{% url 'download_certificate' cert.course.id %}" class="neo-btn px-3 py-2 bg-[#FACC15] text-[#111827] text-xs">PDF</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm font-semibold text-[var(--text-sub)]">Kursdagi barcha darslarni tugatsangiz, PDF sertifikat shu yerda paydo bo'ladi.</p>
+        {% endif %}
+    </div>
+
+    <!-- Logout & Delete Account -->
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <a href="{% url 'logout' %}" class="neo-btn px-6 py-3 bg-[#F43F5E] text-white text-sm">
+            <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Tizimdan chiqish
+        </a>
+        <a href="{% url 'delete_account_web' %}" class="text-xs font-black text-[#F43F5E] underline">
+            Akkauntni butunlay o'chirish
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function redeemXp() {
+    try {
+        const res = await fetch("{% url 'redeem_xp_web' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast(data.message, 'success');
+            document.getElementById('prof-energy').innerText = Math.floor(data.current_energy);
+            document.getElementById('nav-energy-val').innerText = Math.floor(data.current_energy);
+            document.getElementById('prof-avail-xp').innerText = data.available_xp;
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (e) { showToast("Xatolik yuz berdi", 'error'); }
+}
+</script>
+{% endblock %}

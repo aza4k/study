@@ -1,84 +1,105 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load static %}
+
+{% block title %}{{ course.title }} — StudyAi{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-6 sm:px-0">
-    <div class="mb-8">
-        <a href="{% url 'dashboard' %}"
-            class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold mb-4 transition">
-            <i class="fa-solid fa-arrow-left"></i> {% trans "Back to Dashboard" %}
-        </a>
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-3">{{ course.title }}</h1>
-        <p class="text-xl text-gray-600">{{ course.description }}</p>
-    </div>
+<div class="space-y-6">
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 font-black text-sm hover:underline">
+        <i class="fa-solid fa-arrow-left"></i> Kurslarimga qaytish
+    </a>
 
-    {% if is_completed %}
-    <div class="mb-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl p-8 text-white">
-        <div class="flex items-center justify-between flex-wrap gap-4">
-            <div>
-                <div class="flex items-center gap-3 mb-3">
-                    <i class="fa-solid fa-trophy text-5xl"></i>
-                    <h2 class="text-3xl font-bold">{% trans "Course Completed!" %}</h2>
+    <!-- Course Header -->
+    <div class="neo-card overflow-hidden grid md:grid-cols-12">
+        <div class="md:col-span-4 bg-[#38BDF8] border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--border-ink)] flex items-center justify-center min-h-[200px]">
+            {% if course.image_url %}
+            <img src="{{ course.image_url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+            {% else %}
+            <img src="{% static 'images/course_1.png' %}" alt="" class="h-36 object-contain">
+            {% endif %}
+        </div>
+        <div class="md:col-span-8 p-6 sm:p-8 flex flex-col justify-between gap-4">
+            <div class="space-y-2">
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-2.5 py-1 bg-[#FACC15] text-[#111827] border-2 border-[#111827] rounded-lg text-xs font-black uppercase">{{ course.difficulty|default:'beginner' }}</span>
+                    <span class="px-2.5 py-1 bg-[var(--bg-soft)] border-2 border-[var(--border-ink)] rounded-lg text-xs font-black uppercase">{{ course.language }}</span>
+                    {% if is_preview %}
+                    <span class="px-2.5 py-1 bg-[#A78BFA] text-[#111827] border-2 border-[#111827] rounded-lg text-xs font-black">1-dars Preview</span>
+                    {% endif %}
                 </div>
-                <p class="text-green-50 text-lg">{% trans "Congratulations! You've mastered this course. Download your official certificate now." %}</p>
+                <h1 class="text-2xl sm:text-3xl font-black">{{ course.title }}</h1>
+                <p class="text-sm font-semibold text-[var(--text-sub)]">{{ course.description }}</p>
             </div>
-            <a href="{% url 'download_certificate' course.id %}"
-                class="inline-flex items-center gap-2 px-8 py-4 bg-white text-green-600 rounded-xl font-bold text-lg hover:bg-green-50 transition shadow-xl transform hover:scale-105">
-                <i class="fa-solid fa-download"></i> {% trans "Download Certificate" %}
-            </a>
+
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-black">
+                    <span>Kurs progressi: {{ done_lessons }} / {{ total_lessons }} dars</span>
+                    <span>{{ progress_percent }}%</span>
+                </div>
+                <div class="w-full h-4 bg-[var(--bg-soft)] border-2 border-[var(--border-ink)] rounded-full overflow-hidden">
+                    <div class="h-full bg-[#34D399]" style="width: {{ progress_percent }}%"></div>
+                </div>
+            </div>
+
+            {% if is_completed %}
+            <div class="neo-card-sm p-4 bg-[#34D399] text-[#111827] flex flex-wrap items-center justify-between gap-3">
+                <div class="font-black text-sm flex items-center gap-2">
+                    <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-7 h-7 rounded-lg">
+                    <span>Tabriklaymiz! Kurs to'liq yakunlandi!</span>
+                </div>
+                <a href="{% url 'download_certificate' course.id %}" class="neo-btn px-4 py-2 bg-white text-[#111827] text-xs">
+                    <i class="fa-solid fa-file-pdf mr-1"></i> PDF Sertifikatni yuklash
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
 
+    <!-- Modules & Sequential Lessons -->
     <div class="space-y-6">
-        {% for module in course.modules.all %}
-        <div class="bg-white shadow-lg overflow-hidden rounded-2xl border border-gray-100">
-            <div class="px-6 py-5 bg-gradient-to-r from-indigo-600 to-purple-600">
-                <h3 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-book-open"></i>
-                    {{ module.title }}
-                </h3>
-            </div>
-            <ul class="divide-y divide-gray-200">
-                {% for lesson in module.lessons.all %}
-                <li>
-                    <a href="{% url 'lesson_detail' lesson.pk %}"
-                        class="block hover:bg-gray-50 transition-colors group">
-                        <div class="px-6 py-5 flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <div class="flex-shrink-0">
-                                    {% if lesson.id in completed_lesson_ids %}
-                                    <div
-                                        class="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-lg">
-                                        <i class="fa-solid fa-check text-xl"></i>
-                                    </div>
-                                    {% else %}
-                                    <div
-                                        class="h-12 w-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg border-2 border-gray-300">
-                                        {{ lesson.order }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <p class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition">
-                                        {{ lesson.title }}
-                                    </p>
-                                    {% if lesson.id in completed_lesson_ids %}
-                                    <p class="text-sm text-green-600 font-semibold flex items-center gap-1 mt-1">
-                                        <i class="fa-solid fa-circle-check"></i> {% trans "Completed" %}
-                                    </p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div>
-                                <i
-                                    class="fa-solid fa-chevron-right text-gray-400 group-hover:text-indigo-600 transition"></i>
+        {% for mod in modules %}
+        <div class="neo-card p-5 sm:p-6 space-y-4">
+            <h2 class="text-xl font-black flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-[#FACC15] text-[#111827] border-2 border-[#111827] flex items-center justify-center text-sm font-black">{{ mod.order }}</span>
+                <span>{{ mod.title }}</span>
+            </h2>
+
+            <div class="space-y-3">
+                {% for les in mod.ordered_lessons %}
+                <div class="neo-card-sm p-4 flex flex-wrap items-center justify-between gap-3 {% if les.user_done %}bg-[#34D399]/15{% elif les.is_locked %}opacity-75 bg-[var(--bg-soft)]{% endif %}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl border-2 border-[#111827] flex items-center justify-center font-black text-sm {% if les.user_done %}bg-[#34D399] text-[#111827]{% elif les.is_locked %}bg-gray-300 text-gray-700{% else %}bg-[#38BDF8] text-[#111827]{% endif %}">
+                            {% if les.user_done %}<i class="fa-solid fa-check"></i>{% elif les.is_locked %}<i class="fa-solid fa-lock"></i>{% else %}{{ les.order }}{% endif %}
+                        </div>
+                        <div>
+                            <div class="font-black text-base">{{ les.title }}</div>
+                            <div class="text-xs font-bold text-[var(--text-sub)]">
+                                {% if les.user_done %}
+                                    Tugatilgan ✓
+                                {% elif les.prerequisite_locked %}
+                                    Keyingi darsga o'tish uchun avval oldingi darsni tugatishingiz kerak!
+                                {% elif les.is_locked %}
+                                    To'liq ochish uchun kursni saqlang
+                                {% else %}
+                                    O'qishga tayyor
+                                {% endif %}
                             </div>
                         </div>
+                    </div>
+
+                    {% if les.is_locked %}
+                    <button type="button" onclick="showToast('{% if les.prerequisite_locked %}Keyingi darsga o\'tish uchun avval oldingi darsni tugatishingiz kerak!{% else %}Avval kursni Mening kurslarimga saqlang!{% endif %}', 'error')"
+                        class="neo-btn px-4 py-2 bg-gray-200 text-gray-700 text-xs">
+                        <i class="fa-solid fa-lock mr-1"></i> Qulflangan
+                    </button>
+                    {% else %}
+                    <a href="{% url 'lesson_detail' les.id %}" class="neo-btn px-4 py-2 {% if les.user_done %}bg-white text-[#111827]{% else %}bg-[#FACC15] text-[#111827]{% endif %} text-xs">
+                        {% if les.user_done %}Qayta ko'rish{% else %}Darsni ochish &rarr;{% endif %}
                     </a>
-                </li>
+                    {% endif %}
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
         {% endfor %}
     </div>

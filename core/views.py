@@ -1,48 +1,80 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, TemplateView
-from django.views import View
-from django.http import HttpResponse, JsonResponse
-from django.contrib.auth import login, logout, authenticate
-from django.db import transaction
-from django.core.cache import cache
+import json
+import random
+import re
+from decimal import Decimal
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Count, F, Sum, Value
+from django.db.models.functions import Coalesce
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone, translation
 from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
-from django.db.models import Sum
-from django.utils import translation
-from .models import Course, Lesson, UserProgress, Quiz, ChatMessage, UserCourse, CustomUser
-from .services import generate_course_from_ai, chatbot_response
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.views.generic import DetailView, ListView, TemplateView
+
+from core.api.views import _build_daily_quests, _get_total_xp
 from .certificate import generate_certificate
-import json
-import re
-from django.views.generic import TemplateView
-from django.contrib.auth import get_user_model
-from .models import UserStreak
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
+from .models import (
+    Certificate,
+    ChatMessage,
+    Course,
+    CourseStar,
+    CustomUser,
+    DailyActivity,
+    Lesson,
+    Quiz,
+    UserCourse,
+    UserProgress,
+    UserStreak,
+)
+from .services import (
+    ECONOMY_CONFIG,
+    _schedule_single_lesson_prewarm,
+    ask_lesson_tutor,
+    chatbot_response,
+    evaluate_practice_submission,
+    extract_text_from_pdf,
+    generate_course_from_ai,
+    get_or_generate_lesson_content,
+)
+
 User = get_user_model()
-# Helper to get user XP
+
+
 def get_user_xp(user):
     progress_xp = UserProgress.objects.filter(user=user).aggregate(Sum('score'))['score__sum'] or 0
-    return progress_xp + getattr(user, 'bonus_xp', 0)
+    return int(progress_xp) + int(getattr(user, 'bonus_xp', 0))
 
-# Helper to check if course is completed
+
 def is_course_completed(user, course):
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_lessons = UserProgress.objects.filter(
         user=user,
         lesson__module__course=course,
-        is_completed=True
+        is_completed=True,
     ).count()
     return total_lessons > 0 and total_lessons == completed_lessons
+
 
 class LandingPageView(TemplateView):
     template_name = 'landing.html'
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('chatbot')
+            return redirect('dashboard')
         return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['user_count'] = User.objects.count()
@@ -53,132 +85,207 @@ class LandingPageView(TemplateView):
 class PricingView(TemplateView):
     template_name = 'pricing.html'
 
+
 class RegisterView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('chatbot')
-        form = CustomUserCreationForm()
-        return render(request, 'register.html', {'form': form})
+            return redirect('dashboard')
+        return render(request, 'register.html', {'form': CustomUserCreationForm()})
 
     def post(self, request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('chatbot')
+            return redirect('dashboard')
         return render(request, 'register.html', {'form': form})
+
 
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('chatbot')
-        form = CustomAuthenticationForm()
-        return render(request, 'login.html', {'form': form})
+            return redirect('dashboard')
+        return render(request, 'login.html', {'form': CustomAuthenticationForm()})
 
     def post(self, request):
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('chatbot')
+            login(request, form.get_user())
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('dashboard')
         return render(request, 'login.html', {'form': form})
+
 
 class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect('landing')
 
+
 class ChatbotView(LoginRequiredMixin, TemplateView):
     template_name = 'chatbot.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['chat_messages'] = ChatMessage.objects.filter(user=self.request.user)
-        context['user_xp'] = get_user_xp(self.request.user)
+        user = self.request.user
+        today = timezone.localdate()
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+        context['chat_messages'] = ChatMessage.objects.filter(user=user).order_by('created_at')
+        context['user_xp'] = get_user_xp(user)
+        context['chat_cost'] = int(ECONOMY_CONFIG['chat_cost'])
+        context['free_daily_limit'] = ECONOMY_CONFIG['free_daily_chat_limit']
+        context['chats_sent_today'] = activity.chats_sent
         return context
+
 
 @login_required
 @require_POST
 def send_message(request):
-    """Handle chatbot message sending"""
+    """Handle AI Tutor chat messages with the same economy rules as the mobile app."""
+    user = request.user
+    today = timezone.localdate()
+    activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+
+    if user.subscription_type == 'free' and activity.chats_sent >= ECONOMY_CONFIG['free_daily_chat_limit']:
+        return JsonResponse(
+            {'error': f"Kunlik limit ({ECONOMY_CONFIG['free_daily_chat_limit']} ta xabar) tugadi. PRO tarifiga o'ting!"},
+            status=400,
+        )
+
+    chat_cost = ECONOMY_CONFIG['chat_cost']
+    if Decimal(str(user.energy)) < chat_cost:
+        return JsonResponse(
+            {'error': f"Energiya yetarli emas! Xabar narxi {int(chat_cost)}⚡."},
+            status=400,
+        )
+
     user_message = request.POST.get('message', '').strip()
-
     if not user_message:
-        return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+        return JsonResponse({'error': "Xabar bo'sh bo'lishi mumkin emas."}, status=400)
 
-    # Save user message
-    ChatMessage.objects.create(user=request.user, message=user_message, is_user=True)
+    ChatMessage.objects.create(user=user, message=user_message, is_user=True)
+    chat_history = ChatMessage.objects.filter(user=user).order_by('created_at')
 
-    # Get chat history
-    chat_history = ChatMessage.objects.filter(user=request.user).order_by('created_at')
+    bot_reply = chatbot_response(user_message, chat_history, user.preferred_language, user=user)
 
-    # Get bot response
-    bot_reply = chatbot_response(user_message, chat_history, request.user.preferred_language)
-
-    # Check if topic is clear
     topic_clear = False
     topic = None
     if 'TOPIC_CLEAR:' in bot_reply:
         topic_clear = True
-        # Extract topic
         match = re.search(r'TOPIC_CLEAR:\s*(.+)', bot_reply)
         if match:
             topic = match.group(1).strip()
-            # Remove the TOPIC_CLEAR marker from the message
             bot_reply = re.sub(r'TOPIC_CLEAR:.+', '', bot_reply).strip()
 
-    # Save bot message
-    ChatMessage.objects.create(user=request.user, message=bot_reply, is_user=False)
+    ChatMessage.objects.create(user=user, message=bot_reply, is_user=False)
+    user.energy = Decimal(str(user.energy)) - chat_cost
+    user.save(update_fields=['energy'])
+    activity.chats_sent += 1
+    activity.save(update_fields=['chats_sent'])
 
     return JsonResponse({
         'bot_message': bot_reply,
         'topic_clear': topic_clear,
-        'topic': topic
+        'topic': topic,
+        'current_energy': float(user.energy),
     })
+
 
 @login_required
 @require_POST
 def generate_course_view(request):
-    """Handle course generation - async with Celery or sync without"""
-    from django.conf import settings
-    
+    """Handle course generation on web using the same tier limits, energy, and lazy Lesson 1 model."""
+    user = request.user
     topic = request.POST.get('topic', '').strip()
+    difficulty = (request.POST.get('difficulty') or 'beginner').strip().lower()
+    if difficulty not in ('beginner', 'intermediate', 'advanced'):
+        difficulty = 'beginner'
 
     if not topic:
-        return JsonResponse({'error': 'Topic cannot be empty'}, status=400)
+        return JsonResponse({'error': "Mavzu kiritilishi shart."}, status=400)
+
+    sub = user.subscription_type or 'free'
+    limit = ECONOMY_CONFIG['course_limit'].get(sub, 2)
+    created_count = Course.objects.filter(creator=user).count()
+    if created_count >= limit:
+        return JsonResponse(
+            {'error': f"{sub.upper()} tarifi limiti ({limit} ta kurs) to'ldi. Ko'proq yaratish uchun tarifni oshiring!"},
+            status=400,
+        )
+
+    course_cost = ECONOMY_CONFIG['course_cost'].get(sub, Decimal('10.00'))
+    if Decimal(str(user.energy)) < course_cost:
+        return JsonResponse(
+            {'error': f"Energiya yetarli emas! Kurs yaratish uchun {int(course_cost)}⚡ kerak."},
+            status=400,
+        )
 
     try:
-        # Check if Celery is enabled
         if getattr(settings, 'USE_CELERY', False):
-            # Async mode with Celery
             from .tasks import generate_course_task
             task = generate_course_task.delay(
                 topic=topic,
-                language=request.user.preferred_language,
-                user_id=request.user.id
+                language=user.preferred_language,
+                user_id=user.id,
+                difficulty=difficulty,
             )
             return JsonResponse({
                 'success': True,
                 'task_id': task.id,
-                'message': 'Course generation started! This may take 10-30 seconds.',
-                'status_url': f'/task-status/{task.id}/'
+                'message': "Kurs generatsiyasi boshlandi...",
+                'status_url': f'/task-status/{task.id}/',
             })
-        else:
-            # Sync mode without Celery (for PythonAnywhere)
-            from .services import generate_course_from_ai
-            course = generate_course_from_ai(topic, request.user.preferred_language, request.user)
-            return JsonResponse({
-                'success': True,
-                'course_id': course.id,
-                'title': course.title,
-                'message': f'Course "{course.title}" generated successfully!',
-                'redirect_url': '/dashboard/',
-                'sync': True  # Flag to indicate synchronous completion
-            })
+
+        course = generate_course_from_ai(topic, user.preferred_language, user, difficulty=difficulty)
+        cache.delete(f"courses_list_v2_{user.id}")
+        return JsonResponse({
+            'success': True,
+            'course_id': course.id,
+            'title': course.title,
+            'message': f'"{course.title}" kursi yaratildi!',
+            'redirect_url': f'/course/{course.id}/',
+            'sync': True,
+        })
+    except ValueError as ve:
+        return JsonResponse({'error': str(ve)}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-from django.views.decorators.cache import never_cache
+
+@login_required
+@require_POST
+def generate_pdf_course_web(request):
+    user = request.user
+    if user.subscription_type not in ('pro', 'ultra'):
+        return JsonResponse(
+            {'error': "PDF hujjatdan kurs yaratish PRO yoki ULTRA tarifida ishlaydi."},
+            status=403,
+        )
+
+    pdf_file = request.FILES.get('pdf')
+    if not pdf_file:
+        return JsonResponse({'error': "PDF fayl tanlanmadi."}, status=400)
+
+    try:
+        pdf_text = extract_text_from_pdf(pdf_file)
+        if not pdf_text:
+            return JsonResponse({'error': "PDF fayldan matn ajratib bo'lmadi."}, status=400)
+
+        course = generate_course_from_ai("Custom PDF Course", user.preferred_language, user, pdf_text=pdf_text)
+        cache.delete(f"courses_list_v2_{user.id}")
+        return JsonResponse({
+            'success': True,
+            'course_id': course.id,
+            'title': course.title,
+            'redirect_url': f'/course/{course.id}/',
+        })
+    except ValueError as ve:
+        return JsonResponse({'error': str(ve)}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 @method_decorator(never_cache, name='dispatch')
 class DashboardView(LoginRequiredMixin, ListView):
@@ -187,31 +294,136 @@ class DashboardView(LoginRequiredMixin, ListView):
     context_object_name = 'courses'
 
     def get_queryset(self):
-        # Only show courses the user is enrolled in
-        return Course.objects.filter(enrolled_users__user=self.request.user)
+        return (
+            Course.objects.filter(enrolled_users__user=self.request.user)
+            .distinct()
+            .order_by('-created_at')
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_xp'] = get_user_xp(self.request.user)
+        user = self.request.user
+        today = timezone.localdate()
 
-        streak_obj, created = UserStreak.objects.get_or_create(user=self.request.user)
-        context['streak'] = streak_obj
+        total_xp, available_xp = _get_total_xp(user)
+        streak_obj, _ = UserStreak.objects.get_or_create(user=user)
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
 
-        # Calculate progress for each course
         for course in context['courses']:
             total_lessons = Lesson.objects.filter(module__course=course).count()
             completed_lessons = UserProgress.objects.filter(
-                user=self.request.user,
+                user=user,
                 lesson__module__course=course,
-                is_completed=True
+                is_completed=True,
             ).count()
+            course.total_lessons_count = total_lessons
+            course.completed_lessons_count = completed_lessons
+            course.progress = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
 
-            if total_lessons > 0:
-                course.progress = int((completed_lessons / total_lessons) * 100)
-            else:
-                course.progress = 0
-
+        sub = user.subscription_type or 'free'
+        context['user_xp'] = total_xp
+        context['available_xp'] = available_xp
+        context['streak'] = streak_obj
+        context['daily_quests'] = _build_daily_quests(user, activity)
+        context['can_claim_bonus'] = (user.last_bonus_claimed != today)
+        context['course_cost'] = int(ECONOMY_CONFIG['course_cost'].get(sub, Decimal('10.00')))
+        context['course_limit'] = ECONOMY_CONFIG['course_limit'].get(sub, 2)
+        context['created_courses_count'] = Course.objects.filter(creator=user).count()
+        context['certificates_count'] = Certificate.objects.filter(user=user).count()
         return context
+
+
+class ExploreCoursesWebView(LoginRequiredMixin, TemplateView):
+    template_name = 'explore.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        sub = user.subscription_type or 'free'
+
+        courses_qs = Course.objects.annotate(
+            star_count=Count('stars', distinct=True),
+            lessons_count=Count('modules__lessons', distinct=True),
+        ).select_related('creator')
+
+        search_query = self.request.GET.get('search', '').strip()
+        lang_query = self.request.GET.get('language', '').strip()
+        category_query = self.request.GET.get('category', '').strip()
+
+        if search_query:
+            courses_qs = courses_qs.filter(title__icontains=search_query)
+        if lang_query:
+            courses_qs = courses_qs.filter(language=lang_query)
+        if category_query:
+            courses_qs = courses_qs.filter(category=category_query)
+
+        courses_qs = courses_qs.order_by('-star_count', '-created_at')
+
+        page_obj = None
+        if sub == 'free':
+            courses = courses_qs[:10]
+        elif sub == 'pro':
+            courses = courses_qs[:25]
+        else:
+            paginator = Paginator(courses_qs, 12)
+            page_obj = paginator.get_page(self.request.GET.get('page', 1))
+            courses = page_obj.object_list
+
+        context['explore_courses'] = courses
+        context['page_obj'] = page_obj
+        context['starred_ids'] = set(CourseStar.objects.filter(user=user).values_list('course_id', flat=True))
+        context['enrolled_ids'] = set(UserCourse.objects.filter(user=user).values_list('course_id', flat=True))
+        context['search_query'] = search_query
+        context['lang_query'] = lang_query
+        context['category_query'] = category_query
+        context['user_xp'] = get_user_xp(user)
+        return context
+
+
+@login_required
+@require_POST
+def explore_star_web(request, course_id):
+    user = request.user
+    if user.subscription_type == 'free':
+        return JsonResponse({'error': "Yulduzcha bosish PRO/ULTRA tarifida ishlaydi."}, status=403)
+    course = get_object_or_404(Course, id=course_id)
+    existing = CourseStar.objects.filter(user=user, course=course).first()
+    if existing:
+        existing.delete()
+        starred = False
+    else:
+        CourseStar.objects.create(user=user, course=course)
+        starred = True
+    return JsonResponse({'success': True, 'starred': starred, 'star_count': CourseStar.objects.filter(course=course).count()})
+
+
+@login_required
+@require_POST
+def explore_enroll_web(request, course_id):
+    user = request.user
+    sub = user.subscription_type or 'free'
+    if sub == 'free':
+        return JsonResponse({'error': "Jamoa kurslariga qo'shilish uchun PRO yoki ULTRA tarifi kerak."}, status=403)
+    course = get_object_or_404(Course, id=course_id)
+    if sub == 'pro':
+        top_25_ids = list(Course.objects.annotate(sc=Count('stars')).order_by('-sc')[:25].values_list('id', flat=True))
+        if course.id not in top_25_ids and course.creator != user:
+            return JsonResponse({'error': "PRO tarifi Top-25 kurslarni saqlay oladi. Barchasi uchun ULTRA kerak."}, status=403)
+
+    enroll_record = UserCourse.objects.filter(user=user, course=course).first()
+    if enroll_record:
+        enroll_record.delete()
+        enrolled = False
+    else:
+        limit = ECONOMY_CONFIG['course_limit'].get(sub, 15)
+        if UserCourse.objects.filter(user=user).count() >= limit:
+            return JsonResponse({'error': f"{sub.upper()} saqlangan kurslar limiti ({limit}) to'ldi."}, status=400)
+        UserCourse.objects.create(user=user, course=course)
+        enrolled = True
+
+    cache.delete(f"courses_list_v2_{user.id}")
+    return JsonResponse({'success': True, 'enrolled': enrolled})
+
 
 class CourseDetailView(LoginRequiredMixin, DetailView):
     model = Course
@@ -220,60 +432,134 @@ class CourseDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Fetch completed lesson IDs
-        completed_ids = UserProgress.objects.filter(
-            user=self.request.user, is_completed=True
-        ).values_list('lesson_id', flat=True)
-        context['completed_lesson_ids'] = set(completed_ids)
-        context['user_xp'] = get_user_xp(self.request.user)
-        context['is_completed'] = is_course_completed(self.request.user, self.object)
+        user = self.request.user
+        course = self.object
+
+        is_enrolled = UserCourse.objects.filter(user=user, course=course).exists()
+        is_preview = (not is_enrolled and course.creator_id != user.id)
+
+        completed_ids = set(
+            UserProgress.objects.filter(user=user, lesson__module__course=course, is_completed=True)
+            .values_list('lesson_id', flat=True)
+        )
+
+        modules = list(course.modules.prefetch_related('lessons').order_by('order'))
+        total_lessons = 0
+        done_lessons = 0
+        first_seen = False
+        prev_completed = True
+
+        for mod in modules:
+            lessons_list = list(mod.lessons.order_by('order'))
+            for les in lessons_list:
+                total_lessons += 1
+                les.user_done = les.id in completed_ids
+                if les.user_done:
+                    done_lessons += 1
+                if is_preview and first_seen:
+                    les.is_locked = True
+                    les.prerequisite_locked = False
+                else:
+                    unlocked = prev_completed
+                    les.is_locked = not unlocked
+                    les.prerequisite_locked = not unlocked
+                first_seen = True
+                prev_completed = les.user_done
+            mod.ordered_lessons = lessons_list
+
+        context['modules'] = modules
+        context['completed_lesson_ids'] = completed_ids
+        context['is_preview'] = is_preview
+        context['is_enrolled'] = is_enrolled
+        context['total_lessons'] = total_lessons
+        context['done_lessons'] = done_lessons
+        context['progress_percent'] = int((done_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+        context['user_xp'] = get_user_xp(user)
+        context['is_completed'] = total_lessons > 0 and done_lessons >= total_lessons
         return context
+
 
 class LessonView(LoginRequiredMixin, DetailView):
     model = Lesson
     template_name = 'lesson.html'
     context_object_name = 'lesson'
 
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset=queryset)
-        if len(obj.content.strip()) < 80 or not obj.quizzes.exists():
-            from core.services import get_or_generate_lesson_content
-            obj = get_or_generate_lesson_content(obj, obj.module.course.language)
-        return obj
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+        course = obj.module.course
+        user = request.user
+
+        ordered_lessons = list(
+            Lesson.objects.filter(module__course=course)
+            .order_by('module__order', 'order')
+            .values_list('id', flat=True)
+        )
+
+        if obj.id in ordered_lessons:
+            idx = ordered_lessons.index(obj.id)
+            if idx > 0:
+                prev_id = ordered_lessons[idx - 1]
+                if not UserProgress.objects.filter(user=user, lesson_id=prev_id, is_completed=True).exists():
+                    messages.warning(
+                        request,
+                        "Keyingi darsga o'tish uchun avval oldingi darsni tugatishingiz kerak!",
+                    )
+                    return redirect('course_detail', pk=course.id)
+
+        self.object = obj
+        context = self.get_context_data(object=obj, ordered_lessons=ordered_lessons)
+        return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
+        ordered_lessons = kwargs.pop('ordered_lessons', None)
         context = super().get_context_data(**kwargs)
-        context['user_xp'] = get_user_xp(self.request.user)
-        # Check if already completed
-        context['is_completed'] = UserProgress.objects.filter(
-            user=self.request.user, lesson=self.object, is_completed=True
-        ).exists()
+        obj = self.object
+        course = obj.module.course
+        user = self.request.user
+        sub = getattr(user, 'subscription_type', 'free') or 'free'
 
-        # Get current module and all lessons in order
-        current_module = self.object.module
-        all_lessons = current_module.lessons.order_by('order')
+        if len(obj.content.strip()) < 80 or not obj.quizzes.exists() or not obj.interactive_data:
+            obj = get_or_generate_lesson_content(obj, course.language, tier=sub)
+            self.object = obj
+            context['lesson'] = obj
 
-        # Find next and previous lessons
-        current_index = None
-        for idx, lesson in enumerate(all_lessons):
-            if lesson.id == self.object.id:
-                current_index = idx
-                break
+        if ordered_lessons is None:
+            ordered_lessons = list(
+                Lesson.objects.filter(module__course=course)
+                .order_by('module__order', 'order')
+                .values_list('id', flat=True)
+            )
 
-        if current_index is not None:
-            # Get previous lesson
-            if current_index > 0:
-                context['previous_lesson'] = all_lessons[current_index - 1]
-            else:
-                context['previous_lesson'] = None
+        prev_lesson = None
+        next_lesson = None
+        if obj.id in ordered_lessons:
+            idx = ordered_lessons.index(obj.id)
+            if idx > 0:
+                prev_lesson = Lesson.objects.filter(id=ordered_lessons[idx - 1]).first()
+            if idx + 1 < len(ordered_lessons):
+                next_lesson = Lesson.objects.filter(id=ordered_lessons[idx + 1]).first()
 
-            # Get next lesson
-            if current_index < len(all_lessons) - 1:
-                context['next_lesson'] = all_lessons[current_index + 1]
-            else:
-                context['next_lesson'] = None
+        # Strictly pre-warm ONLY the immediate next lesson once this lesson is actually opened
+        if next_lesson and (len(next_lesson.content.strip()) < 80 or not next_lesson.interactive_data):
+            _schedule_single_lesson_prewarm(next_lesson.id, course.language, sub)
 
+        progress = UserProgress.objects.filter(user=user, lesson=obj).first()
+        completed_quizzes = set(progress.completed_quizzes or []) if progress else set()
+
+        interactive = obj.interactive_data or {}
+        context['visual_diagram'] = interactive.get('visual_diagram') or {}
+        context['flashcards'] = interactive.get('flashcards') or []
+        context['practice_lab'] = interactive.get('practice_lab') or {}
+        context['quizzes'] = list(obj.quizzes.all())
+        context['solved_quiz_ids'] = [q for q in completed_quizzes if isinstance(q, int) and q > 0]
+        context['lab_passed'] = (-1 in completed_quizzes)
+        context['is_completed'] = bool(progress and progress.is_completed)
+        context['previous_lesson'] = prev_lesson
+        context['next_lesson'] = next_lesson
+        context['user_xp'] = get_user_xp(user)
+        context['lab_cost'] = int(ECONOMY_CONFIG['lab_eval_cost'].get(sub, Decimal('2.00')))
         return context
+
 
 @login_required
 @require_POST
@@ -282,360 +568,503 @@ def submit_quiz(request, lesson_id):
     quiz_id = request.POST.get('quiz_id')
     selected_option = request.POST.get('option')
 
-    if not quiz_id:
-        # Try to get the first quiz if no ID provided (backward compatibility)
-        quiz = lesson.quizzes.first()
-        if not quiz:
-            return HttpResponse('<div class="text-red-500">No quiz found for this lesson.</div>')
-    else:
-        quiz = get_object_or_404(Quiz, id=quiz_id)
+    is_json = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
 
-    if not selected_option:
-        return HttpResponse('<div class="text-red-500">Please select an option.</div>')
+    if not quiz_id or not selected_option:
+        if is_json:
+            return JsonResponse({'error': "Iltimos, variantlardan birini tanlang."}, status=400)
+        return HttpResponse('<div class="text-red-500">Variantni tanlang.</div>')
 
-    is_correct = selected_option == quiz.correct_answer
+    quiz = get_object_or_404(Quiz, id=quiz_id, lesson=lesson)
+    user = request.user
+    course = lesson.module.course
+    is_correct = (selected_option == quiz.correct_answer)
 
-    # Update progress
-    progress, created = UserProgress.objects.get_or_create(
-        user=request.user, lesson=lesson
-    )
+    progress, _ = UserProgress.objects.get_or_create(user=user, lesson=lesson)
+    was_completed = progress.is_completed
+    xp_gained = 0
+    today = timezone.localdate()
+    activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
 
-    # Mark as completed regardless of outcome (as per user request)
-    if not progress.is_completed:
+    if is_correct and quiz.id not in (progress.completed_quizzes or []):
+        xp_gained = 10
+        progress.score += xp_gained
+        comp = list(progress.completed_quizzes or [])
+        comp.append(quiz.id)
+        progress.completed_quizzes = comp
+        activity.quizzes_correct += 1
+
+    solved_quizzes = [qid for qid in (progress.completed_quizzes or []) if isinstance(qid, int) and qid > 0]
+    total_quizzes = Quiz.objects.filter(lesson=lesson).count()
+
+    lesson_just_completed = False
+    course_completed_bonus = False
+    if total_quizzes == 0 or len(solved_quizzes) >= total_quizzes:
         progress.is_completed = True
-        progress.save()
+        if not was_completed:
+            lesson_just_completed = True
+            xp_gained += 15
+            progress.score += 15
+            activity.lessons_completed += 1
 
-    if is_correct:
-        progress.score += 10 # 10 XP per correct answer
-        progress.save()
+            all_course_lessons = Lesson.objects.filter(module__course=course).count()
+            done_course_lessons = UserProgress.objects.filter(
+                user=user, lesson__module__course=course, is_completed=True
+            ).count() + 1
+            if all_course_lessons > 0 and done_course_lessons >= all_course_lessons:
+                user.energy = Decimal(str(user.energy)) + Decimal('15.00')
+                user.save(update_fields=['energy'])
+                course_completed_bonus = True
 
-        return render(request, 'partials/quiz_result.html', {
+    progress.save()
+    activity.save()
+
+    streak, _ = UserStreak.objects.get_or_create(user=user)
+    streak.update_streak()
+    cache.delete(f"courses_list_v2_{user.id}")
+    cache.delete('api_leaderboard_cache')
+
+    if is_json:
+        return JsonResponse({
             'success': True,
-            'lesson': lesson,
-            'quiz': quiz,
-            'next_lesson': Lesson.objects.filter(module=lesson.module, order__gt=lesson.order).first() or
-                           Lesson.objects.filter(module__course=lesson.module.course, module__order__gt=lesson.module.order).first()
-        })
-    else:
-        progress.score -= 5 # Deduct 5 XP for incorrect answer
-        progress.save()
-        return render(request, 'partials/quiz_result.html', {
-            'success': False,
+            'is_correct': is_correct,
             'correct_answer': quiz.correct_answer,
-            'quiz': quiz
+            'explanation': quiz.explanation or "",
+            'xp_gained': xp_gained,
+            'total_xp': get_user_xp(user),
+            'lesson_completed': progress.is_completed,
+            'lesson_just_completed': lesson_just_completed,
+            'course_completed_bonus': course_completed_bonus,
+            'current_energy': float(user.energy),
+            'current_streak': streak.current_streak,
         })
+
+    ordered_ids = list(
+        Lesson.objects.filter(module__course=course).order_by('module__order', 'order').values_list('id', flat=True)
+    )
+    next_lesson = None
+    if lesson.id in ordered_ids:
+        i = ordered_ids.index(lesson.id)
+        if i + 1 < len(ordered_ids):
+            next_lesson = Lesson.objects.filter(id=ordered_ids[i + 1]).first()
+
+    return render(request, 'partials/quiz_result.html', {
+        'success': is_correct,
+        'correct_answer': quiz.correct_answer,
+        'lesson': lesson,
+        'quiz': quiz,
+        'xp_gained': xp_gained,
+        'lesson_completed': progress.is_completed,
+        'next_lesson': next_lesson,
+    })
+
+
+@login_required
+@require_POST
+def evaluate_practice_web(request, lesson_id):
+    user = request.user
+    sub = user.subscription_type or 'free'
+    if sub == 'free':
+        return JsonResponse(
+            {'error': "Amaliyot Lab PRO yoki ULTRA tarifida ishlaydi."},
+            status=403,
+        )
+
+    submission = (request.POST.get('submission') or '').strip()
+    if not submission:
+        return JsonResponse({'error': "Avval kodingiz yoki javobingizni yozing."}, status=400)
+
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    cost = ECONOMY_CONFIG['lab_eval_cost'].get(sub, Decimal('2.00'))
+    if Decimal(str(user.energy)) < cost:
+        return JsonResponse({'error': f"Energiya yetarli emas! Tekshirish narxi {int(cost)}⚡."}, status=400)
+
+    if cost > 0:
+        user.energy = Decimal(str(user.energy)) - cost
+        user.save(update_fields=['energy'])
+
+    try:
+        result = evaluate_practice_submission(lesson, submission, user.preferred_language)
+    except Exception as e:
+        if cost > 0:
+            user.energy = Decimal(str(user.energy)) + cost
+            user.save(update_fields=['energy'])
+        return JsonResponse({'error': f'Tekshirishda xatolik: {e}'}, status=500)
+
+    xp_gained = 0
+    if result.get('is_passed'):
+        progress, _ = UserProgress.objects.get_or_create(user=user, lesson=lesson)
+        comp = list(progress.completed_quizzes or [])
+        if -1 not in comp:
+            comp.append(-1)
+            progress.completed_quizzes = comp
+            progress.score += 15
+            progress.save()
+            xp_gained = 15
+
+        today = timezone.localdate()
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+        activity.practice_completed += 1
+        activity.save()
+
+        streak, _ = UserStreak.objects.get_or_create(user=user)
+        streak.update_streak()
+        cache.delete('api_leaderboard_cache')
+
+    result['xp_gained'] = xp_gained
+    result['current_energy'] = float(user.energy)
+    return JsonResponse(result)
+
+
+@login_required
+@require_POST
+def lesson_chatbot(request, lesson_id):
+    """Lesson AI Tutor powered by core.services.ask_lesson_tutor (supports uz, kaa, ru, en)."""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    question = request.POST.get('message', '').strip()
+    if not question:
+        return JsonResponse({'error': "Savol yozing."}, status=400)
+
+    user = request.user
+    sub = user.subscription_type or 'free'
+    cost = ECONOMY_CONFIG['chat_cost']
+    if Decimal(str(user.energy)) < cost:
+        return JsonResponse({'error': f"Energiya yetarli emas! ({int(cost)}⚡ kerak)"}, status=400)
+
+    try:
+        reply = ask_lesson_tutor(lesson, question, lesson.module.course.language, tier=sub)
+        if cost > 0:
+            user.energy = Decimal(str(user.energy)) - cost
+            user.save(update_fields=['energy'])
+        return JsonResponse({'reply': reply, 'current_energy': float(user.energy)})
+    except Exception as e:
+        return JsonResponse({'error': f'AI xatoligi: {e}'}, status=500)
+
+
+class BlitzReviewWebView(LoginRequiredMixin, TemplateView):
+    template_name = 'blitz.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        enrolled_ids = list(UserCourse.objects.filter(user=user).values_list('course_id', flat=True))
+        quizzes_qs = Quiz.objects.select_related('lesson__module__course').filter(
+            lesson__module__course_id__in=enrolled_ids
+        )
+        if not quizzes_qs.exists():
+            quizzes_qs = Quiz.objects.select_related('lesson__module__course').filter(
+                lesson__module__course__language=user.preferred_language
+            )[:25]
+            if not quizzes_qs.exists():
+                quizzes_qs = Quiz.objects.select_related('lesson__module__course').all()[:25]
+
+        solved_ids = set()
+        for prog in UserProgress.objects.filter(user=user).only('completed_quizzes'):
+            for qid in (prog.completed_quizzes or []):
+                if isinstance(qid, int) and qid > 0:
+                    solved_ids.add(qid)
+
+        unsolved, solved = [], []
+        for q in quizzes_qs[:80]:
+            item = {
+                'id': q.id,
+                'question': q.question,
+                'options': q.options,
+                'correct_answer': q.correct_answer,
+                'explanation': q.explanation or '',
+                'lesson_title': q.lesson.title,
+                'course_title': q.lesson.module.course.title,
+                'is_review': q.id in solved_ids,
+            }
+            (solved if q.id in solved_ids else unsolved).append(item)
+
+        random.shuffle(unsolved)
+        random.shuffle(solved)
+        deck = (unsolved[:6] + solved[:4])[:8]
+        context['deck_json'] = json.dumps(deck)
+        context['total_available'] = len(unsolved) + len(solved)
+        context['user_xp'] = get_user_xp(user)
+        return context
+
+    def post(self, request):
+        user = request.user
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            payload = {}
+        correct_count = max(0, min(20, int(payload.get('correct_count', 0))))
+        solved_quiz_ids = payload.get('solved_quiz_ids', [])
+
+        xp_earned = correct_count * 5
+        today = timezone.localdate()
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+
+        if isinstance(solved_quiz_ids, list) and solved_quiz_ids:
+            for q in Quiz.objects.filter(id__in=solved_quiz_ids).select_related('lesson'):
+                prog, _ = UserProgress.objects.get_or_create(user=user, lesson=q.lesson)
+                comp = list(prog.completed_quizzes or [])
+                if q.id not in comp:
+                    comp.append(q.id)
+                    prog.completed_quizzes = comp
+                    prog.save(update_fields=['completed_quizzes'])
+
+        if xp_earned > 0:
+            user.bonus_xp += xp_earned
+            user.save(update_fields=['bonus_xp'])
+            activity.quizzes_correct += correct_count
+            activity.save(update_fields=['quizzes_correct'])
+
+        streak, _ = UserStreak.objects.get_or_create(user=user)
+        streak.update_streak()
+        cache.delete('api_leaderboard_cache')
+
+        total_xp, _ = _get_total_xp(user)
+        return JsonResponse({
+            'success': True,
+            'xp_earned': xp_earned,
+            'total_xp': total_xp,
+            'current_streak': streak.current_streak,
+        })
+
 
 class LeaderboardView(LoginRequiredMixin, TemplateView):
     template_name = 'leaderboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        users = (
+            User.objects.annotate(progress_xp=Coalesce(Sum('progress__score'), Value(0)))
+            .annotate(total_xp=F('progress_xp') + F('bonus_xp'))
+            .filter(total_xp__gt=0)
+            .select_related('streak')
+            .order_by('-total_xp')[:50]
+        )
 
-        # Get all users with their total XP
-        users_with_xp = []
-        for user in CustomUser.objects.all():
-            total_xp = get_user_xp(user)
-            if total_xp > 0:  # Only include users with XP
-                users_with_xp.append({
-                    'user': user,
-                    'total_xp': total_xp,
-                    'league': self.get_league(total_xp),
-                    'badge_color': self.get_badge_color(total_xp)
-                })
+        leaderboard_list = []
+        for idx, u in enumerate(users, start=1):
+            streak_val = u.streak.current_streak if hasattr(u, 'streak') and u.streak else 0
+            leaderboard_list.append({
+                'rank': idx,
+                'user': u,
+                'total_xp': u.total_xp,
+                'league': self.get_league(u.total_xp),
+                'streak': streak_val,
+                'is_current_user': u.id == self.request.user.id,
+            })
 
-        # Sort by XP descending and limit to top 100
-        users_with_xp.sort(key=lambda x: x['total_xp'], reverse=True)
-        users_with_xp = users_with_xp[:100]  # Limit to top 100
-
-        # Add rank
-        for index, user_data in enumerate(users_with_xp, start=1):
-            user_data['rank'] = index
-            user_data['is_current_user'] = user_data['user'].id == self.request.user.id
-
-        # Get current user stats
         current_user_xp = get_user_xp(self.request.user)
-        current_user_league = self.get_league(current_user_xp)
-
-        # Calculate XP needed for next league
         if current_user_xp < 100:
-            xp_to_next_league = 100 - current_user_xp
+            xp_to_next = 100 - current_user_xp
         elif current_user_xp < 500:
-            xp_to_next_league = 500 - current_user_xp
+            xp_to_next = 500 - current_user_xp
         elif current_user_xp < 1000:
-            xp_to_next_league = 1000 - current_user_xp
+            xp_to_next = 1000 - current_user_xp
         else:
-            xp_to_next_league = 0
+            xp_to_next = 0
 
-        context['leaderboard'] = users_with_xp
+        context['leaderboard'] = leaderboard_list
         context['current_user_xp'] = current_user_xp
-        context['current_user_league'] = current_user_league
-        context['xp_to_next_league'] = xp_to_next_league
-
+        context['current_user_league'] = self.get_league(current_user_xp)
+        context['xp_to_next_league'] = xp_to_next
         return context
 
     def get_league(self, xp):
-        """Determine league based on XP"""
         if xp >= 1000:
             return 'Gold'
-        elif xp >= 500:
+        if xp >= 500:
             return 'Silver'
-        elif xp >= 100:
+        if xp >= 100:
             return 'Bronze'
-        else:
-            return 'Beginner'
+        return 'Beginner'
 
-    def get_badge_color(self, xp):
-        """Get badge color based on league"""
-        if xp >= 1000:
-            return 'yellow'  # Gold
-        elif xp >= 500:
-            return 'gray'  # Silver
-        elif xp >= 100:
-            return 'orange'  # Bronze
-        else:
-            return 'blue'  # Beginner
 
-class GamificationView(LoginRequiredMixin, TemplateView):
-    template_name = 'gamification.html'
+class ProfileWebView(LoginRequiredMixin, TemplateView):
+    template_name = 'profile.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        today = timezone.localdate()
+        total_xp, available_xp = _get_total_xp(user)
+        streak, _ = UserStreak.objects.get_or_create(user=user)
+        activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
 
-        # Add user XP to context
-        context['user_xp'] = get_user_xp(self.request.user)
-
-        # Get top 5 users for leaderboard preview
-        users_with_xp = []
-        for user in CustomUser.objects.all():
-            total_xp = get_user_xp(user)
-            if total_xp > 0:
-                users_with_xp.append({
-                    'username': user.username,
-                    'xp': total_xp
-                })
-
-        # Sort by XP and get top 5
-        users_with_xp.sort(key=lambda x: x['xp'], reverse=True)
-        context['top_users'] = users_with_xp[:5]
-
+        context['total_xp'] = total_xp
+        context['available_xp'] = available_xp
+        context['xp_redeem_cost'] = ECONOMY_CONFIG['xp_redeem_cost']
+        context['xp_redeem_reward'] = int(ECONOMY_CONFIG['xp_redeem_reward'])
+        context['streak'] = streak
+        context['courses_count'] = UserCourse.objects.filter(user=user).count()
+        context['certificates'] = Certificate.objects.filter(user=user).select_related('course').order_by('-issued_at')
+        context['daily_quests'] = _build_daily_quests(user, activity)
+        context['can_claim_bonus'] = (user.last_bonus_claimed != today)
         return context
 
-@login_required
-def download_certificate(request, course_id):
-    """
-    Generate and download PDF certificate for completed courses
-    """
-    course = get_object_or_404(Course, id=course_id)
+    def post(self, request):
+        user = request.user
+        user.first_name = (request.POST.get('first_name') or '').strip()[:30]
+        user.last_name = (request.POST.get('last_name') or '').strip()[:30]
+        user.email = (request.POST.get('email') or '').strip()
+        lang = request.POST.get('preferred_language')
+        if lang in ('uz', 'kaa', 'ru', 'en'):
+            user.preferred_language = lang
+            translation.activate(lang)
+            request.session['_language'] = lang
+        user.save()
+        messages.success(request, "Profil ma'lumotlari saqlandi!")
+        return redirect('profile_web')
 
-    # Check if user has completed the course
-    if not is_course_completed(request.user, course):
-        return HttpResponse("You must complete all lessons to download the certificate.", status=403)
-
-    # Generate the certificate PDF
-    pdf = generate_certificate(request.user, course)
-
-    # Create the HTTP response with PDF
-    response = HttpResponse(pdf, content_type='application/pdf')
-    filename = f"Certificate_{course.title.replace(' ', '_')}_{request.user.username}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
-
-@require_POST
-def change_language(request):
-    """Handle language change requests"""
-    from django.utils import translation
-
-    language_code = request.POST.get('language')
-
-    # Validate language code
-    # Ensure all languages in settings are valid
-    from django.conf import settings
-    valid_languages = [lang[0] for lang in settings.LANGUAGES]
-    
-    if language_code not in valid_languages:
-        return JsonResponse({'error': 'Invalid language code'}, status=400)
-
-    # Update user's preferred language if authenticated
-    if request.user.is_authenticated:
-        request.user.preferred_language = language_code
-        request.user.save()
-
-    # Activate the new language for the current session
-    translation.activate(language_code)
-    request.session['_language'] = language_code
-
-    return JsonResponse({'success': True, 'language': language_code})
 
 @login_required
 @require_POST
-def lesson_chatbot(request, lesson_id):
-    """
-    AI chatbot that helps with lesson content but refuses to answer quiz questions
-    """
-    lesson = get_object_or_404(Lesson, id=lesson_id)
-    user_message = request.POST.get('message', '').strip()
+def claim_bonus_web(request):
+    user = request.user
+    today = timezone.localdate()
+    if user.last_bonus_claimed == today:
+        return JsonResponse({'error': "Bugungi bonus allaqachon olingan."}, status=400)
 
-    if not user_message:
-        return HttpResponse('<div class="text-red-500 text-sm">Please enter a message.</div>')
+    streak, _ = UserStreak.objects.get_or_create(user=user)
+    streak.update_streak()
+    is_weekly = (streak.current_streak > 0 and streak.current_streak % 7 == 0)
+    amount = ECONOMY_CONFIG['daily_bonus_streak_7'] if is_weekly else ECONOMY_CONFIG['daily_bonus_base']
 
-    # Get lesson content and quiz questions
-    lesson_content = lesson.content[:2000]  # Limit content length
-    quiz_questions = [q.question for q in lesson.quizzes.all()]
-    course_language = lesson.module.course.language
-
-    # Language-specific prompts
-    language_prompts = {
-        'en': {
-            'system': f"""You are a helpful learning assistant for a specific lesson. Your role is to help students understand the lesson content.
-
-LESSON TITLE: {lesson.title}
-LESSON CONTENT (excerpt): {lesson_content}
-
-QUIZ QUESTIONS (for reference only - DO NOT answer these):
-{chr(10).join(f"- {q}" for q in quiz_questions)}
-
-IMPORTANT RULES:
-1. Help explain the lesson content and concepts
-2. If asked about quiz answers or solutions, politely refuse and encourage the student to study the lesson
-3. Keep responses concise and educational
-4. Respond in English
-5. Be encouraging and supportive""",
-            'refusal': "I can't help with quiz answers, but I'd be happy to explain the lesson concepts to help you understand the material better!",
-        },
-        'ru': {
-            'system': f"""Вы полезный помощник по обучению для конкретного урока. Ваша роль - помочь студентам понять содержание урока.
-
-НАЗВАНИЕ УРОКА: {lesson.title}
-СОДЕРЖАНИЕ УРОКА (отрывок): {lesson_content}
-
-ВОПРОСЫ ТЕСТА (только для справки - НЕ отвечайте на них):
-{chr(10).join(f"- {q}" for q in quiz_questions)}
-
-ВАЖНЫЕ ПРАВИЛА:
-1. Помогайте объяснять содержание урока и концепции
-2. Если спрашивают об ответах на тесты, вежливо откажите и поощрите студента изучить урок
-3. Давайте краткие и образовательные ответы
-4. Отвечайте на русском языке
-5. Будьте ободряющими и поддерживающими""",
-            'refusal': "Я не могу помочь с ответами на тесты, но с удовольствием объясню концепции урока, чтобы помочь вам лучше понять материал!",
-        },
-        'kaa': {
-            'system': f"""Siz belgili bir sabaq ushın paydali oqiw járdemshisisiz. Sizdiń rólińiz - studentlerge sabaq mazmunın túsiniwge járdem beriw.
-
-SABAQ ATI: {lesson.title}
-SABAQ MAZMUNI (úzindi): {lesson_content}
-
-TEST SORAWLARI (tek anıqlama ushın - bularǵa juwap BERMEŃ):
-{chr(10).join(f"- {q}" for q in quiz_questions)}
-
-MÁNISLI QÁǴIDELER:
-1. Sabaq mazmunı hám túsiniklerin túsindiriwge járdem beriń
-2. Eger test juwapları haqqında sorasalar, sıylı túrde bas tartıń hám studentti sabaqti úyreniwge ruwxlandırıń
-3. Qısqa hám bilim beriwshi juwaplar beriń
-4. Qaraqalpaq tilinde juwap beriń
-5. Qollap-quwatławshı hám ruwxlandırıwshı bolıń""",
-            'refusal': "Men test juwaplarına járdem bere almayman, biraq sabaq túsiniklerin túsindirip, materialı jaqsı túsiniwińizge járdem beremın!",
-        }
-    }
-
-    prompt_data = language_prompts.get(course_language, language_prompts['en'])
-    system_prompt = prompt_data['system']
-
-    # Check if user is asking about quiz answers
-    quiz_keywords = ['answer', 'solution', 'correct', 'ответ', 'решение', 'правильн', 'juwap', 'durıs', 'sheshim']
-    is_quiz_question = any(keyword in user_message.lower() for keyword in quiz_keywords) and \
-                      any(q_word in user_message.lower() for q_word in ['quiz', 'test', 'question', 'тест', 'вопрос', 'soraw'])
-
-    if is_quiz_question:
-        response_text = prompt_data['refusal']
-    else:
-        # Generate AI response using modern Gemini API
-        try:
-            from core.services import get_gemini_client
-            client = get_gemini_client()
-            
-            sub_type = 'free'
-            if request.user.is_authenticated:
-                sub_type = getattr(request.user, 'subscription_type', 'free')
-            
-            model_name = 'gemini-3.8-flash' if sub_type == 'ultra' else 'gemini-3.5-flash-lite'
-            full_prompt = f"{system_prompt}\n\nStudent question: {user_message}\n\nYour response:"
-            
-            interaction = client.interactions.create(
-                model=model_name,
-                input=full_prompt
-            )
-            response_text = (interaction.output_text or "").strip()
-        except Exception as e:
-            print(f"Error in lesson chatbot: {e}")
-            response_text = "Sorry, I encountered an error. Please try again." if course_language == 'en' else \
-                           "Извините, произошла ошибка. Попробуйте снова." if course_language == 'ru' else \
-                           "Keshiriń, qátelik júz berdi. Qaytadan háreket etiń."
-
-    # Return formatted response
-    return render(request, 'partials/lesson_chatbot_message.html', {
-        'message': response_text,
-        'is_ai': True
+    user.last_bonus_claimed = today
+    user.energy = Decimal(str(user.energy)) + amount
+    user.save(update_fields=['last_bonus_claimed', 'energy'])
+    return JsonResponse({
+        'success': True,
+        'message': f"Kunlik bonus olindi! +{int(amount)}⚡",
+        'current_energy': float(user.energy),
+        'current_streak': streak.current_streak,
     })
 
 
 @login_required
+@require_POST
+def claim_quest_web(request):
+    user = request.user
+    quest_key = request.POST.get('quest_key', '').strip()
+    today = timezone.localdate()
+    activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+    quests = {q['key']: q for q in _build_daily_quests(user, activity)}
+    quest = quests.get(quest_key)
+    if not quest:
+        return JsonResponse({'error': "Noto'g'ri topshiriq."}, status=400)
+    if not quest['completed']:
+        return JsonResponse({'error': "Topshiriq hali bajarilmagan."}, status=400)
+    if quest['claimed']:
+        return JsonResponse({'error': "Mukofot allaqachon olingan."}, status=400)
+
+    claimed = list(activity.claimed_quests or [])
+    claimed.append(quest_key)
+    activity.claimed_quests = claimed
+    activity.save(update_fields=['claimed_quests'])
+
+    user.energy = Decimal(str(user.energy)) + Decimal(str(quest['reward_energy']))
+    user.bonus_xp += int(quest['reward_xp'])
+    user.save(update_fields=['energy', 'bonus_xp'])
+    cache.delete('api_leaderboard_cache')
+
+    return JsonResponse({
+        'success': True,
+        'message': f"+{quest['reward_energy']}⚡ va +{quest['reward_xp']} XP qo'shildi!",
+        'current_energy': float(user.energy),
+        'total_xp': get_user_xp(user),
+    })
+
+
+@login_required
+@require_POST
+def redeem_xp_web(request):
+    user = request.user
+    total_xp, available_xp = _get_total_xp(user)
+    cost_xp = ECONOMY_CONFIG['xp_redeem_cost']
+    reward = ECONOMY_CONFIG['xp_redeem_reward']
+    if available_xp < cost_xp:
+        return JsonResponse({'error': f"Kamida {cost_xp} XP kerak (sizda: {available_xp} XP)."}, status=400)
+
+    user.redeemed_xp += cost_xp
+    user.energy = Decimal(str(user.energy)) + reward
+    user.save(update_fields=['redeemed_xp', 'energy'])
+    return JsonResponse({
+        'success': True,
+        'message': f"{cost_xp} XP → +{int(reward)}⚡ Energiyaga almashtirildi!",
+        'current_energy': float(user.energy),
+        'available_xp': available_xp - cost_xp,
+    })
+
+
+class GamificationView(LoginRequiredMixin, View):
+    def get(self, request):
+        return redirect('profile_web')
+
+
+@login_required
+def download_certificate(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if not is_course_completed(request.user, course):
+        return HttpResponse("Sertifikat olish uchun kursdagi barcha darslarni tugating.", status=403)
+    Certificate.objects.get_or_create(user=request.user, course=course)
+    pdf = generate_certificate(request.user, course)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    filename = f"Certificate_{course.title.replace(' ', '_')}_{request.user.username}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@require_POST
+def change_language(request):
+    language_code = request.POST.get('language')
+    valid_languages = [lang[0] for lang in settings.LANGUAGES]
+    if language_code not in valid_languages:
+        return JsonResponse({'error': 'Invalid language code'}, status=400)
+
+    if request.user.is_authenticated:
+        request.user.preferred_language = language_code
+        request.user.save(update_fields=['preferred_language'])
+
+    translation.activate(language_code)
+    request.session['_language'] = language_code
+    resp = JsonResponse({'success': True, 'language': language_code})
+    resp.set_cookie(settings.LANGUAGE_COOKIE_NAME, language_code)
+    return resp
+
+
+@login_required
 def check_task_status(request, task_id):
-    """
-    Check the status of a Celery task (for course generation)
-    
-    Returns JSON with task status and result
-    """
     from celery.result import AsyncResult
-    
+
     task = AsyncResult(task_id)
-    
-    response_data = {
-        'task_id': task_id,
-        'status': task.state,
-    }
-    
+    response_data = {'task_id': task_id, 'status': task.state}
+
     if task.state == 'PENDING':
-        response_data['message'] = 'Task is waiting to start...'
+        response_data['message'] = 'Navbatda kutilmoqda...'
     elif task.state == 'STARTED':
-        response_data['message'] = 'Generating course... This may take 10-30 seconds.'
+        response_data['message'] = 'AI kurs yaratmoqda...'
     elif task.state == 'SUCCESS':
-        result = task.result
-        response_data['message'] = result.get('message', 'Course generated successfully!')
-        response_data['course_id'] = result.get('course_id')
+        result = task.result or {}
+        course_id = result.get('course_id')
+        response_data['message'] = result.get('message', 'Kurs tayyor!')
+        response_data['course_id'] = course_id
         response_data['title'] = result.get('title')
-        response_data['redirect_url'] = '/dashboard/'
+        response_data['redirect_url'] = f'/course/{course_id}/' if course_id else '/dashboard/'
     elif task.state == 'FAILURE':
-        response_data['message'] = f'Error: {str(task.info)}'
+        response_data['message'] = f'Xatolik: {str(task.info)}'
         response_data['error'] = True
-    elif task.state == 'RETRY':
-        response_data['message'] = 'Retrying... Please wait.'
     else:
-        response_data['message'] = f'Task status: {task.state}'
-    
+        response_data['message'] = f'Holat: {task.state}'
+
     return JsonResponse(response_data)
 
 
 @login_required
 @require_POST
 def clear_chat_history(request):
-    """
-    Clear all chat messages for the current user
-    
-    This is useful after course generation to start fresh conversation
-    """
     try:
         ChatMessage.objects.filter(user=request.user).delete()
-        return JsonResponse({
-            'success': True,
-            'message': 'Chat history cleared successfully!'
-        })
+        return JsonResponse({'success': True, 'message': 'Chat tarixi tozalandi!'})
     except Exception as e:
-        return JsonResponse({
-            'error': str(e),
-            'message': 'Failed to clear chat history'
-        }, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 def _resolve_legal_lang(request):
