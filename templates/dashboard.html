@@ -1,83 +1,78 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Asosiy — StudyAi{% endblock %}
+{% block title %}{{ t.nav_home }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
-    <!-- Top Stats & Daily Bonus Row -->
     <div class="grid md:grid-cols-12 gap-5 items-stretch">
-        <!-- Welcome & 1-Tap Course Generator -->
-        <div class="md:col-span-8 neo-card p-6 bg-[#38BDF8] text-[#111827] flex flex-col justify-between gap-4">
+        <div class="md:col-span-8 neo-card neo-reveal p-6 bg-[#38BDF8] text-[#111827] flex flex-col justify-between gap-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-12 h-12 rounded-2xl border-[2.5px] border-[#111827] bg-white">
+                    <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-12 h-12 rounded-2xl border-[2.5px] border-[#111827] bg-white neo-float">
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-black">Salom, {{ user.first_name|default:user.username }}!</h1>
-                        <p class="text-xs sm:text-sm font-extrabold opacity-85">Bugun nimani o'rganamiz? Istalgan mavzuda kurs yarating.</p>
+                        <h1 class="text-2xl sm:text-3xl font-black">{{ t.dash_hello }}, {{ user.first_name|default:user.username }}!</h1>
+                        <p class="text-xs sm:text-sm font-extrabold opacity-85">{{ t.dash_sub }}</p>
                     </div>
                 </div>
                 <span class="px-3 py-1 bg-[#FACC15] border-2 border-[#111827] rounded-xl text-xs font-black uppercase">
-                    {{ user.subscription_type|upper }} ({{ created_courses_count }}/{{ course_limit }} kurs)
+                    {{ user.subscription_type|upper }} ({{ created_courses_count }}/{{ course_limit }})
                 </span>
             </div>
 
-            <!-- AI Course Quick Generator -->
             <form id="quick-course-form" class="space-y-3" onsubmit="submitQuickCourse(event)">
                 {% csrf_token %}
                 <div class="flex flex-col sm:flex-row gap-2.5">
                     <input type="text" id="quick-topic" required
                         class="flex-1 px-4 py-3 rounded-xl border-[2.5px] border-[#111827] bg-white text-[#111827] font-bold placeholder-gray-400 focus:outline-none shadow-[3px_3px_0px_#111827]"
-                        placeholder="Masalan: Python asoslari, IELTS Writing, Matematika...">
+                        placeholder="{{ t.dash_topic_ph }}">
                     <select id="quick-difficulty"
                         class="px-3.5 py-3 rounded-xl border-[2.5px] border-[#111827] bg-[#FAF9F6] text-[#111827] font-black shadow-[3px_3px_0px_#111827]">
-                        <option value="beginner">Boshlang'ich</option>
-                        <option value="intermediate">O'rta</option>
-                        <option value="advanced">Murakkab</option>
+                        <option value="beginner">{{ t.dash_diff_beg }}</option>
+                        <option value="intermediate">{{ t.dash_diff_int }}</option>
+                        <option value="advanced">{{ t.dash_diff_adv }}</option>
                     </select>
                     <button type="submit" id="quick-gen-btn"
                         class="neo-btn px-5 py-3 bg-[#FACC15] text-[#111827] flex items-center justify-center gap-2 shrink-0">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Yaratish ({{ course_cost }}⚡)</span>
+                        <span>{{ t.dash_create_btn }} ({{ course_cost }}⚡)</span>
                     </button>
                 </div>
 
-                <!-- Quick Category Pills & PDF Upload -->
                 <div class="flex flex-wrap items-center gap-2 pt-1">
-                    <button type="button" onclick="fillTopic('Python dasturlash asoslari')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">Dasturlash</button>
-                    <button type="button" onclick="fillTopic('Ingliz tili IELTS Speaking')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">Tillar & IELTS</button>
-                    <button type="button" onclick="fillTopic('Oliy matematika asoslari')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">Matematika</button>
-                    <button type="button" onclick="fillTopic('Biznes va Marketing strategiyasi')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">Biznes</button>
+                    <button type="button" onclick="fillTopic('Python')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">{{ t.cat_coding }}</button>
+                    <button type="button" onclick="fillTopic('English IELTS')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">{{ t.cat_lang }}</button>
+                    <button type="button" onclick="fillTopic('Mathematics')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">{{ t.cat_math }}</button>
+                    <button type="button" onclick="fillTopic('Business Marketing')" class="px-3 py-1 bg-white/90 border-2 border-[#111827] rounded-lg text-xs font-black hover:bg-[#FACC15]">{{ t.cat_biz }}</button>
                     <label class="px-3 py-1 bg-[#111827] text-white border-2 border-[#111827] rounded-lg text-xs font-black cursor-pointer hover:opacity-90 ml-auto flex items-center gap-1.5">
                         <i class="fa-solid fa-file-pdf text-[#FACC15]"></i>
-                        <span>PDF'dan Kurs</span>
+                        <span>{{ t.dash_pdf_btn }}</span>
                         <input type="file" id="pdf-upload-input" accept="application/pdf" class="hidden" onchange="uploadPdfCourse(this)">
                     </label>
                 </div>
                 <div id="gen-status-box" class="hidden neo-card-sm p-3 bg-white text-[#111827] text-sm font-extrabold flex items-center gap-2.5">
                     <i class="fa-solid fa-spinner fa-spin text-[#0EA5E9]"></i>
-                    <span id="gen-status-text">Kurs tayyorlanmoqda...</span>
+                    <span id="gen-status-text">...</span>
                 </div>
             </form>
         </div>
 
-        <!-- Stats + Daily Bonus -->
-        <div class="md:col-span-4 neo-card p-5 bg-[#FACC15] text-[#111827] flex flex-col justify-between gap-4">
+        <div class="md:col-span-4 neo-card neo-reveal p-5 bg-[#FACC15] text-[#111827] flex flex-col justify-between gap-4">
             <div class="grid grid-cols-3 gap-2.5">
-                <div class="neo-card-sm p-2.5 bg-white text-center">
+                <a href="{% url 'store_web' %}" class="neo-card-sm neo-card-interactive p-2.5 bg-white text-center">
                     <img src="{% static 'images/icon_energy.png' %}" alt="" class="w-6 h-6 mx-auto mb-1">
                     <div id="dash-energy" class="text-lg font-black">{{ user.energy|floatformat:0 }}</div>
-                    <div class="text-[10px] font-black uppercase text-gray-500">Energiya</div>
-                </div>
+                    <div class="text-[10px] font-black uppercase text-gray-500">{{ t.dash_energy }}</div>
+                </a>
                 <div class="neo-card-sm p-2.5 bg-white text-center">
                     <img src="{% static 'images/icon_streak.png' %}" alt="" class="w-6 h-6 mx-auto mb-1">
                     <div id="dash-streak" class="text-lg font-black">{{ streak.current_streak }}</div>
-                    <div class="text-[10px] font-black uppercase text-gray-500">Streak</div>
+                    <div class="text-[10px] font-black uppercase text-gray-500">{{ t.dash_streak }}</div>
                 </div>
                 <div class="neo-card-sm p-2.5 bg-white text-center">
                     <img src="{% static 'images/icon_xp.png' %}" alt="" class="w-6 h-6 mx-auto mb-1">
                     <div class="text-lg font-black">{{ user_xp }}</div>
-                    <div class="text-[10px] font-black uppercase text-gray-500">Jami XP</div>
+                    <div class="text-[10px] font-black uppercase text-gray-500">{{ t.dash_xp }}</div>
                 </div>
             </div>
 
@@ -85,64 +80,62 @@
                 <button id="claim-bonus-btn" onclick="claimDailyBonus()" {% if not can_claim_bonus %}disabled{% endif %}
                     class="neo-btn w-full py-3 {% if can_claim_bonus %}bg-[#34D399] text-[#111827]{% else %}bg-white/70 text-gray-500 cursor-not-allowed{% endif %} text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-gift"></i>
-                    <span>{% if can_claim_bonus %}Kunlik bonusni olish (+3⚡){% else %}Bugungi bonus olindi ✓{% endif %}</span>
+                    <span>{% if can_claim_bonus %}{{ t.dash_claim_bonus }}{% else %}{{ t.dash_bonus_done }}{% endif %}</span>
                 </button>
                 <div class="grid grid-cols-2 gap-2">
                     <a href="{% url 'blitz_web' %}" class="neo-btn py-2.5 bg-white text-[#111827] text-xs text-center flex items-center justify-center gap-1.5">
                         <img src="{% static 'images/icon_blitz.png' %}" alt="" class="w-4 h-4 rounded">
-                        <span>Blitz (0⚡)</span>
+                        <span>{{ t.nav_blitz }} (0⚡)</span>
                     </a>
-                    <a href="{% url 'explore' %}" class="neo-btn py-2.5 bg-white text-[#111827] text-xs text-center flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-compass text-[#0EA5E9]"></i>
-                        <span>Kashf etish</span>
+                    <a href="{% url 'store_web' %}" class="neo-btn py-2.5 bg-white text-[#111827] text-xs text-center flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-store text-[#0EA5E9]"></i>
+                        <span>{{ t.nav_store }}</span>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Daily Quests -->
-    <section class="space-y-3">
+    <section class="space-y-3 neo-reveal">
         <h2 class="text-xl font-black flex items-center gap-2">
             <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-6 h-6 rounded-lg">
-            <span>Kunlik topshiriqlar</span>
+            <span>{{ t.dash_quests }}</span>
         </h2>
         <div class="grid md:grid-cols-3 gap-4">
             {% for q in daily_quests %}
-            <div class="neo-card-sm p-4 flex flex-col justify-between gap-3">
+            <div class="neo-card-sm neo-card-interactive p-4 flex flex-col justify-between gap-3">
                 <div>
                     <div class="flex items-center justify-between gap-2 mb-1">
                         <span class="font-black text-sm">{{ q.title }}</span>
                         <span class="px-2 py-0.5 bg-[#FACC15] text-[#111827] border border-[#111827] rounded-lg text-[11px] font-black">+{{ q.reward_energy }}⚡ / +{{ q.reward_xp }} XP</span>
                     </div>
                     <div class="w-full h-3 bg-[var(--bg-soft)] border-2 border-[var(--border-ink)] rounded-full overflow-hidden mt-2">
-                        <div class="h-full bg-[#34D399]" style="width: {% widthratio q.progress q.target 100 %}%"></div>
+                        <div class="h-full bg-[#34D399] neo-bar-fill" style="width: {% widthratio q.progress q.target 100 %}%"></div>
                     </div>
                     <div class="text-xs font-bold text-[var(--text-sub)] mt-1">{{ q.progress }} / {{ q.target }}</div>
                 </div>
                 {% if q.claimed %}
-                    <div class="text-xs font-black text-[#10B981]">Mukofot olindi ✓</div>
+                    <div class="text-xs font-black text-[#10B981]">✓</div>
                 {% elif q.completed %}
-                    <button onclick="claimQuest('{{ q.key }}', this)" class="neo-btn py-2 bg-[#34D399] text-[#111827] text-xs">Mukofotni olish</button>
+                    <button onclick="claimQuest('{{ q.key }}', this)" class="neo-btn py-2 bg-[#34D399] text-[#111827] text-xs">+{{ q.reward_energy }}⚡</button>
                 {% else %}
-                    <div class="text-xs font-bold text-[var(--text-sub)]">Jarayonda...</div>
+                    <div class="text-xs font-bold text-[var(--text-sub)]">...</div>
                 {% endif %}
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- My Courses Grid -->
     <section class="space-y-4">
-        <div class="flex items-center justify-between gap-3">
-            <h2 class="text-2xl font-black">Mening kurslarim</h2>
-            <a href="{% url 'explore' %}" class="neo-btn px-4 py-2 bg-[var(--bg-card)] text-xs">Jamoa kurslari &rarr;</a>
+        <div class="flex items-center justify-between gap-3 neo-reveal">
+            <h2 class="text-2xl font-black">{{ t.dash_my_courses }}</h2>
+            <a href="{% url 'explore' %}" class="neo-btn px-4 py-2 bg-[var(--bg-card)] text-xs">{{ t.dash_explore_link }}</a>
         </div>
 
         {% if courses %}
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for course in courses %}
-            <div class="neo-card overflow-hidden flex flex-col justify-between">
+            <div class="neo-card neo-card-interactive neo-reveal overflow-hidden flex flex-col justify-between">
                 <div>
                     <div class="h-40 bg-[#38BDF8] border-b-[3px] border-[var(--border-ink)] relative overflow-hidden">
                         {% if course.image_url %}
@@ -161,28 +154,28 @@
                         <p class="text-xs font-semibold text-[var(--text-sub)] line-clamp-2">{{ course.description }}</p>
                         <div class="pt-2">
                             <div class="flex justify-between text-xs font-black mb-1">
-                                <span>{{ course.completed_lessons_count }} / {{ course.total_lessons_count }} dars</span>
+                                <span>{{ course.completed_lessons_count }} / {{ course.total_lessons_count }}</span>
                                 <span>{{ course.progress }}%</span>
                             </div>
                             <div class="w-full h-3.5 bg-[var(--bg-soft)] border-2 border-[var(--border-ink)] rounded-full overflow-hidden">
-                                <div class="h-full bg-[#34D399]" style="width: {{ course.progress }}%"></div>
+                                <div class="h-full bg-[#34D399] neo-bar-fill" style="width: {{ course.progress }}%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="p-5 pt-0">
                     <a href="{% url 'course_detail' course.id %}" class="neo-btn block w-full py-2.5 bg-[#FACC15] text-[#111827] text-center text-sm">
-                        {% if course.progress == 100 %}Ko'rish / Sertifikat{% elif course.progress > 0 %}Davom ettirish{% else %}1-darsni boshlash{% endif %}
+                        {% if course.progress == 100 %}{{ t.btn_cert_view }}{% elif course.progress > 0 %}{{ t.btn_continue }}{% else %}{{ t.btn_start_1 }}{% endif %}
                     </a>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="neo-card p-10 text-center space-y-4">
-            <img src="{% static 'images/onboard_1.png' %}" alt="" class="h-36 mx-auto object-contain">
-            <h3 class="text-xl font-black">Hali kurslaringiz yo'q</h3>
-            <p class="text-sm font-semibold text-[var(--text-sub)] max-w-md mx-auto">Yuqoridagi maydonga istalgan mavzuni yozing va birinchi AI kursingizni yarating — faqat 1-dars ochiladi va siz tezda o'qishni boshlaysiz!</p>
+        <div class="neo-card neo-reveal p-10 text-center space-y-4">
+            <img src="{% static 'images/onboard_1.png' %}" alt="" class="h-36 mx-auto object-contain neo-float">
+            <h3 class="text-xl font-black">{{ t.dash_empty_title }}</h3>
+            <p class="text-sm font-semibold text-[var(--text-sub)] max-w-md mx-auto">{{ t.dash_empty_sub }}</p>
         </div>
         {% endif %}
     </section>
@@ -207,7 +200,7 @@ async function submitQuickCourse(e) {
     const txt = document.getElementById('gen-status-text');
     btn.disabled = true;
     box.classList.remove('hidden');
-    txt.innerText = "AI kurs rejasini va 1-darsni tayyorlamoqda...";
+    txt.innerText = "...";
 
     const form = new FormData();
     form.append('topic', topic);
@@ -221,20 +214,15 @@ async function submitQuickCourse(e) {
         });
         const data = await res.json();
         if (!res.ok) {
-            showToast(data.error || "Xatolik yuz berdi", 'error');
+            showToast(data.error || "Error", 'error');
             box.classList.add('hidden');
             btn.disabled = false;
             return;
         }
-        if (data.sync && data.redirect_url) {
-            window.location.href = data.redirect_url;
-            return;
-        }
-        if (data.status_url) {
-            pollCourseTask(data.status_url, btn, box, txt);
-        }
+        if (data.sync && data.redirect_url) { window.location.href = data.redirect_url; return; }
+        if (data.status_url) pollCourseTask(data.status_url, btn, box, txt);
     } catch (err) {
-        showToast("Server bilan aloqa uzildi", 'error');
+        showToast("Network error", 'error');
         box.classList.add('hidden');
         btn.disabled = false;
     }
@@ -245,19 +233,16 @@ async function pollCourseTask(url, btn, box, txt) {
         const res = await fetch(url);
         const data = await res.json();
         if (data.status === 'SUCCESS') {
-            txt.innerText = data.message || "Kurs tayyor!";
             window.location.href = data.redirect_url || "{% url 'dashboard' %}";
         } else if (data.status === 'FAILURE' || data.error) {
-            showToast(data.message || "Generatsiyada xatolik", 'error');
+            showToast(data.message || "Error", 'error');
             box.classList.add('hidden');
             btn.disabled = false;
         } else {
-            txt.innerText = data.message || "Tayyorlanmoqda...";
+            txt.innerText = data.message || "...";
             setTimeout(() => pollCourseTask(url, btn, box, txt), 2000);
         }
-    } catch (e) {
-        setTimeout(() => pollCourseTask(url, btn, box, txt), 2500);
-    }
+    } catch (e) { setTimeout(() => pollCourseTask(url, btn, box, txt), 2500); }
 }
 
 async function uploadPdfCourse(input) {
@@ -266,7 +251,7 @@ async function uploadPdfCourse(input) {
     const box = document.getElementById('gen-status-box');
     const txt = document.getElementById('gen-status-text');
     box.classList.remove('hidden');
-    txt.innerText = "PDF tahlil qilinmoqda va kurs yaratilmoqda...";
+    txt.innerText = "PDF...";
 
     const form = new FormData();
     form.append('pdf', file);
@@ -277,18 +262,10 @@ async function uploadPdfCourse(input) {
             body: form
         });
         const data = await res.json();
-        if (!res.ok) {
-            showToast(data.error || "PDF xatoligi", 'error');
-            box.classList.add('hidden');
-        } else {
-            window.location.href = data.redirect_url;
-        }
-    } catch (e) {
-        showToast("PDF yuklashda xatolik", 'error');
-        box.classList.add('hidden');
-    } finally {
-        input.value = '';
-    }
+        if (!res.ok) { showToast(data.error || "PDF Error", 'error'); box.classList.add('hidden'); }
+        else window.location.href = data.redirect_url;
+    } catch (e) { showToast("Error", 'error'); box.classList.add('hidden'); }
+    finally { input.value = ''; }
 }
 
 async function claimDailyBonus() {
@@ -305,15 +282,10 @@ async function claimDailyBonus() {
             document.getElementById('dash-energy').innerText = Math.floor(data.current_energy);
             document.getElementById('nav-energy-val').innerText = Math.floor(data.current_energy);
             document.getElementById('dash-streak').innerText = data.current_streak;
-            btn.innerHTML = '<span>Bugungi bonus olindi ✓</span>';
-            btn.classList.remove('bg-[#34D399]');
-            btn.classList.add('bg-white/70', 'text-gray-500');
-        } else {
-            showToast(data.error, 'error');
-        }
-    } catch (e) {
-        showToast("Xatolik yuz berdi", 'error');
-    }
+            btn.innerHTML = '<span>{{ t.dash_bonus_done }}</span>';
+            btn.className = 'neo-btn w-full py-3 bg-white/70 text-gray-500 text-sm cursor-not-allowed';
+        } else showToast(data.error, 'error');
+    } catch (e) { showToast("Error", 'error'); }
 }
 
 async function claimQuest(key, btn) {
@@ -327,16 +299,9 @@ async function claimQuest(key, btn) {
             body: form
         });
         const data = await res.json();
-        if (res.ok) {
-            showToast(data.message, 'success');
-            setTimeout(() => window.location.reload(), 600);
-        } else {
-            showToast(data.error, 'error');
-            btn.disabled = false;
-        }
-    } catch (e) {
-        btn.disabled = false;
-    }
+        if (res.ok) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 600); }
+        else { showToast(data.error, 'error'); btn.disabled = false; }
+    } catch (e) { btn.disabled = false; }
 }
 </script>
 {% endblock %}

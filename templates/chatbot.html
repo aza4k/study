@@ -1,25 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}AI Ustoz — StudyAi{% endblock %}
+{% block title %}{{ t.nav_ai }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-4">
-    <div class="neo-card p-5 bg-[#A78BFA] text-[#111827] flex flex-wrap items-center justify-between gap-3">
+    <div class="neo-card neo-reveal p-5 bg-[#A78BFA] text-[#111827] flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-            <img src="{% static 'images/icon_mentor.png' %}" alt="" class="w-12 h-12 rounded-2xl border-2 border-[#111827] bg-white">
+            <img src="{% static 'images/icon_mentor.png' %}" alt="" class="w-12 h-12 rounded-2xl border-2 border-[#111827] bg-white neo-float">
             <div>
-                <h1 class="text-2xl font-black">24/7 Shaxsiy AI Ustoz</h1>
-                <p class="text-xs font-extrabold">Savol bering yoki mavzuni tushuntiring — StudyAi sizga kurs tuzib beradi ({{ chat_cost }}⚡ / xabar)</p>
+                <h1 class="text-2xl font-black">{{ t.chat_title }}</h1>
+                <p class="text-xs font-extrabold">{{ t.chat_sub }} ({{ chat_cost }}⚡)</p>
             </div>
         </div>
         <button type="button" onclick="clearChat()" class="neo-btn px-4 py-2 bg-white text-[#111827] text-xs">
-            <i class="fa-solid fa-trash mr-1"></i> Tarixni tozalash
+            <i class="fa-solid fa-trash mr-1"></i> {{ t.chat_clear }}
         </button>
     </div>
 
-    <!-- Chat Messages Box -->
-    <div id="chat-history" class="neo-card p-5 h-[460px] overflow-y-auto space-y-4">
+    <div id="chat-history" class="neo-card neo-reveal p-5 h-[460px] overflow-y-auto space-y-4">
         {% if chat_messages %}
             {% for msg in chat_messages %}
             <div class="flex {% if msg.is_user %}justify-end{% else %}justify-start{% endif %}">
@@ -30,26 +29,24 @@
             {% endfor %}
         {% else %}
             <div class="text-center py-14 space-y-3">
-                <img src="{% static 'images/studyai_logo.png' %}" alt="" class="w-16 h-16 mx-auto rounded-2xl border-2 border-[#111827]">
-                <h3 class="font-black text-lg">Suhbatni boshlang!</h3>
-                <p class="text-xs font-bold text-[var(--text-sub)] max-w-md mx-auto">Masalan: "Menga Django REST Framework bo'yicha kurs kerak" yoki istalgan savolingizni yozing.</p>
+                <img src="{% static 'images/studyai_logo.png' %}" alt="" class="w-16 h-16 mx-auto rounded-2xl border-2 border-[#111827] neo-float">
+                <h3 class="font-black text-lg">{{ t.chat_title }}</h3>
+                <p class="text-xs font-bold text-[var(--text-sub)] max-w-md mx-auto">{{ t.chat_sub }}</p>
             </div>
         {% endif %}
     </div>
 
-    <!-- Course Suggestion Banner when TOPIC_CLEAR arrives -->
-    <div id="topic-ready-banner" class="hidden neo-card-sm p-4 bg-[#34D399] text-[#111827] flex flex-wrap items-center justify-between gap-3">
-        <div class="font-black text-sm">Mavzu tayyor: <span id="detected-topic-name"></span></div>
+    <div id="topic-ready-banner" class="hidden neo-card-sm p-4 bg-[#34D399] text-[#111827] flex flex-wrap items-center justify-between gap-3 neo-pop">
+        <div class="font-black text-sm"><span id="detected-topic-name"></span></div>
         <button type="button" onclick="createFromDetectedTopic()" class="neo-btn px-5 py-2.5 bg-[#FACC15] text-[#111827] text-xs">
-            Shu mavzudan kurs yaratish &rarr;
+            {{ t.dash_create_btn }} &rarr;
         </button>
     </div>
 
-    <!-- Input Form -->
     <form onsubmit="sendChatMsg(event)" class="flex gap-3">
-        <input type="text" id="chat-input" required placeholder="AI ustozga xabar yozing..." class="neo-input text-sm">
+        <input type="text" id="chat-input" required placeholder="{{ t.chat_ph }}" class="neo-input text-sm">
         <button type="submit" id="chat-send-btn" class="neo-btn px-6 py-3 bg-[#FACC15] text-[#111827] text-sm shrink-0">
-            Yuborish <i class="fa-solid fa-paper-plane ml-1"></i>
+            {{ t.chat_send }} <i class="fa-solid fa-paper-plane ml-1"></i>
         </button>
     </form>
 </div>
@@ -59,9 +56,7 @@
 <script>
 let detectedTopic = '';
 const chatBox = document.getElementById('chat-history');
-document.querySelectorAll('.chat-md').forEach(el => {
-    el.innerHTML = marked.parse(el.textContent || '');
-});
+document.querySelectorAll('.chat-md').forEach(el => { el.innerHTML = marked.parse(el.textContent || ''); });
 chatBox.scrollTop = chatBox.scrollHeight;
 
 async function sendChatMsg(e) {
@@ -69,9 +64,8 @@ async function sendChatMsg(e) {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
-
     const btn = document.getElementById('chat-send-btn');
-    chatBox.innerHTML += `<div class="flex justify-end"><div class="max-w-[85%] neo-card-sm p-3.5 text-sm font-bold bg-[#38BDF8] text-[#111827]">${text}</div></div>`;
+    chatBox.innerHTML += `<div class="flex justify-end neo-pop"><div class="max-w-[85%] neo-card-sm p-3.5 text-sm font-bold bg-[#38BDF8] text-[#111827]">${text}</div></div>`;
     input.value = '';
     btn.disabled = true;
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -79,16 +73,11 @@ async function sendChatMsg(e) {
     const form = new FormData();
     form.append('message', text);
     try {
-        const res = await fetch("{% url 'send_message' %}", {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() },
-            body: form
-        });
+        const res = await fetch("{% url 'send_message' %}", { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() }, body: form });
         const data = await res.json();
-        if (!res.ok) {
-            showToast(data.error || "Xatolik", 'error');
-        } else {
-            chatBox.innerHTML += `<div class="flex justify-start"><div class="max-w-[85%] neo-card-sm p-3.5 text-sm font-semibold bg-[var(--bg-soft)]">${marked.parse(data.bot_message || '')}</div></div>`;
+        if (!res.ok) showToast(data.error || "Error", 'error');
+        else {
+            chatBox.innerHTML += `<div class="flex justify-start neo-pop"><div class="max-w-[85%] neo-card-sm p-3.5 text-sm font-semibold bg-[var(--bg-soft)]">${marked.parse(data.bot_message || '')}</div></div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
             if (data.current_energy !== undefined) document.getElementById('nav-energy-val').innerText = Math.floor(data.current_energy);
             if (data.topic_clear && data.topic) {
@@ -97,40 +86,25 @@ async function sendChatMsg(e) {
                 document.getElementById('topic-ready-banner').classList.remove('hidden');
             }
         }
-    } catch (err) {
-        showToast("Server bilan aloqa uzildi", 'error');
-    } finally {
-        btn.disabled = false;
-    }
+    } catch (err) { showToast("Network error", 'error'); }
+    finally { btn.disabled = false; }
 }
 
 async function createFromDetectedTopic() {
     if (!detectedTopic) return;
     const form = new FormData();
     form.append('topic', detectedTopic);
-    showToast("Kurs yaratish boshlandi...", 'info');
     try {
-        const res = await fetch("{% url 'generate_course' %}", {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() },
-            body: form
-        });
+        const res = await fetch("{% url 'generate_course' %}", { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() }, body: form });
         const data = await res.json();
-        if (res.ok && data.redirect_url) {
-            window.location.href = data.redirect_url;
-        } else if (res.ok && data.status_url) {
-            window.location.href = "{% url 'dashboard' %}";
-        } else {
-            showToast(data.error || "Xatolik", 'error');
-        }
-    } catch (e) { showToast("Xatolik yuz berdi", 'error'); }
+        if (res.ok && data.redirect_url) window.location.href = data.redirect_url;
+        else if (res.ok && data.status_url) window.location.href = "{% url 'dashboard' %}";
+        else showToast(data.error || "Error", 'error');
+    } catch (e) { showToast("Error", 'error'); }
 }
 
 async function clearChat() {
-    const res = await fetch("{% url 'clear_chat_history' %}", {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCsrfToken() }
-    });
+    const res = await fetch("{% url 'clear_chat_history' %}", { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } });
     if (res.ok) window.location.reload();
 }
 </script>

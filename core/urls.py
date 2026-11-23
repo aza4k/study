@@ -31,6 +31,7 @@ urlpatterns = [
     path('blitz/', views.BlitzReviewWebView.as_view(), name='blitz_web'),
     path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
     path('profile/', views.ProfileWebView.as_view(), name='profile_web'),
+    path('store/', views.StoreWebView.as_view(), name='store_web'),
     path('gamification/', views.GamificationView.as_view(), name='gamification'),
     path('pricing/', views.PricingView.as_view(), name='pricing'),
     path('claim-bonus/', views.claim_bonus_web, name='claim_bonus_web'),

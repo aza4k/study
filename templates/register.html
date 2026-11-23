@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Ro'yxatdan o'tish — StudyAi{% endblock %}
+{% block title %}{{ t.auth_reg_title }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="max-w-lg mx-auto py-4 sm:py-8">
-    <div class="neo-card p-6 sm:p-8 space-y-6">
+    <div class="neo-card neo-reveal p-6 sm:p-8 space-y-6">
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827]">
+                <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827] neo-float">
                 <div>
-                    <h1 class="text-2xl font-black">Yangi hisob yaratish</h1>
-                    <p class="text-sm font-bold text-[var(--text-sub)]">Boshlash uchun +30 Energiya bepul beriladi!</p>
+                    <h1 class="text-2xl font-black">{{ t.auth_reg_title }}</h1>
+                    <p class="text-sm font-bold text-[var(--text-sub)]">{{ t.auth_reg_sub }}</p>
                 </div>
             </div>
             <span class="px-3 py-1 bg-[#34D399] text-[#111827] border-2 border-[#111827] rounded-xl text-xs font-black">+30 ⚡</span>
@@ -28,47 +28,25 @@
         <form method="post" class="space-y-4">
             {% csrf_token %}
             <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">Ism</label>
-                    {{ form.first_name }}
-                </div>
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">Familiya</label>
-                    {{ form.last_name }}
-                </div>
+                <div><label class="block text-xs font-black uppercase mb-1">First Name</label>{{ form.first_name }}</div>
+                <div><label class="block text-xs font-black uppercase mb-1">Last Name</label>{{ form.last_name }}</div>
             </div>
-            <div>
-                <label class="block text-xs font-black uppercase mb-1">Username</label>
-                {{ form.username }}
+            <div><label class="block text-xs font-black uppercase mb-1">Username</label>{{ form.username }}</div>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div><label class="block text-xs font-black uppercase mb-1">Phone</label>{{ form.phone_number }}</div>
+                <div><label class="block text-xs font-black uppercase mb-1">Language</label>{{ form.preferred_language }}</div>
             </div>
             <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">Telefon (ixtiyoriy)</label>
-                    {{ form.phone_number }}
-                </div>
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">O'qish tili</label>
-                    {{ form.preferred_language }}
-                </div>
+                <div><label class="block text-xs font-black uppercase mb-1">Password</label>{{ form.password1 }}</div>
+                <div><label class="block text-xs font-black uppercase mb-1">Confirm</label>{{ form.password2 }}</div>
             </div>
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">Parol</label>
-                    {{ form.password1 }}
-                </div>
-                <div>
-                    <label class="block text-xs font-black uppercase mb-1">Parolni tasdiqlash</label>
-                    {{ form.password2 }}
-                </div>
-            </div>
-            <button type="submit" class="neo-btn w-full py-3.5 bg-[#FACC15] text-[#111827] text-base">
-                RO'YXATDAN O'TISH
+            <button type="submit" class="neo-btn w-full py-3.5 bg-[#FACC15] text-[#111827] text-base uppercase">
+                {{ t.nav_start }}
             </button>
         </form>
 
         <div class="border-t-2 border-dashed border-[var(--border-ink)] pt-4 text-center text-sm font-bold">
-            Akkauntingiz bormi?
-            <a href="{% url 'login' %}" class="text-[#0EA5E9] font-black underline ml-1">Kirish</a>
+            <a href="{% url 'login' %}" class="text-[#0EA5E9] font-black underline">{{ t.nav_login }}</a>
         </div>
     </div>
 </div>

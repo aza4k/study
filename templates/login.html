@@ -1,43 +1,42 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Kirish — StudyAi{% endblock %}
+{% block title %}{{ t.nav_login }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto py-6 sm:py-10">
-    <div class="neo-card p-6 sm:p-8 space-y-6">
+    <div class="neo-card neo-reveal p-6 sm:p-8 space-y-6">
         <div class="flex items-center gap-3">
-            <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827]">
+            <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827] neo-float">
             <div>
-                <h1 class="text-2xl font-black">Xush kelibsiz!</h1>
-                <p class="text-sm font-bold text-[var(--text-sub)]">StudyAi hisobingizga kiring</p>
+                <h1 class="text-2xl font-black">{{ t.auth_welcome }}</h1>
+                <p class="text-sm font-bold text-[var(--text-sub)]">{{ t.auth_login_sub }}</p>
             </div>
         </div>
 
         {% if form.errors %}
         <div class="neo-card-sm p-3.5 bg-[#F43F5E] text-white text-sm font-extrabold">
-            Foydalanuvchi nomi yoki parol noto'g'ri. Qaytadan tekshiring.
+            Username / Password error.
         </div>
         {% endif %}
 
         <form method="post" class="space-y-4">
             {% csrf_token %}
             <div>
-                <label class="block text-sm font-black mb-1.5">Foydalanuvchi nomi (Username)</label>
+                <label class="block text-sm font-black mb-1.5">Username</label>
                 {{ form.username }}
             </div>
             <div>
-                <label class="block text-sm font-black mb-1.5">Parol</label>
+                <label class="block text-sm font-black mb-1.5">Password</label>
                 {{ form.password }}
             </div>
-            <button type="submit" class="neo-btn w-full py-3.5 bg-[#FACC15] text-[#111827] text-base">
-                KIRISH
+            <button type="submit" class="neo-btn w-full py-3.5 bg-[#FACC15] text-[#111827] text-base uppercase">
+                {{ t.nav_login }}
             </button>
         </form>
 
         <div class="border-t-2 border-dashed border-[var(--border-ink)] pt-4 text-center text-sm font-bold">
-            Hisobingiz yo'qmi?
-            <a href="{% url 'register' %}" class="text-[#0EA5E9] font-black underline ml-1">Ro'yxatdan o'tish</a>
+            <a href="{% url 'register' %}" class="text-[#0EA5E9] font-black underline">{{ t.auth_reg_title }}</a>
         </div>
     </div>
 </div>

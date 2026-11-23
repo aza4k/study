@@ -1,46 +1,42 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Kashf etish — StudyAi{% endblock %}
+{% block title %}{{ t.nav_explore }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <div class="neo-card p-6 bg-[#38BDF8] text-[#111827] flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="neo-card neo-reveal p-6 bg-[#38BDF8] text-[#111827] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-black">Jamoa kurslarini kashf eting</h1>
-            <p class="text-sm font-extrabold opacity-85">Barcha kurslarning 1-darsini bepul ko'ring yoki o'zingizga saqlab oling.</p>
+            <h1 class="text-3xl font-black">{{ t.exp_title }}</h1>
+            <p class="text-sm font-extrabold opacity-85">{{ t.exp_sub }}</p>
         </div>
         <span class="px-3.5 py-1.5 bg-[#FACC15] border-2 border-[#111827] rounded-xl text-xs font-black uppercase self-start md:self-auto">
-            Sizning tarif: {{ user.subscription_type|upper }}
+            {{ user.subscription_type|upper }}
         </span>
     </div>
 
-    <!-- Filters -->
-    <form method="get" class="neo-card-sm p-4 grid sm:grid-cols-4 gap-3">
-        <input type="text" name="search" value="{{ search_query }}" placeholder="Kurs nomini qidiring..." class="neo-input text-sm">
+    <form method="get" class="neo-card-sm neo-reveal p-4 grid sm:grid-cols-4 gap-3">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="{{ t.exp_search_ph }}" class="neo-input text-sm">
         <select name="language" class="neo-input text-sm">
-            <option value="">Barcha tillar</option>
+            <option value="">{{ t.exp_all_langs }}</option>
             <option value="uz" {% if lang_query == 'uz' %}selected{% endif %}>O'zbekcha</option>
             <option value="kaa" {% if lang_query == 'kaa' %}selected{% endif %}>Qaraqalpaqsha</option>
             <option value="ru" {% if lang_query == 'ru' %}selected{% endif %}>Русский</option>
             <option value="en" {% if lang_query == 'en' %}selected{% endif %}>English</option>
         </select>
         <select name="category" class="neo-input text-sm">
-            <option value="">Barcha yo'nalishlar</option>
-            <option value="coding" {% if category_query == 'coding' %}selected{% endif %}>Dasturlash</option>
-            <option value="language" {% if category_query == 'language' %}selected{% endif %}>Tillar</option>
-            <option value="science" {% if category_query == 'science' %}selected{% endif %}>Fan & Matematika</option>
-            <option value="business" {% if category_query == 'business' %}selected{% endif %}>Biznes</option>
-            <option value="creative" {% if category_query == 'creative' %}selected{% endif %}>Ijod & Dizayn</option>
-            <option value="general" {% if category_query == 'general' %}selected{% endif %}>Umumiy</option>
+            <option value="">{{ t.exp_all_cats }}</option>
+            <option value="coding" {% if category_query == 'coding' %}selected{% endif %}>{{ t.cat_coding }}</option>
+            <option value="language" {% if category_query == 'language' %}selected{% endif %}>{{ t.cat_lang }}</option>
+            <option value="science" {% if category_query == 'science' %}selected{% endif %}>{{ t.cat_math }}</option>
+            <option value="business" {% if category_query == 'business' %}selected{% endif %}>{{ t.cat_biz }}</option>
         </select>
-        <button type="submit" class="neo-btn bg-[#FACC15] text-[#111827] py-2.5 text-sm">Qidirish</button>
+        <button type="submit" class="neo-btn bg-[#FACC15] text-[#111827] py-2.5 text-sm">{{ t.exp_search_btn }}</button>
     </form>
 
-    <!-- Courses Grid -->
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for c in explore_courses %}
-        <div class="neo-card overflow-hidden flex flex-col justify-between">
+        <div class="neo-card neo-card-interactive neo-reveal overflow-hidden flex flex-col justify-between">
             <div>
                 <div class="h-36 bg-[#FACC15] border-b-[3px] border-[var(--border-ink)] relative overflow-hidden">
                     {% if c.image_url %}
@@ -57,38 +53,24 @@
                     </button>
                 </div>
                 <div class="p-5 space-y-2">
-                    <div class="text-[11px] font-black uppercase text-[#0EA5E9]">@{{ c.creator.username|default:'StudyAi' }} &bull; {{ c.lessons_count }} dars</div>
+                    <div class="text-[11px] font-black uppercase text-[#0EA5E9]">@{{ c.creator.username|default:'StudyAi' }} &bull; {{ c.lessons_count }}</div>
                     <h3 class="text-lg font-black leading-snug line-clamp-2">{{ c.title }}</h3>
                     <p class="text-xs font-semibold text-[var(--text-sub)] line-clamp-2">{{ c.description }}</p>
                 </div>
             </div>
             <div class="p-5 pt-0 flex gap-2">
                 <a href="{% url 'course_detail' c.id %}" class="neo-btn flex-1 py-2.5 bg-[var(--bg-soft)] text-center text-xs">
-                    {% if c.id in enrolled_ids %}Ochish{% else %}1-darsni ko'rish{% endif %}
+                    {% if c.id in enrolled_ids %}{{ t.exp_open }}{% else %}{{ t.exp_preview }}{% endif %}
                 </a>
                 <button onclick="toggleEnroll({{ c.id }}, this)" class="neo-btn px-4 py-2.5 text-xs {% if c.id in enrolled_ids %}bg-[#34D399] text-[#111827]{% else %}bg-[#FACC15] text-[#111827]{% endif %}">
-                    {% if c.id in enrolled_ids %}Saqlangan ✓{% else %}+ Saqlash{% endif %}
+                    {% if c.id in enrolled_ids %}{{ t.exp_saved }}{% else %}{{ t.exp_save }}{% endif %}
                 </button>
             </div>
         </div>
         {% empty %}
-        <div class="sm:col-span-2 lg:col-span-3 neo-card p-10 text-center">
-            <p class="font-black text-lg">Mos kurslar topilmadi.</p>
-        </div>
+        <div class="sm:col-span-2 lg:col-span-3 neo-card p-10 text-center font-black">0</div>
         {% endfor %}
     </div>
-
-    {% if page_obj and page_obj.has_other_pages %}
-    <div class="flex justify-center gap-3 pt-4">
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&language={{ lang_query }}&category={{ category_query }}" class="neo-btn px-4 py-2 bg-[var(--bg-card)] text-sm">&larr; Oldingi</a>
-        {% endif %}
-        <span class="px-4 py-2 font-black text-sm">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&language={{ lang_query }}&category={{ category_query }}" class="neo-btn px-4 py-2 bg-[#FACC15] text-[#111827] text-sm">Keyingi &rarr;</a>
-        {% endif %}
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
 
@@ -96,36 +78,28 @@
 <script>
 async function toggleStar(courseId, btn) {
     try {
-        const res = await fetch(`/courses/${courseId}/star/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() }
-        });
+        const res = await fetch(`/courses/${courseId}/star/`, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } });
         const data = await res.json();
         if (!res.ok) { showToast(data.error, 'error'); return; }
-        const icon = btn.querySelector('i');
-        const span = btn.querySelector('span');
-        icon.className = `fa-solid fa-star ${data.starred ? 'text-[#F59E0B]' : 'text-gray-400'}`;
-        span.innerText = data.star_count;
-    } catch (e) { showToast("Xatolik yuz berdi", 'error'); }
+        btn.querySelector('i').className = `fa-solid fa-star ${data.starred ? 'text-[#F59E0B]' : 'text-gray-400'}`;
+        btn.querySelector('span').innerText = data.star_count;
+    } catch (e) { showToast("Error", 'error'); }
 }
 
 async function toggleEnroll(courseId, btn) {
     try {
-        const res = await fetch(`/courses/${courseId}/enroll/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCsrfToken() }
-        });
+        const res = await fetch(`/courses/${courseId}/enroll/`, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } });
         const data = await res.json();
         if (!res.ok) { showToast(data.error, 'error'); return; }
         if (data.enrolled) {
-            btn.innerText = 'Saqlangan ✓';
+            btn.innerText = '{{ t.exp_saved }}';
             btn.className = 'neo-btn px-4 py-2.5 text-xs bg-[#34D399] text-[#111827]';
-            showToast("Kurs Mening kurslarimga qo'shildi!", 'success');
+            showToast("OK!", 'success');
         } else {
-            btn.innerText = '+ Saqlash';
+            btn.innerText = '{{ t.exp_save }}';
             btn.className = 'neo-btn px-4 py-2.5 text-xs bg-[#FACC15] text-[#111827]';
         }
-    } catch (e) { showToast("Xatolik yuz berdi", 'error'); }
+    } catch (e) { showToast("Error", 'error'); }
 }
 </script>
 {% endblock %}

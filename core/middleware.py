@@ -1,16 +1,22 @@
 from django.utils import translation
 
 class UserLanguageMiddleware:
-    """Automatically activate the user's preferred language"""
+    """Activate user's chosen session/cookie or preferred language without overriding explicit switches."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated:
-            user_language = request.user.preferred_language
-            translation.activate(user_language)
-            request.LANGUAGE_CODE = user_language
+        from django.conf import settings
+        lang = (
+            request.session.get('_language')
+            or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+        )
+        if not lang and request.user.is_authenticated:
+            lang = request.user.preferred_language
+        if lang:
+            translation.activate(lang)
+            request.LANGUAGE_CODE = lang
 
         response = self.get_response(request)
         return response

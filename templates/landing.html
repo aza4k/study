@@ -1,71 +1,69 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}StudyAi — Shaxsiy AI O'quv Ustozingiz{% endblock %}
+{% block title %}StudyAi — {{ t.hero_badge }}{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
 <section class="grid lg:grid-cols-12 gap-8 items-center py-6 sm:py-10">
-    <div class="lg:col-span-7 space-y-6">
+    <div class="lg:col-span-7 space-y-6 neo-reveal">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#38BDF8] text-[#111827] border-2 border-[#111827] rounded-xl font-black text-xs uppercase shadow-[3px_3px_0px_#111827]">
-            <span>FunDev Uzbekistan &bull; study-ai.uz</span>
+            <span>{{ t.hero_badge }}</span>
         </div>
 
         <h1 class="text-4xl sm:text-6xl font-black leading-tight tracking-tight">
-            Istalgan mavzuda <span class="bg-[#FACC15] text-[#111827] px-2.5 py-0.5 rounded-xl border-2 border-[#111827] inline-block">AI kurslar</span> yarating va o'rganing!
+            {{ t.hero_title_1 }} <span class="bg-[#FACC15] text-[#111827] px-2.5 py-0.5 rounded-xl border-2 border-[#111827] inline-block">{{ t.hero_title_highlight }}</span> {{ t.hero_title_2 }}
         </h1>
 
         <p class="text-lg sm:text-xl font-semibold text-[var(--text-sub)] max-w-2xl leading-relaxed">
-            StudyAi sizga bir necha soniyada tuzilgan kurslar, interaktiv darslar, audio tushuntirishlar, fleshkartalar, Amaliyot Lab va 0 energiyali Blitz testlarni taqdim etadi.
+            {{ t.hero_sub }}
         </p>
 
         <div class="flex flex-wrap gap-4 pt-2">
             <a href="{% url 'register' %}" class="neo-btn px-7 py-4 bg-[#FACC15] text-[#111827] text-base flex items-center gap-2.5">
                 <i class="fa-solid fa-rocket"></i>
-                <span>Bepul boshlash</span>
+                <span>{{ t.hero_cta_free }}</span>
             </a>
             <a href="{% url 'login' %}" class="neo-btn px-7 py-4 bg-[var(--bg-card)] text-base flex items-center gap-2.5">
                 <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Kirish</span>
+                <span>{{ t.hero_cta_login }}</span>
             </a>
         </div>
 
-        <!-- Live Platform Stats -->
         <div class="grid grid-cols-3 gap-3 pt-4 max-w-lg">
-            <div class="neo-card-sm p-3.5 text-center bg-[#FACC15] text-[#111827]">
+            <div class="neo-card-sm neo-card-interactive p-3.5 text-center bg-[#FACC15] text-[#111827]">
                 <div class="text-2xl font-black">{{ user_count|default:10 }}+</div>
-                <div class="text-[11px] font-black uppercase">O'quvchilar</div>
+                <div class="text-[11px] font-black uppercase">{{ t.stat_learners }}</div>
             </div>
-            <div class="neo-card-sm p-3.5 text-center bg-[#38BDF8] text-[#111827]">
+            <div class="neo-card-sm neo-card-interactive p-3.5 text-center bg-[#38BDF8] text-[#111827]">
                 <div class="text-2xl font-black">{{ course_count|default:20 }}+</div>
-                <div class="text-[11px] font-black uppercase">AI Kurslar</div>
+                <div class="text-[11px] font-black uppercase">{{ t.stat_courses }}</div>
             </div>
-            <div class="neo-card-sm p-3.5 text-center bg-[#34D399] text-[#111827]">
-                <div class="text-2xl font-black">4 Til</div>
+            <div class="neo-card-sm neo-card-interactive p-3.5 text-center bg-[#34D399] text-[#111827]">
+                <div class="text-2xl font-black">{{ t.stat_langs }}</div>
                 <div class="text-[11px] font-black uppercase">UZ / QR / RU / EN</div>
             </div>
         </div>
     </div>
 
-    <div class="lg:col-span-5">
+    <div class="lg:col-span-5 neo-reveal">
         <div class="neo-card p-6 bg-[#38BDF8] text-[#111827] space-y-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi Mascot" class="w-14 h-14 rounded-2xl border-[3px] border-[#111827] bg-white">
+                    <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-14 h-14 rounded-2xl border-[3px] border-[#111827] bg-white neo-float">
                     <div>
-                        <div class="font-black text-xl">StudyAi Ilovasi</div>
-                        <div class="text-xs font-extrabold opacity-80">Android + Web Platforma</div>
+                        <div class="font-black text-xl">StudyAi</div>
+                        <div class="text-xs font-extrabold opacity-80">Android + Web</div>
                     </div>
                 </div>
-                <span class="px-3 py-1 bg-[#FACC15] border-2 border-[#111827] rounded-xl font-black text-xs">+30 Energiya</span>
+                <span class="px-3 py-1 bg-[#FACC15] border-2 border-[#111827] rounded-xl font-black text-xs">+30 ⚡</span>
             </div>
             <div class="neo-card-sm p-4 bg-white text-[#111827]">
-                <img src="{% static 'images/onboard_1.png' %}" alt="AI Course Generation" class="w-full max-h-60 object-contain mx-auto">
+                <img src="{% static 'images/onboard_1.png' %}" alt="" class="w-full max-h-60 object-contain mx-auto neo-float">
             </div>
             <div class="grid grid-cols-2 gap-3 text-xs font-black">
                 <div class="neo-card-sm p-3 bg-white text-[#111827] flex items-center gap-2">
                     <img src="{% static 'images/icon_blitz.png' %}" alt="" class="w-7 h-7 rounded-lg">
-                    <span>0 Energiya Blitz</span>
+                    <span>0⚡ {{ t.nav_blitz }}</span>
                 </div>
                 <div class="neo-card-sm p-3 bg-white text-[#111827] flex items-center gap-2">
                     <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-7 h-7 rounded-lg">
@@ -76,70 +74,60 @@
     </div>
 </section>
 
-<!-- Features Section -->
 <section id="features" class="py-12 space-y-8">
-    <div class="text-center max-w-2xl mx-auto space-y-2">
-        <span class="inline-block px-3 py-1 bg-[#A78BFA] text-[#111827] border-2 border-[#111827] rounded-lg font-black text-xs uppercase">Ilova bilan bir xil imkoniyatlar</span>
-        <h2 class="text-3xl sm:text-4xl font-black">Nima uchun StudyAi?</h2>
+    <div class="text-center max-w-2xl mx-auto space-y-2 neo-reveal">
+        <span class="inline-block px-3 py-1 bg-[#A78BFA] text-[#111827] border-2 border-[#111827] rounded-lg font-black text-xs uppercase">{{ t.feat_badge }}</span>
+        <h2 class="text-3xl sm:text-4xl font-black">{{ t.feat_title }}</h2>
     </div>
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_coding.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">Tezkor AI Kurs Generatori</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">Python, Ingliz tili, IELTS, Matematika yoki istalgan mavzuni yozing — tuzilgan modul va darslar bir zumda tayyor bo'ladi.</p>
+            <h3 class="text-xl font-black">{{ t.hero_title_highlight }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">{{ t.dash_sub }}</p>
         </div>
-
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_pdf.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">PDF'dan Interaktiv Kurs</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">Kitob yoki konspektingizni PDF shaklida yuklang — StudyAi uni darslarga, fleshkartalarga va testlarga aylantiradi.</p>
+            <h3 class="text-xl font-black">{{ t.dash_pdf_btn }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">PDF → AI Lessons, Flashcards &amp; Quizzes</p>
         </div>
-
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_blitz.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">0 Energiyali Blitz Testlar</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">O'tilgan darslarni energiya sarflamasdan tezkor testlar orqali takrorlang va bilimingizni mustahkamlang.</p>
+            <h3 class="text-xl font-black">{{ t.blitz_title }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">{{ t.blitz_sub }}</p>
         </div>
-
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_mentor.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">24/7 Shaxsiy AI Ustoz</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">Dars ichida tushunmagan joyingizni so'rang yoki Amaliyot Lab'da kod/javobingizni tekshirtiring.</p>
+            <h3 class="text-xl font-black">{{ t.chat_title }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">{{ t.chat_sub }}</p>
         </div>
-
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_streak.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">Streak, Kunlik Vazifa va XP</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">Har kuni kunlik bonus va topshiriqlardan bepul Energiya oling, XP ni esa energiyaga almashtiring.</p>
+            <h3 class="text-xl font-black">{{ t.dash_quests }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">{{ t.store_how_3 }}</p>
         </div>
-
-        <div class="neo-card p-6 space-y-3">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-3">
             <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-12 h-12 rounded-xl border-2 border-[#111827]">
-            <h3 class="text-xl font-black">Reyting va PDF Sertifikat</h3>
-            <p class="text-sm text-[var(--text-sub)] font-semibold">Eng faol o'quvchilar reytingida bellashing va tugatilgan har bir kurs uchun PDF sertifikat yuklab oling.</p>
+            <h3 class="text-xl font-black">{{ t.rank_title }}</h3>
+            <p class="text-sm text-[var(--text-sub)] font-semibold">{{ t.prof_certs }} (PDF)</p>
         </div>
     </div>
 </section>
 
-<!-- 3-Step Onboarding Strip -->
-<section class="py-8">
+<section class="py-8 neo-reveal">
     <div class="neo-card p-6 sm:p-10 bg-[#FACC15] text-[#111827]">
         <div class="grid md:grid-cols-3 gap-6 items-center text-center">
-            <div class="neo-card-sm p-5 bg-white text-[#111827] space-y-3">
+            <div class="neo-card-sm neo-card-interactive p-5 bg-white text-[#111827] space-y-3">
                 <img src="{% static 'images/onboard_1.png' %}" alt="" class="h-32 mx-auto object-contain">
-                <div class="font-black text-lg">1. Mavzu yoki PDF kiriting</div>
-                <p class="text-xs font-bold text-gray-600">Qiyinlik darajasini tanlang va AI dastur tuzishini kuting.</p>
+                <div class="font-black text-lg">1. {{ t.dash_create_btn }}</div>
             </div>
-            <div class="neo-card-sm p-5 bg-white text-[#111827] space-y-3">
+            <div class="neo-card-sm neo-card-interactive p-5 bg-white text-[#111827] space-y-3">
                 <img src="{% static 'images/onboard_2.png' %}" alt="" class="h-32 mx-auto object-contain">
-                <div class="font-black text-lg">2. Ketma-ket o'rganing</div>
-                <p class="text-xs font-bold text-gray-600">Sxema, audio, fleshkarta va testlarni ketma-ket bajaring.</p>
+                <div class="font-black text-lg">2. {{ t.lesson_flashcards }} &amp; {{ t.nav_blitz }}</div>
             </div>
-            <div class="neo-card-sm p-5 bg-white text-[#111827] space-y-3">
+            <div class="neo-card-sm neo-card-interactive p-5 bg-white text-[#111827] space-y-3">
                 <img src="{% static 'images/onboard_3.png' %}" alt="" class="h-32 mx-auto object-contain">
-                <div class="font-black text-lg">3. Sertifikat va Energiya oling</div>
-                <p class="text-xs font-bold text-gray-600">Kurs yakunida +15 Energiya bonusi va rasmiy PDF sertifikat!</p>
+                <div class="font-black text-lg">3. {{ t.prof_certs }}</div>
             </div>
         </div>
     </div>

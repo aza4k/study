@@ -1,56 +1,55 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Blitz Takrorlash (0⚡) — StudyAi{% endblock %}
+{% block title %}{{ t.blitz_title }} (0⚡) — StudyAi{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
-    <div class="neo-card p-6 bg-[#34D399] text-[#111827] flex items-center justify-between gap-4">
+    <div class="neo-card neo-reveal p-6 bg-[#34D399] text-[#111827] flex items-center justify-between gap-4">
         <div class="flex items-center gap-3.5">
-            <img src="{% static 'images/icon_blitz.png' %}" alt="Blitz" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827] bg-white">
+            <img src="{% static 'images/icon_blitz.png' %}" alt="Blitz" class="w-14 h-14 rounded-2xl border-[2.5px] border-[#111827] bg-white neo-float">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-black">Blitz Takrorlash</h1>
-                <p class="text-xs sm:text-sm font-extrabold">Energiya sarflamasdan bilimingizni mustahkamlang (0⚡)</p>
+                <h1 class="text-2xl sm:text-3xl font-black">{{ t.blitz_title }}</h1>
+                <p class="text-xs sm:text-sm font-extrabold">{{ t.blitz_sub }}</p>
             </div>
         </div>
         <span class="px-3 py-1 bg-white border-2 border-[#111827] rounded-xl text-xs font-black">0 ⚡</span>
     </div>
 
-    <div id="blitz-stage" class="neo-card p-6 sm:p-8 space-y-5">
+    <div id="blitz-stage" class="neo-card neo-reveal p-6 sm:p-8 space-y-5">
         <div class="flex items-center justify-between text-xs font-black">
-            <span id="blitz-counter" class="text-[#0EA5E9]">Savol 1 / 8</span>
-            <span id="blitz-score-pill" class="px-2.5 py-1 bg-[#FACC15] text-[#111827] border-2 border-[#111827] rounded-lg">To'g'ri: 0</span>
+            <span id="blitz-counter" class="text-[#0EA5E9]">1 / 8</span>
+            <span id="blitz-score-pill" class="px-2.5 py-1 bg-[#FACC15] text-[#111827] border-2 border-[#111827] rounded-lg">0</span>
         </div>
         <div class="w-full h-3 bg-[var(--bg-soft)] border-2 border-[var(--border-ink)] rounded-full overflow-hidden">
-            <div id="blitz-progress" class="h-full bg-[#38BDF8] transition-all" style="width: 12%"></div>
+            <div id="blitz-progress" class="h-full bg-[#38BDF8] neo-bar-fill" style="width: 12%"></div>
         </div>
 
         <div id="blitz-meta" class="text-xs font-bold text-[var(--text-sub)]"></div>
         <h2 id="blitz-question" class="text-xl font-black leading-snug"></h2>
         <div id="blitz-options" class="space-y-3"></div>
-        <div id="blitz-explanation" class="hidden neo-card-sm p-4 bg-[#FACC15] text-[#111827] text-sm font-bold"></div>
+        <div id="blitz-explanation" class="hidden neo-card-sm p-4 bg-[#FACC15] text-[#111827] text-sm font-bold neo-pop"></div>
 
         <div class="flex justify-end">
             <button id="blitz-next-btn" onclick="nextBlitz()" class="hidden neo-btn px-6 py-3 bg-[#38BDF8] text-[#111827] text-sm">
-                Keyingi savol &rarr;
+                &rarr;
             </button>
         </div>
     </div>
 
     <div id="blitz-empty" class="hidden neo-card p-8 text-center space-y-4">
-        <img src="{% static 'images/onboard_2.png' %}" alt="" class="h-32 mx-auto object-contain">
-        <h2 class="text-xl font-black">Hozircha testlar mavjud emas</h2>
-        <p class="text-sm font-semibold text-[var(--text-sub)]">Avval kurs yarating yoki Explore bo'limidan kursga qo'shiling.</p>
-        <a href="{% url 'dashboard' %}" class="neo-btn inline-block px-6 py-3 bg-[#FACC15] text-[#111827] text-sm">Kurs yaratishga o'tish</a>
+        <img src="{% static 'images/onboard_2.png' %}" alt="" class="h-32 mx-auto object-contain neo-float">
+        <h2 class="text-xl font-black">{{ t.dash_empty_title }}</h2>
+        <a href="{% url 'dashboard' %}" class="neo-btn inline-block px-6 py-3 bg-[#FACC15] text-[#111827] text-sm">{{ t.blitz_back }}</a>
     </div>
 
-    <div id="blitz-result" class="hidden neo-card p-8 text-center space-y-4 bg-[#FACC15] text-[#111827]">
-        <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-16 h-16 mx-auto rounded-2xl border-2 border-[#111827]">
-        <h2 class="text-3xl font-black">Blitz yakunlandi!</h2>
+    <div id="blitz-result" class="hidden neo-card p-8 text-center space-y-4 bg-[#FACC15] text-[#111827] neo-pop">
+        <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-16 h-16 mx-auto rounded-2xl border-2 border-[#111827] neo-float">
+        <h2 class="text-3xl font-black">{{ t.blitz_done }}</h2>
         <p id="blitz-summary" class="text-lg font-extrabold"></p>
         <div class="flex justify-center gap-3 pt-2">
-            <button onclick="window.location.reload()" class="neo-btn px-6 py-3 bg-white text-[#111827] text-sm">Yana o'ynash</button>
-            <a href="{% url 'dashboard' %}" class="neo-btn px-6 py-3 bg-[#34D399] text-[#111827] text-sm">Asosiyga qaytish</a>
+            <button onclick="window.location.reload()" class="neo-btn px-6 py-3 bg-white text-[#111827] text-sm">{{ t.blitz_retry }}</button>
+            <a href="{% url 'dashboard' %}" class="neo-btn px-6 py-3 bg-[#34D399] text-[#111827] text-sm">{{ t.blitz_back }}</a>
         </div>
     </div>
 </div>
@@ -68,13 +67,10 @@ function renderBlitz() {
         document.getElementById('blitz-empty').classList.remove('hidden');
         return;
     }
-    if (idx >= deck.length) {
-        finishBlitz();
-        return;
-    }
+    if (idx >= deck.length) { finishBlitz(); return; }
     answered = false;
     const q = deck[idx];
-    document.getElementById('blitz-counter').innerText = `Savol ${idx + 1} / ${deck.length}`;
+    document.getElementById('blitz-counter').innerText = `${idx + 1} / ${deck.length}`;
     document.getElementById('blitz-progress').style.width = `${Math.round(((idx + 1) / deck.length) * 100)}%`;
     document.getElementById('blitz-meta').innerText = `${q.course_title} • ${q.lesson_title}`;
     document.getElementById('blitz-question').innerText = q.question;
@@ -86,7 +82,7 @@ function renderBlitz() {
     (q.options || []).forEach(opt => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'w-full text-left px-4 py-3.5 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] font-extrabold text-sm hover:bg-[#FACC15] hover:text-[#111827] transition';
+        b.className = 'neo-btn w-full text-left px-4 py-3.5 bg-[var(--bg-soft)] font-extrabold text-sm hover:bg-[#FACC15] hover:text-[#111827]';
         b.innerText = opt;
         b.onclick = () => selectBlitzOption(opt, b);
         box.appendChild(b);
@@ -101,24 +97,21 @@ function selectBlitzOption(opt, btn) {
     if (isRight) {
         correct++;
         solvedIds.push(q.id);
-        btn.className = 'w-full text-left px-4 py-3.5 rounded-xl border-2 border-[#111827] bg-[#34D399] text-[#111827] font-black text-sm';
+        btn.className = 'w-full text-left px-4 py-3.5 rounded-xl border-2 border-[#111827] bg-[#34D399] text-[#111827] font-black text-sm neo-pop';
     } else {
         btn.className = 'w-full text-left px-4 py-3.5 rounded-xl border-2 border-[#111827] bg-[#F43F5E] text-white font-black text-sm';
     }
-    document.getElementById('blitz-score-pill').innerText = `To'g'ri: ${correct}`;
+    document.getElementById('blitz-score-pill').innerText = `${correct} ✓`;
     const exp = document.getElementById('blitz-explanation');
-    exp.innerHTML = `<div>${isRight ? "To'g'ri! (+5 XP)" : "To'g'ri javob: " + q.correct_answer}</div>` +
+    exp.innerHTML = `<div>${isRight ? "+5 XP ✓" : "✓: " + q.correct_answer}</div>` +
         (q.explanation ? `<div class="mt-1 font-semibold">${q.explanation}</div>` : '');
     exp.classList.remove('hidden');
     const nb = document.getElementById('blitz-next-btn');
-    nb.innerText = idx + 1 >= deck.length ? 'Natijani ko\'rish →' : 'Keyingi savol →';
+    nb.innerText = idx + 1 >= deck.length ? '✓ →' : '→';
     nb.classList.remove('hidden');
 }
 
-function nextBlitz() {
-    idx++;
-    renderBlitz();
-}
+function nextBlitz() { idx++; renderBlitz(); }
 
 async function finishBlitz() {
     document.getElementById('blitz-stage').classList.add('hidden');
@@ -130,12 +123,11 @@ async function finishBlitz() {
             body: JSON.stringify({ correct_count: correct, solved_quiz_ids: solvedIds })
         });
         const data = await res.json();
-        document.getElementById('blitz-summary').innerText = `${correct} / ${deck.length} ta to'g'ri javob • +${data.xp_earned || 0} XP qo'shildi! (Streak: ${data.current_streak || 1} kun)`;
+        document.getElementById('blitz-summary').innerText = `${correct} / ${deck.length} • +${data.xp_earned || 0} XP`;
     } catch (e) {
-        document.getElementById('blitz-summary').innerText = `${correct} / ${deck.length} ta to'g'ri javob!`;
+        document.getElementById('blitz-summary').innerText = `${correct} / ${deck.length}`;
     }
 }
-
 renderBlitz();
 </script>
 {% endblock %}

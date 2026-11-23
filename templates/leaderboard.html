@@ -1,30 +1,28 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Eng yaxshi o'quvchilar — StudyAi{% endblock %}
+{% block title %}{{ t.rank_title }} — StudyAi{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-6">
-    <!-- User League Banner -->
-    <div class="neo-card p-6 bg-[#38BDF8] text-[#111827] flex flex-wrap items-center justify-between gap-4">
+    <div class="neo-card neo-reveal p-6 bg-[#38BDF8] text-[#111827] flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
-            <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-14 h-14 rounded-2xl border-2 border-[#111827] bg-white">
+            <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-14 h-14 rounded-2xl border-2 border-[#111827] bg-white neo-float">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-black">Eng yaxshi o'quvchilar</h1>
-                <p class="text-xs sm:text-sm font-extrabold">Sizning ligangiz: <span class="px-2 py-0.5 bg-[#FACC15] border border-[#111827] rounded">{{ current_user_league }}</span> &bull; {{ current_user_xp }} XP</p>
+                <h1 class="text-2xl sm:text-3xl font-black">{{ t.rank_title }}</h1>
+                <p class="text-xs sm:text-sm font-extrabold">{{ t.rank_league }} <span class="px-2 py-0.5 bg-[#FACC15] border border-[#111827] rounded">{{ current_user_league }}</span> &bull; {{ current_user_xp }} XP</p>
             </div>
         </div>
         {% if xp_to_next_league > 0 %}
         <div class="neo-card-sm px-4 py-2 bg-white text-[#111827] text-xs font-black">
-            Keyingi ligaga: {{ xp_to_next_league }} XP qoldi
+            {{ t.rank_next }} {{ xp_to_next_league }} XP
         </div>
         {% endif %}
     </div>
 
-    <!-- Leaderboard List -->
     <div class="space-y-3">
         {% for entry in leaderboard %}
-        <div class="neo-card-sm p-4 flex items-center justify-between gap-4 {% if entry.is_current_user %}bg-[#FACC15] text-[#111827]{% endif %}">
+        <div class="neo-card-sm neo-card-interactive neo-reveal p-4 flex items-center justify-between gap-4 {% if entry.is_current_user %}bg-[#FACC15] text-[#111827]{% endif %}">
             <div class="flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl border-2 border-[#111827] flex items-center justify-center font-black text-base {% if entry.rank == 1 %}bg-[#FACC15] text-[#111827]{% elif entry.rank == 2 %}bg-gray-200 text-[#111827]{% elif entry.rank == 3 %}bg-[#FB923C] text-[#111827]{% else %}bg-[var(--bg-soft)]{% endif %}">
                     #{{ entry.rank }}
@@ -36,7 +34,7 @@
                         <span class="px-2 py-0.5 bg-[#38BDF8] text-[#111827] border border-[#111827] rounded text-[10px] font-black uppercase">{{ entry.user.subscription_type }}</span>
                         {% endif %}
                     </div>
-                    <div class="text-xs font-bold opacity-75">@{{ entry.user.username }} &bull; {{ entry.streak }} kunlik streak</div>
+                    <div class="text-xs font-bold opacity-75">@{{ entry.user.username }} &bull; {{ entry.streak }} {{ t.dash_streak }}</div>
                 </div>
             </div>
             <div class="px-3.5 py-1.5 rounded-xl bg-[#38BDF8] text-[#111827] border-2 border-[#111827] font-black text-sm shrink-0">
@@ -44,7 +42,7 @@
             </div>
         </div>
         {% empty %}
-        <div class="neo-card p-8 text-center font-bold">Hozircha reytingda foydalanuvchilar yo'q.</div>
+        <div class="neo-card p-8 text-center font-bold">0 XP</div>
         {% endfor %}
     </div>
 </div>

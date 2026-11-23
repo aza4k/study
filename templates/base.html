@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load i18n static %}
-<html lang="{{ LANGUAGE_CODE|default:'uz' }}">
+<html lang="{{ active_lang|default:'uz' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,20 +75,27 @@
             border-radius: 14px;
             box-shadow: 3px 3px 0px var(--shadow-ink);
         }
+        .neo-card-interactive {
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+        }
+        .neo-card-interactive:hover {
+            transform: translate3d(-2px, -3px, 0);
+            box-shadow: 7px 7px 0px var(--shadow-ink);
+        }
         .neo-btn {
             border: 2.5px solid var(--border-ink);
             border-radius: 14px;
             box-shadow: 3.5px 3.5px 0px var(--shadow-ink);
             font-weight: 900;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
             cursor: pointer;
         }
         .neo-btn:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 4.5px 4.5px 0px var(--shadow-ink);
+            transform: translate3d(-1px, -2px, 0);
+            box-shadow: 5px 5px 0px var(--shadow-ink);
         }
         .neo-btn:active {
-            transform: translate(2px, 2px);
+            transform: translate3d(2px, 2px, 0);
             box-shadow: 1px 1px 0px var(--shadow-ink);
         }
         .neo-input {
@@ -100,10 +107,66 @@
             color: var(--text-main);
             font-weight: 700;
             box-shadow: 3px 3px 0px var(--shadow-ink);
+            transition: box-shadow 0.15s ease;
         }
         .neo-input:focus {
             outline: none;
             box-shadow: 3px 3px 0px var(--primary);
+        }
+        /* GPU-composited 60fps Animations */
+        @keyframes neoFadeUp {
+            from { opacity: 0; transform: translate3d(0, 14px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        @keyframes gentleFloat {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -6px, 0); }
+        }
+        @keyframes neoPop {
+            0% { transform: scale3d(0.95, 0.95, 1); }
+            50% { transform: scale3d(1.06, 1.06, 1); }
+            100% { transform: scale3d(1, 1, 1); }
+        }
+        .neo-reveal {
+            opacity: 0;
+            transform: translate3d(0, 14px, 0);
+            will-change: transform, opacity;
+        }
+        .neo-reveal.is-visible {
+            animation: neoFadeUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation-delay: var(--reveal-delay, 0ms);
+        }
+        .neo-float {
+            animation: gentleFloat 3.4s ease-in-out infinite;
+            will-change: transform;
+        }
+        .neo-pop { animation: neoPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .neo-bar-fill { transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1); }
+        /* 3D Flashcard Flip */
+        .flashcard-scene { perspective: 1000px; }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            min-height: 165px;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            transform-style: preserve-3d;
+        }
+        .flashcard-inner.is-flipped { transform: rotateY(180deg); }
+        .flashcard-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .flashcard-back { transform: rotateY(180deg); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .neo-reveal, .neo-float, .neo-btn, .neo-card-interactive, .flashcard-inner {
+                animation: none !important;
+                transition: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
         }
         .prose-neo h1, .prose-neo h2, .prose-neo h3 { font-weight: 900; margin-top: 1.25rem; margin-bottom: 0.6rem; color: var(--text-main); }
         .prose-neo h2 { font-size: 1.35rem; }
@@ -120,7 +183,7 @@
 <body class="min-h-screen flex flex-col pb-20 md:pb-0">
     <!-- Top Navbar -->
     <nav class="sticky top-0 z-50 border-b-[3px] border-[var(--border-ink)] bg-[var(--bg-card)]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
             <!-- Brand -->
             <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}" class="flex items-center gap-2.5 shrink-0">
                 <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-10 h-10 rounded-xl border-[2.5px] border-[var(--border-ink)]">
@@ -128,68 +191,65 @@
             </a>
 
             <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center gap-1.5">
+            <div class="hidden md:flex items-center gap-1">
                 {% if user.is_authenticated %}
                     {% with url_name=request.resolver_match.url_name %}
-                    <a href="{% url 'dashboard' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
-                        <i class="fa-solid fa-house mr-1.5"></i>Asosiy
+                    <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-house mr-1"></i>{{ t.nav_home }}
                     </a>
-                    <a href="{% url 'explore' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
-                        <i class="fa-solid fa-compass mr-1.5"></i>Kashf etish
+                    <a href="{% url 'explore' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-compass mr-1"></i>{{ t.nav_explore }}
                     </a>
-                    <a href="{% url 'blitz_web' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
-                        <i class="fa-solid fa-bolt mr-1.5"></i>Blitz
+                    <a href="{% url 'blitz_web' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-bolt mr-1"></i>{{ t.nav_blitz }}
                     </a>
-                    <a href="{% url 'chatbot' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'chatbot' %}bg-[#A78BFA] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
-                        <i class="fa-solid fa-robot mr-1.5"></i>AI Ustoz
+                    <a href="{% url 'chatbot' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'chatbot' %}bg-[#A78BFA] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-robot mr-1"></i>{{ t.nav_ai }}
                     </a>
-                    <a href="{% url 'leaderboard' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'leaderboard' %}bg-[#F43F5E] text-white border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
-                        <i class="fa-solid fa-trophy mr-1.5"></i>Reyting
+                    <a href="{% url 'leaderboard' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'leaderboard' %}bg-[#F43F5E] text-white border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-trophy mr-1"></i>{{ t.nav_rank }}
+                    </a>
+                    <a href="{% url 'store_web' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm transition {% if url_name == 'store_web' %}bg-[#FACC15] text-[#111827] border-2 border-[#111827]{% else %}hover:bg-[var(--bg-soft)]{% endif %}">
+                        <i class="fa-solid fa-store mr-1"></i>{{ t.nav_store }}
                     </a>
                     {% endwith %}
                 {% else %}
-                    <a href="{% url 'landing' %}#features" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Imkoniyatlar</a>
-                    <a href="{% url 'pricing' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Tariflar</a>
-                    <a href="{% url 'support_page' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">Yordam</a>
+                    <a href="{% url 'landing' %}#features" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">{{ t.nav_features }}</a>
+                    <a href="{% url 'pricing' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">{{ t.nav_pricing }}</a>
+                    <a href="{% url 'support_page' %}" class="px-3.5 py-2 rounded-xl font-bold text-sm hover:bg-[var(--bg-soft)]">{{ t.nav_support }}</a>
                 {% endif %}
             </div>
 
             <!-- Right Controls -->
             <div class="flex items-center gap-2">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'profile_web' %}" title="Energiya" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#38BDF8] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black">
+                    <a href="{% url 'store_web' %}" title="{{ t.nav_store }}" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#38BDF8] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black hover:opacity-90">
                         <img src="{% static 'images/icon_energy.png' %}" alt="E" class="w-4 h-4 rounded">
                         <span id="nav-energy-val">{{ user.energy|floatformat:0 }}</span>
                     </a>
-                    <a href="{% url 'profile_web' %}" title="Profil" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FACC15] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black">
+                    <a href="{% url 'profile_web' %}" title="{{ t.nav_profile }}" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FACC15] text-[#111827] border-2 border-[#111827] shadow-[2px_2px_0px_#111827] text-xs font-black">
                         <i class="fa-solid fa-user"></i>
                         <span>{{ user.username }}</span>
                     </a>
                 {% else %}
-                    <a href="{% url 'login' %}" class="px-3.5 py-2 rounded-xl font-extrabold text-sm hover:bg-[var(--bg-soft)]">Kirish</a>
-                    <a href="{% url 'register' %}" class="neo-btn px-4 py-2 bg-[#FACC15] text-[#111827] text-sm">Boshlash</a>
+                    <a href="{% url 'login' %}" class="px-3 py-2 rounded-xl font-extrabold text-sm hover:bg-[var(--bg-soft)]">{{ t.nav_login }}</a>
+                    <a href="{% url 'register' %}" class="neo-btn px-4 py-2 bg-[#FACC15] text-[#111827] text-sm">{{ t.nav_start }}</a>
                 {% endif %}
 
-                <!-- Theme toggle -->
-                <button type="button" onclick="toggleTheme()" title="Mavzuni almashtirish" class="w-9 h-9 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] flex items-center justify-center text-sm hover:opacity-85">
+                <button type="button" onclick="toggleTheme()" title="Theme" class="w-9 h-9 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] flex items-center justify-center text-sm hover:opacity-85">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
 
-                <!-- Language Switcher -->
-                <div class="relative">
-                    <select onchange="switchWebLanguage(this.value)" aria-label="Language" class="px-2 py-1.5 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] text-xs font-black cursor-pointer">
-                        {% get_current_language as CURRENT_LANG %}
-                        <option value="uz" {% if CURRENT_LANG == 'uz' or user.preferred_language == 'uz' %}selected{% endif %}>O'Z</option>
-                        <option value="kaa" {% if CURRENT_LANG == 'kaa' or user.preferred_language == 'kaa' %}selected{% endif %}>QR</option>
-                        <option value="ru" {% if CURRENT_LANG == 'ru' or user.preferred_language == 'ru' %}selected{% endif %}>RU</option>
-                        <option value="en" {% if CURRENT_LANG == 'en' or user.preferred_language == 'en' %}selected{% endif %}>EN</option>
-                    </select>
-                </div>
+                <select id="web-lang-select" onchange="switchWebLanguage(this.value)" aria-label="Language" class="px-2 py-1.5 rounded-xl border-2 border-[var(--border-ink)] bg-[var(--bg-soft)] text-xs font-black cursor-pointer">
+                    <option value="uz" {% if active_lang == 'uz' %}selected{% endif %}>O'Z</option>
+                    <option value="kaa" {% if active_lang == 'kaa' %}selected{% endif %}>QR</option>
+                    <option value="ru" {% if active_lang == 'ru' %}selected{% endif %}>RU</option>
+                    <option value="en" {% if active_lang == 'en' %}selected{% endif %}>EN</option>
+                </select>
             </div>
         </div>
     </nav>
 
-    <!-- Flash Messages -->
     {% if messages %}
     <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
         {% for message in messages %}
@@ -201,43 +261,39 @@
     </div>
     {% endif %}
 
-    <!-- Toast Container -->
     <div id="toast-box" class="fixed top-20 right-4 z-50 space-y-2 max-w-sm"></div>
 
-    <!-- Main Content -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Mobile Bottom Navigation (matches Android app) -->
     {% if user.is_authenticated %}
-    <div class="md:hidden fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--border-ink)] bg-[var(--bg-card)] px-2 py-1.5 flex justify-around items-center">
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--border-ink)] bg-[var(--bg-card)] px-1 py-1.5 flex justify-around items-center">
         {% with url_name=request.resolver_match.url_name %}
-        <a href="{% url 'dashboard' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827]{% endif %}">
-            <i class="fa-solid fa-house text-base"></i>
-            <span class="text-[10px] font-black mt-0.5">Asosiy</span>
+        <a href="{% url 'dashboard' %}" class="flex flex-col items-center px-2.5 py-1 rounded-xl {% if url_name == 'dashboard' %}bg-[#FACC15] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-house text-sm"></i>
+            <span class="text-[10px] font-black mt-0.5">{{ t.nav_home }}</span>
         </a>
-        <a href="{% url 'explore' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827]{% endif %}">
-            <i class="fa-solid fa-compass text-base"></i>
-            <span class="text-[10px] font-black mt-0.5">Kashf</span>
+        <a href="{% url 'explore' %}" class="flex flex-col items-center px-2.5 py-1 rounded-xl {% if url_name == 'explore' %}bg-[#38BDF8] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-compass text-sm"></i>
+            <span class="text-[10px] font-black mt-0.5">{{ t.nav_explore }}</span>
         </a>
-        <a href="{% url 'blitz_web' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827]{% endif %}">
-            <i class="fa-solid fa-bolt text-base"></i>
-            <span class="text-[10px] font-black mt-0.5">Blitz</span>
+        <a href="{% url 'blitz_web' %}" class="flex flex-col items-center px-2.5 py-1 rounded-xl {% if url_name == 'blitz_web' %}bg-[#34D399] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-bolt text-sm"></i>
+            <span class="text-[10px] font-black mt-0.5">{{ t.nav_blitz }}</span>
         </a>
-        <a href="{% url 'chatbot' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'chatbot' %}bg-[#A78BFA] text-[#111827]{% endif %}">
-            <i class="fa-solid fa-robot text-base"></i>
-            <span class="text-[10px] font-black mt-0.5">AI</span>
+        <a href="{% url 'store_web' %}" class="flex flex-col items-center px-2.5 py-1 rounded-xl {% if url_name == 'store_web' %}bg-[#FACC15] text-[#111827]{% endif %}">
+            <i class="fa-solid fa-store text-sm"></i>
+            <span class="text-[10px] font-black mt-0.5">{{ t.nav_store }}</span>
         </a>
-        <a href="{% url 'profile_web' %}" class="flex flex-col items-center px-3 py-1 rounded-xl {% if url_name == 'profile_web' %}bg-[#F43F5E] text-white{% endif %}">
-            <i class="fa-solid fa-user text-base"></i>
-            <span class="text-[10px] font-black mt-0.5">Profil</span>
+        <a href="{% url 'profile_web' %}" class="flex flex-col items-center px-2.5 py-1 rounded-xl {% if url_name == 'profile_web' %}bg-[#F43F5E] text-white{% endif %}">
+            <i class="fa-solid fa-user text-sm"></i>
+            <span class="text-[10px] font-black mt-0.5">{{ t.nav_profile }}</span>
         </a>
         {% endwith %}
     </div>
     {% endif %}
 
-    <!-- Footer -->
     <footer class="border-t-[3px] border-[var(--border-ink)] bg-[#111827] text-gray-300 py-10 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-3 gap-8 mb-8">
@@ -246,24 +302,24 @@
                         <img src="{% static 'images/studyai_logo.png' %}" alt="StudyAi" class="w-9 h-9 rounded-xl border-2 border-white/20">
                         <span class="text-xl font-black text-white">StudyAi</span>
                     </div>
-                    <p class="text-sm text-gray-400">Sun'iy intellekt yordamida istalgan fanni tez, tushunarli va interaktiv o'rganish platformasi.</p>
+                    <p class="text-sm text-gray-400">{{ t.footer_desc }}</p>
                 </div>
                 <div>
-                    <h4 class="text-white font-black mb-3">Platforma</h4>
+                    <h4 class="text-white font-black mb-3">{{ t.footer_platform }}</h4>
                     <ul class="space-y-2 text-sm font-semibold">
-                        <li><a href="{% url 'dashboard' %}" class="hover:text-[#FACC15]">Kurslarim</a></li>
-                        <li><a href="{% url 'explore' %}" class="hover:text-[#FACC15]">Kashf etish</a></li>
-                        <li><a href="{% url 'blitz_web' %}" class="hover:text-[#FACC15]">Blitz Takrorlash</a></li>
-                        <li><a href="{% url 'pricing' %}" class="hover:text-[#FACC15]">Tariflar</a></li>
+                        <li><a href="{% url 'dashboard' %}" class="hover:text-[#FACC15]">{{ t.footer_my_courses }}</a></li>
+                        <li><a href="{% url 'explore' %}" class="hover:text-[#FACC15]">{{ t.nav_explore }}</a></li>
+                        <li><a href="{% url 'blitz_web' %}" class="hover:text-[#FACC15]">{{ t.nav_blitz }}</a></li>
+                        <li><a href="{% url 'store_web' %}" class="hover:text-[#FACC15]">{{ t.nav_store }}</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-black mb-3">Huquqiy & Yordam</h4>
+                    <h4 class="text-white font-black mb-3">{{ t.footer_legal }}</h4>
                     <ul class="space-y-2 text-sm font-semibold">
-                        <li><a href="{% url 'privacy_policy' %}" class="hover:text-[#38BDF8]">Maxfiylik siyosati (Privacy)</a></li>
-                        <li><a href="{% url 'delete_account_web' %}" class="hover:text-[#F43F5E]">Akkauntni o'chirish</a></li>
-                        <li><a href="{% url 'terms_of_use' %}" class="hover:text-[#38BDF8]">Foydalanish shartlari</a></li>
-                        <li><a href="{% url 'support_page' %}" class="hover:text-[#34D399]">Yordam (aza4kf@gmail.com)</a></li>
+                        <li><a href="{% url 'privacy_policy' %}" class="hover:text-[#38BDF8]">{{ t.footer_privacy }}</a></li>
+                        <li><a href="{% url 'delete_account_web' %}" class="hover:text-[#F43F5E]">{{ t.footer_delete }}</a></li>
+                        <li><a href="{% url 'terms_of_use' %}" class="hover:text-[#38BDF8]">{{ t.footer_terms }}</a></li>
+                        <li><a href="{% url 'support_page' %}" class="hover:text-[#34D399]">{{ t.nav_support }} (aza4kf@gmail.com)</a></li>
                     </ul>
                 </div>
             </div>
@@ -291,7 +347,7 @@
             if (!box) return;
             const el = document.createElement('div');
             const bg = type === 'error' ? 'bg-[#F43F5E] text-white' : (type === 'success' ? 'bg-[#34D399] text-[#111827]' : 'bg-[#FACC15] text-[#111827]');
-            el.className = `neo-card-sm p-3.5 font-extrabold text-sm ${bg} transition`;
+            el.className = `neo-card-sm p-3.5 font-extrabold text-sm ${bg} neo-pop`;
             el.innerText = msg;
             box.appendChild(el);
             setTimeout(() => el.remove(), 4200);
@@ -320,10 +376,29 @@
                     body: form
                 });
                 if (res.ok) window.location.reload();
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
         }
+
+        // Optimized one-shot IntersectionObserver for GPU scroll reveals
+        document.addEventListener('DOMContentLoaded', () => {
+            const targets = document.querySelectorAll('.neo-reveal');
+            if (!('IntersectionObserver' in window)) {
+                targets.forEach(el => { el.classList.add('is-visible'); el.style.opacity = '1'; });
+                return;
+            }
+            const obs = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        el.style.setProperty('--reveal-delay', `${Math.min(i * 55, 220)}ms`);
+                        el.classList.add('is-visible');
+                        el.addEventListener('animationend', () => { el.style.willChange = 'auto'; }, { once: true });
+                        observer.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+            targets.forEach(el => obs.observe(el));
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

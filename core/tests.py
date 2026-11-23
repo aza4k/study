@@ -251,10 +251,23 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         wc = Client(HTTP_HOST='study-ai.uz')
         self.assertTrue(wc.login(username='testlearner', password='StrongPassword123!'))
 
-        # All primary Neo-Brutalist pages render 200
-        for name in ('dashboard', 'explore', 'blitz_web', 'chatbot', 'leaderboard', 'profile_web', 'pricing'):
+        # All primary Neo-Brutalist pages render 200 (including Store!)
+        for name in ('dashboard', 'explore', 'blitz_web', 'chatbot', 'leaderboard', 'profile_web', 'store_web', 'pricing'):
             res = wc.get(reverse(name))
             self.assertEqual(res.status_code, 200, msg=f"Failed rendering {name}")
+
+        # Language switcher translates UI across uz, kaa, ru, en
+        lang_checks = [
+            ('ru', 'Магазин'),
+            ('en', 'Store'),
+            ('kaa', 'Dúkan'),
+            ('uz', "Do&#x27;kon"),
+        ]
+        for code, expected in lang_checks:
+            sw = wc.post(reverse('change_language'), {'language': code})
+            self.assertEqual(sw.status_code, 200)
+            page = wc.get(reverse('store_web'))
+            self.assertContains(page, expected)
 
         # Sequential lock blocks Lesson 2 before Lesson 1 is completed
         blocked = wc.get(reverse('lesson_detail', kwargs={'pk': les2.id}))

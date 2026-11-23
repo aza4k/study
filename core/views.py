@@ -86,6 +86,20 @@ class PricingView(TemplateView):
     template_name = 'pricing.html'
 
 
+class StoreWebView(LoginRequiredMixin, TemplateView):
+    template_name = 'store.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        total_xp, available_xp = _get_total_xp(user)
+        context['total_xp'] = total_xp
+        context['available_xp'] = available_xp
+        context['xp_redeem_cost'] = ECONOMY_CONFIG['xp_redeem_cost']
+        context['xp_redeem_reward'] = int(ECONOMY_CONFIG['xp_redeem_reward'])
+        return context
+
+
 class RegisterView(View):
     def get(self, request):
         if request.user.is_authenticated:

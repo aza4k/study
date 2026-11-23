@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ t.store_title }} — StudyAi{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Energy Status Banner -->
+    <div class="neo-card neo-reveal p-6 bg-[#FACC15] text-[#111827] flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <img src="{% static 'images/icon_energy.png' %}" alt="" class="w-12 h-12 rounded-2xl border-2 border-[#111827] bg-white neo-float">
+            <div>
+                <div class="text-xs font-black uppercase opacity-80">{{ t.store_your_energy }}</div>
+                <div class="text-2xl sm:text-3xl font-black"><span id="store-energy-val">{{ user.energy|floatformat:0 }}</span> {{ t.dash_energy }}</div>
+            </div>
+        </div>
+        <span class="px-4 py-1.5 bg-white border-2 border-[#111827] rounded-xl text-sm font-black uppercase shadow-[2px_2px_0px_#111827]">
+            {{ user.subscription_type|upper }}
+        </span>
+    </div>
+
+    <!-- Economy Transparency Guide -->
+    <div class="neo-card-sm neo-reveal p-5 space-y-2">
+        <div class="flex items-center gap-2 font-black text-sm">
+            <img src="{% static 'images/icon_blitz.png' %}" alt="" class="w-5 h-5 rounded">
+            <span>{{ t.store_how_title }}</span>
+        </div>
+        <div class="text-xs sm:text-sm font-bold text-[var(--text-sub)] space-y-1">
+            <p>{{ t.store_how_1 }}</p>
+            <p>{{ t.store_how_2 }}</p>
+            <p>{{ t.store_how_3 }}</p>
+        </div>
+    </div>
+
+    <!-- Annual Toggle -->
+    <div class="neo-card-sm neo-reveal p-4 flex items-center justify-between gap-3">
+        <span class="font-black text-sm">{{ t.store_annual }}</span>
+        <button type="button" id="annual-toggle-btn" onclick="toggleBillingPeriod()" class="neo-btn px-4 py-2 bg-[var(--bg-soft)] text-xs">
+            <span id="annual-toggle-label">OFF (Oylik)</span>
+        </button>
+    </div>
+
+    <!-- Subscription Plans -->
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+                <div class="px-3 py-1.5 bg-[#38BDF8] text-[#111827] border-2 border-[#111827] rounded-xl font-black text-sm flex items-center gap-2">
+                    <img src="{% static 'images/icon_coding.png' %}" alt="" class="w-5 h-5 rounded">
+                    <span>PRO OBUNA</span>
+                </div>
+                <div class="text-right">
+                    <div id="pro-price" class="text-xl font-black">$3.99 / oy</div>
+                    <div id="pro-subprice" class="text-xs font-bold text-[var(--text-sub)]">~49,000 so'm/oy</div>
+                </div>
+            </div>
+            <ul class="text-xs sm:text-sm font-bold space-y-1.5 border-t-2 border-dashed border-[var(--border-ink)] pt-3">
+                <li>• +150 Energiya oylik bonusi</li>
+                <li>• Interaktiv Amaliyot Lab va AI tekshiruv</li>
+                <li>• PDF kitob va konspektlardan kurs yaratish</li>
+                <li>• Katalogdagi Top-25 jamoa kurslari ochiq</li>
+                <li>• Ovozli darslar (TTS) va PDF sertifikat</li>
+            </ul>
+            <button type="button" {% if user.subscription_type == 'pro' %}disabled{% endif %} onclick="openActivateModal('PRO')"
+                class="neo-btn w-full py-3 {% if user.subscription_type == 'pro' %}bg-[var(--bg-soft)] text-gray-500{% else %}bg-[#38BDF8] text-[#111827]{% endif %} text-sm">
+                {% if user.subscription_type == 'pro' %}{{ t.store_current }}{% else %}{{ t.store_activate }}{% endif %}
+            </button>
+        </div>
+
+        <div class="neo-card neo-card-interactive neo-reveal p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+                <div class="px-3 py-1.5 bg-[#F43F5E] text-white border-2 border-[#111827] rounded-xl font-black text-sm flex items-center gap-2">
+                    <img src="{% static 'images/icon_trophy.png' %}" alt="" class="w-5 h-5 rounded">
+                    <span>ULTRA VIP</span>
+                </div>
+                <div class="text-right">
+                    <div id="ultra-price" class="text-xl font-black">$9.99 / oy</div>
+                    <div id="ultra-subprice" class="text-xs font-bold text-[var(--text-sub)]">~119,000 so'm/oy</div>
+                </div>
+            </div>
+            <ul class="text-xs sm:text-sm font-bold space-y-1.5 border-t-2 border-dashed border-[var(--border-ink)] pt-3">
+                <li>• +500 Energiya oylik VIP bonusi</li>
+                <li>• Dars ichida BEPUL AI Mentor va Kod Tahlili</li>
+                <li>• Cheksiz AI kurslar + Explore to'liq katalogi</li>
+                <li>• Eng kuchli Gemini AI modeli</li>
+                <li>• Reyting jadvalida ULTRA VIP nishoni</li>
+            </ul>
+            <button type="button" {% if user.subscription_type == 'ultra' %}disabled{% endif %} onclick="openActivateModal('ULTRA VIP')"
+                class="neo-btn w-full py-3 {% if user.subscription_type == 'ultra' %}bg-[var(--bg-soft)] text-gray-500{% else %}bg-[#F43F5E] text-white{% endif %} text-sm">
+                {% if user.subscription_type == 'ultra' %}{{ t.store_current }}{% else %}{{ t.store_activate }}{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Energy Packs -->
+    <div class="space-y-3 neo-reveal">
+        <h2 class="text-xl font-black">{{ t.store_packs }}</h2>
+        <div class="grid grid-cols-3 gap-3 sm:gap-4">
+            <button type="button" onclick="openActivateModal('+50 Energiya ($0.99)')" class="neo-btn p-4 bg-[#34D399] text-[#111827] flex flex-col items-center gap-2">
+                <div class="text-xl sm:text-2xl font-black flex items-center gap-1">+50 <img src="{% static 'images/icon_energy.png' %}" class="w-5 h-5" alt=""></div>
+                <span class="px-2.5 py-1 bg-white border-2 border-[#111827] rounded-lg text-[11px] font-black">$0.99 / ~12.5k</span>
+            </button>
+            <button type="button" onclick="openActivateModal('+180 Energiya ($2.49)')" class="neo-btn p-4 bg-[#FACC15] text-[#111827] flex flex-col items-center gap-2">
+                <div class="text-xl sm:text-2xl font-black flex items-center gap-1">+180 <img src="{% static 'images/icon_energy.png' %}" class="w-5 h-5" alt=""></div>
+                <span class="px-2.5 py-1 bg-white border-2 border-[#111827] rounded-lg text-[11px] font-black">$2.49 / ~31k</span>
+            </button>
+            <button type="button" onclick="openActivateModal('+500 Energiya ($4.99)')" class="neo-btn p-4 bg-[#38BDF8] text-[#111827] flex flex-col items-center gap-2">
+                <div class="text-xl sm:text-2xl font-black flex items-center gap-1">+500 <img src="{% static 'images/icon_energy.png' %}" class="w-5 h-5" alt=""></div>
+                <span class="px-2.5 py-1 bg-white border-2 border-[#111827] rounded-lg text-[11px] font-black">$4.99 / ~62k</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Redeem XP Section -->
+    <div class="neo-card neo-reveal p-6 space-y-4">
+        <h2 class="text-xl font-black">{{ t.store_xp_title }}</h2>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="{% static 'images/icon_xp.png' %}" alt="" class="w-10 h-10 rounded-xl border-2 border-[#111827]">
+                <div>
+                    <div class="font-black text-base">{{ xp_redeem_cost }} XP almashtirish</div>
+                    <div class="text-xs font-bold text-[var(--text-sub)]">{{ t.prof_avail_xp }}: <span id="store-avail-xp">{{ available_xp }}</span> XP</div>
+                </div>
+            </div>
+            <span class="px-3 py-1.5 bg-[#34D399] text-[#111827] border-2 border-[#111827] rounded-xl font-black text-sm">+{{ xp_redeem_reward }} ⚡</span>
+        </div>
+        <button type="button" onclick="redeemStoreXp()" class="neo-btn w-full py-3 bg-[#34D399] text-[#111827] text-sm">
+            {{ xp_redeem_cost }} XP &rarr; +{{ xp_redeem_reward }}⚡ ALMASHTIRISH
+        </button>
+    </div>
+</div>
+
+<!-- Activation Modal -->
+<div id="activate-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="neo-card max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 id="modal-plan-title" class="text-xl font-black">StudyAi</h3>
+            <button onclick="document.getElementById('activate-modal').classList.add('hidden')" class="font-black text-lg px-2">✕</button>
+        </div>
+        <p class="text-sm font-semibold text-[var(--text-sub)]">
+            Hozircha veb-saytda avtomatik karta to'lovi ulanmoqda. Obuna yoki energiya paketini faollashtirish uchun StudyAi Android ilovasidan yoki Telegram orqali murojaat qiling (@{{ user.username }}):
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+            <a href="https://t.me/fundevuz" target="_blank" class="neo-btn py-3 bg-[#38BDF8] text-[#111827] text-center text-xs">Telegram: @fundevuz</a>
+            <button onclick="document.getElementById('activate-modal').classList.add('hidden')" class="neo-btn py-3 bg-[#FACC15] text-[#111827] text-xs">Yopish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isAnnual = false;
+function toggleBillingPeriod() {
+    isAnnual = !isAnnual;
+    document.getElementById('annual-toggle-label').innerText = isAnnual ? 'ON (-30% Yillik)' : 'OFF (Oylik)';
+    document.getElementById('annual-toggle-btn').className = `neo-btn px-4 py-2 text-xs ${isAnnual ? 'bg-[#34D399] text-[#111827]' : 'bg-[var(--bg-soft)]'}`;
+    document.getElementById('pro-price').innerText = isAnnual ? '$2.79 / oy' : '$3.99 / oy';
+    document.getElementById('pro-subprice').innerText = isAnnual ? "~35,000 so'm/oy" : "~49,000 so'm/oy";
+    document.getElementById('ultra-price').innerText = isAnnual ? '$6.99 / oy' : '$9.99 / oy';
+    document.getElementById('ultra-subprice').innerText = isAnnual ? "~85,000 so'm/oy" : "~119,000 so'm/oy";
+}
+
+function openActivateModal(title) {
+    document.getElementById('modal-plan-title').innerText = title;
+    document.getElementById('activate-modal').classList.remove('hidden');
+}
+
+async function redeemStoreXp() {
+    try {
+        const res = await fetch("{% url 'redeem_xp_web' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast(data.message, 'success');
+            document.getElementById('store-energy-val').innerText = Math.floor(data.current_energy);
+            document.getElementById('nav-energy-val').innerText = Math.floor(data.current_energy);
+            document.getElementById('store-avail-xp').innerText = data.available_xp;
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (e) { showToast("Xatolik yuz berdi", 'error'); }
+}
+</script>
+{% endblock %}
