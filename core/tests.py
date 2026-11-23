@@ -208,3 +208,29 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
             open1 = self.client.get(f'/api/v1/lessons/{self.lesson.id}/', **self.headers)
             self.assertEqual(open1.status_code, 200)
             mock_prewarm.assert_called_once_with(les2.id, 'uz', 'free')
+
+    def test_play_store_compliance_pages_and_domain_host(self):
+        from django.test import Client
+        web_client = Client(HTTP_HOST='study-ai.uz')
+
+        for name in ('privacy_policy', 'terms_of_use', 'support_page', 'delete_account_web'):
+            res = web_client.get(reverse(name) + '?lang=uz')
+            self.assertEqual(res.status_code, 200)
+            self.assertContains(res, 'StudyAi')
+
+        # Web account deletion rejects bad password, then deletes on valid credentials
+        bad_res = web_client.post(reverse('delete_account_web'), {
+            'username': 'testlearner',
+            'password': 'WrongPassword!',
+            'confirm_delete': 'yes',
+        })
+        self.assertEqual(bad_res.status_code, 200)
+        self.assertTrue(User.objects.filter(id=self.user.id).exists())
+
+        ok_res = web_client.post(reverse('delete_account_web'), {
+            'username': 'testlearner',
+            'password': 'StrongPassword123!',
+            'confirm_delete': 'yes',
+        })
+        self.assertEqual(ok_res.status_code, 200)
+        self.assertFalse(User.objects.filter(id=self.user.id).exists())

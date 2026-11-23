@@ -1,0 +1,52 @@
+{% extends 'legal_base.html' %}
+
+{% block title %}{% if page_lang == 'uz' %}Foydalanish shartlari{% elif page_lang == 'ru' %}Условия использования{% else %}Terms of Use{% endif %}{% endblock %}
+
+{% block content %}
+<div class="neo-card p-6 sm:p-10 space-y-6">
+    <div class="inline-block px-3 py-1 bg-[#FFCF0D] border-2 border-[#111827] rounded-lg text-xs font-black uppercase tracking-wider">
+        StudyAi &bull; study-ai.uz
+    </div>
+
+    {% if page_lang == 'uz' %}
+        <h1 class="text-3xl sm:text-4xl font-black">Foydalanish shartlari (Terms of Use)</h1>
+        <p class="text-sm font-semibold text-gray-600">Oxirgi yangilanish: 2026-yil 23-noyabr</p>
+        <section class="space-y-2 text-gray-800 leading-relaxed">
+            <h2 class="text-xl font-black text-[#111827]">1. Xizmat ko'rsatish</h2>
+            <p><strong>StudyAi</strong> — sun'iy intellekt yordamida interaktiv kurslar, amaliy mashqlar, testlar va o'quv yordamchisi xizmatini taqdim etuvchi ta'lim platformasidir. Ilova va veb-saytdan foydalanish orqali siz ushbu shartlarga rozilik bildirasiz.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">2. AI ta'lim kontenti</h2>
+            <p>Kurslar, tushuntirishlar va javoblar sun'iy intellekt tomonidan ta'lim maqsadida generatsiya qilinadi. Foydalanuvchilar ilmiy yoki rasmiy qarorlar qabul qilishda asosiy manbalar bilan tekshirishlari tavsiya etiladi.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">3. Energiya va akkaunt</h2>
+            <p>Har bir foydalanuvchi halol o'qish qoidalariga amal qilishi kerak. Avtomatlashtirilgan spam so'rovlar yoki tizimni chetlab o'tishga urinishlar akkaunt cheklanishiga olib kelishi mumkin.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">4. Aloqa</h2>
+            <p>Savollar bo'yicha: <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> yoki <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a>.</p>
+        </section>
+    {% elif page_lang == 'ru' %}
+        <h1 class="text-3xl sm:text-4xl font-black">Условия использования</h1>
+        <p class="text-sm font-semibold text-gray-600">Последнее обновление: 23 ноября 2026 г.</p>
+        <section class="space-y-2 text-gray-800 leading-relaxed">
+            <h2 class="text-xl font-black text-[#111827]">1. Описание сервиса</h2>
+            <p><strong>StudyAi</strong> — образовательная платформа с ИИ, предоставляющая интерактивные курсы, тесты, практические задания и ИИ-наставника. Используя сервис, вы соглашаетесь с настоящими условиями.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">2. Учебный ИИ-контент</h2>
+            <p>Уроки и пояснения создаются искусственным интеллектом в образовательных целях. При использовании в критически важных областях рекомендуется сверяться с первоисточниками.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">3. Правила использования</h2>
+            <p>Запрещается автоматизированная накрутка, спам-запросы и попытки обхода ограничений безопасности сервиса.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">4. Контакты</h2>
+            <p>По всем вопросам: <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> или <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a>.</p>
+        </section>
+    {% else %}
+        <h1 class="text-3xl sm:text-4xl font-black">Terms of Use</h1>
+        <p class="text-sm font-semibold text-gray-600">Last updated: November 23, 2026</p>
+        <section class="space-y-2 text-gray-800 leading-relaxed">
+            <h2 class="text-xl font-black text-[#111827]">1. Acceptance of Terms</h2>
+            <p>By accessing or using the <strong>StudyAi</strong> Android app (<code>com.fundev.uz</code>) or <strong>https://study-ai.uz</strong>, operated by <strong>FunDev</strong>, you agree to these Terms of Use.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">2. Educational AI Content</h2>
+            <p>StudyAi generates interactive lessons, quizzes, practice feedback, and AI tutor responses for educational purposes. While we strive for high accuracy, AI-generated materials should not be treated as licensed medical, legal, or financial advice.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">3. Fair Use & Accounts</h2>
+            <p>You are responsible for safeguarding your account credentials. Abusive automation, reverse engineering, or attempting to bypass security checks may result in account suspension.</p>
+            <h2 class="text-xl font-black text-[#111827] pt-2">4. Contact</h2>
+            <p>Questions? Reach us at <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> or Telegram <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a>.</p>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

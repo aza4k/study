@@ -2,7 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from django.views import View
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
+from django.db import transaction
+from django.core.cache import cache
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
@@ -634,3 +636,100 @@ def clear_chat_history(request):
             'error': str(e),
             'message': 'Failed to clear chat history'
         }, status=500)
+
+
+def _resolve_legal_lang(request):
+    lang = (request.GET.get('lang') or '').lower()
+    if lang in ('en', 'uz', 'ru'):
+        return lang
+    current = (translation.get_language() or 'en').split('-')[0].lower()
+    if current in ('uz', 'ru'):
+        return current
+    return 'en'
+
+
+class PrivacyPolicyView(TemplateView):
+    template_name = 'privacy_policy.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_lang'] = _resolve_legal_lang(self.request)
+        ctx['active_tab'] = 'privacy'
+        return ctx
+
+
+class TermsOfUseView(TemplateView):
+    template_name = 'terms.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_lang'] = _resolve_legal_lang(self.request)
+        ctx['active_tab'] = 'terms'
+        return ctx
+
+
+class SupportView(TemplateView):
+    template_name = 'support.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_lang'] = _resolve_legal_lang(self.request)
+        ctx['active_tab'] = 'support'
+        return ctx
+
+
+class AccountDeletionWebView(View):
+    template_name = 'delete_account.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'page_lang': _resolve_legal_lang(request),
+            'active_tab': 'delete',
+        })
+
+    def post(self, request):
+        page_lang = _resolve_legal_lang(request)
+        username = (request.POST.get('username') or '').strip()
+        password = request.POST.get('password') or ''
+        confirm = request.POST.get('confirm_delete') == 'yes'
+
+        if not confirm:
+            msg = {
+                'uz': "Iltimos, o'chirish roziligini tasdiqlang.",
+                'ru': 'Пожалуйста, подтвердите согласие на удаление.',
+                'en': 'Please confirm that you want to permanently delete your account.',
+            }[page_lang]
+            return render(request, self.template_name, {
+                'page_lang': page_lang,
+                'active_tab': 'delete',
+                'error_message': msg,
+            })
+
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            msg = {
+                'uz': "Foydalanuvchi nomi yoki parol noto'g'ri.",
+                'ru': 'Неверное имя пользователя или пароль.',
+                'en': 'Invalid username or password.',
+            }[page_lang]
+            return render(request, self.template_name, {
+                'page_lang': page_lang,
+                'active_tab': 'delete',
+                'error_message': msg,
+            })
+
+        deleted_username = user.username
+        user_id = user.id
+        if request.user.is_authenticated and request.user.id == user_id:
+            logout(request)
+        with transaction.atomic():
+            cache.delete(f"courses_list_v2_{user_id}")
+            cache.delete('api_leaderboard_cache')
+            user.delete()
+
+        return render(request, self.template_name, {
+            'page_lang': page_lang,
+            'active_tab': 'delete',
+            'deleted_success': True,
+            'deleted_username': deleted_username,
+        })

@@ -35,11 +35,24 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'study-ai.uz,www.study-ai.uz,185.133.49.211,localhost,127.0.0.1').split(',') if h.strip()]
 
-# CSRF Trusted Origins (loaded dynamically from environment)
-csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000')
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_origins.split(',') if o.strip()]
+# CSRF Trusted Origins (loaded dynamically from environment + study-ai.uz domain)
+CSRF_TRUSTED_ORIGINS = [
+    'https://study-ai.uz',
+    'https://www.study-ai.uz',
+    'http://study-ai.uz',
+    'http://www.study-ai.uz',
+    'http://185.133.49.211:8001',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if csrf_env:
+    for origin in csrf_env.split(','):
+        origin = origin.strip()
+        if origin and origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # Reverse proxy (Nginx) SSL header support
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -106,18 +119,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-CSRF_TRUSTED_ORIGINS = [
-    'https://study.pythonanywhere.com',
-    'https://*.up.railway.app',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-]
-csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
-if csrf_env:
-    for origin in csrf_env.split(','):
-        origin = origin.strip()
-        if origin and origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
 import urllib.parse
 
 db_url = os.getenv('DATABASE_URL')

@@ -1,0 +1,122 @@
+{% extends 'legal_base.html' %}
+
+{% block title %}{% if page_lang == 'uz' %}Maxfiylik siyosati{% elif page_lang == 'ru' %}Политика конфиденциальности{% else %}Privacy Policy{% endif %}{% endblock %}
+
+{% block content %}
+<div class="neo-card p-6 sm:p-10 space-y-6">
+    <div class="inline-block px-3 py-1 bg-[#4DB8FF] border-2 border-[#111827] rounded-lg text-xs font-black uppercase tracking-wider">
+        StudyAi &bull; com.fundev.uz &bull; study-ai.uz
+    </div>
+
+    {% if page_lang == 'uz' %}
+        <h1 class="text-3xl sm:text-4xl font-black">Maxfiylik siyosati (Privacy Policy)</h1>
+        <p class="text-sm font-semibold text-gray-600">Oxirgi yangilanish: 2026-yil 23-noyabr</p>
+
+        <p class="leading-relaxed">Ushbu Maxfiylik siyosati <strong>StudyAi</strong> mobil ilovasi (paket identifikatori: <code>com.fundev.uz</code>) va <strong>https://study-ai.uz</strong> veb-platformasidan foydalanishda foydalanuvchi ma'lumotlari qanday yig'ilishi, ishlatilishi va himoyalanishini tushuntiradi.</p>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">1. Biz yig'adigan ma'lumotlar</h2>
+            <ul class="list-disc pl-5 space-y-1.5 text-gray-800">
+                <li><strong>Akkaunt ma'lumotlari:</strong> foydalanuvchi nomi (username), ism-familiya, ixtiyoriy email yoki telefon raqami, shifrlangan parol va tanlangan interfeys tili.</li>
+                <li><strong>Ta'lim va faollik ma'lumotlari:</strong> yaratilgan kurslar, darslarni tugatish holati, test natijalari, XP ballari, streaklar, kunlik topshiriqlar, energiya balansi va sertifikatlar.</li>
+                <li><strong>AI so'rovlari va yuklangan fayllar:</strong> AI ustozga berilgan savollar, kurs yaratish mavzulari hamda dars yaratish uchun foydalanuvchi ixtiyoriy yuklagan PDF matnlari.</li>
+            </ul>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">2. Ma'lumotlardan foydalanish va AI ishlovi</h2>
+            <p class="text-gray-800">Ma'lumotlar faqat shaxsiylashtirilgan kurslar, testlar, amaliy topshiriqlar tekshiruvi, ovozli darslar va ta'lim statistikasini taqdim etish uchun ishlatiladi. AI javoblari va darslarini yaratish uchun so'rovlar xavfsiz kanal orqali <strong>Google Gemini API</strong> xizmatiga uzatiladi. StudyAi foydalanuvchi ma'lumotlarini reklama tarmoqlariga yoki uchinchi shaxslarga <strong>sotmaydi</strong>.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">3. To'lovlar va xavfsizlik</h2>
+            <p class="text-gray-800">Ilova ichidagi xaridlar yoki obunalar faqat Google Play Billing orqali amalga oshiriladi; StudyAi serverlarida bank karta raqamlari saqlanmaydi. Barcha aloqa HTTPS/TLS orqali shifrlanadi va parollar xeshlangan holda saqlanadi.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">4. Ma'lumotlarni o'chirish huquqi</h2>
+            <p class="text-gray-800">Siz istalgan vaqtda ilova ichidan (<em>Profil &rarr; Akkauntni o'chirish</em>) yoki veb-sahifa orqali (<a href="{% url 'delete_account_web' %}?lang=uz" class="underline font-bold text-blue-600">https://study-ai.uz/delete-account/</a>) akkauntingiz va barcha ta'lim ma'lumotlaringizni butunlay o'chirib tashlashingiz mumkin.</p>
+        </section>
+
+        <section class="space-y-2 bg-[#FFCF0D]/20 border-2 border-[#111827] rounded-2xl p-4">
+            <h2 class="text-lg font-black">5. Aloqa</h2>
+            <p>Ishlab chiquvchi: <strong>FunDev</strong> &bull; Email: <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> &bull; Telegram: <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a></p>
+        </section>
+
+    {% elif page_lang == 'ru' %}
+        <h1 class="text-3xl sm:text-4xl font-black">Политика конфиденциальности</h1>
+        <p class="text-sm font-semibold text-gray-600">Последнее обновление: 23 ноября 2026 г.</p>
+
+        <p class="leading-relaxed">Настоящая Политика конфиденциальности описывает, как приложение <strong>StudyAi</strong> (ID пакета: <code>com.fundev.uz</code>) и веб-платформа <strong>https://study-ai.uz</strong> собирают, используют и защищают данные пользователей.</p>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">1. Какие данные мы собираем</h2>
+            <ul class="list-disc pl-5 space-y-1.5 text-gray-800">
+                <li><strong>Данные аккаунта:</strong> имя пользователя (username), имя и фамилия, необязательный email или номер телефона, хэшированный пароль и выбранный язык.</li>
+                <li><strong>Учебный прогресс:</strong> курсы, пройденные уроки, результаты тестов, баллы XP, серии дней (streak), ежедневные задания, энергия и сертификаты.</li>
+                <li><strong>Запросы к ИИ и загруженные файлы:</strong> сообщения для ИИ-наставника, темы для генерации курсов и добровольно загружаемые PDF-документы для создания учебных материалов.</li>
+            </ul>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">2. Использование данных и обработка ИИ</h2>
+            <p class="text-gray-800">Данные используются исключительно для предоставления учебных курсов, проверки заданий и сохранения прогресса. Учебные запросы передаются в <strong>Google Gemini API</strong> для генерации уроков и ответов. Мы <strong>не продаем</strong> персональные данные третьим лицам и не передаем их рекламным сетям.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">3. Платежи и безопасность</h2>
+            <p class="text-gray-800">Любые цифровые покупки и подписки обрабатываются защищенной системой Google Play Billing. StudyAi не хранит реквизиты банковских карт. Передача данных защищена шифрованием HTTPS/TLS.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">4. Удаление аккаунта и данных</h2>
+            <p class="text-gray-800">Вы можете в любой момент полностью удалить свой аккаунт и все связанные с ним данные внутри приложения (<em>Профиль &rarr; Удалить аккаунт</em>) или на странице <a href="{% url 'delete_account_web' %}?lang=ru" class="underline font-bold text-blue-600">https://study-ai.uz/delete-account/</a>.</p>
+        </section>
+
+        <section class="space-y-2 bg-[#FFCF0D]/20 border-2 border-[#111827] rounded-2xl p-4">
+            <h2 class="text-lg font-black">5. Контакты</h2>
+            <p>Разработчик: <strong>FunDev</strong> &bull; Email: <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> &bull; Telegram: <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a></p>
+        </section>
+
+    {% else %}
+        <h1 class="text-3xl sm:text-4xl font-black">Privacy Policy</h1>
+        <p class="text-sm font-semibold text-gray-600">Last updated: November 23, 2026</p>
+
+        <p class="leading-relaxed">This Privacy Policy explains how <strong>StudyAi</strong> (Android package: <code>com.fundev.uz</code>) and <strong>https://study-ai.uz</strong> (operated by <strong>FunDev</strong>) collect, process, store, and protect your personal information.</p>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">1. Information We Collect</h2>
+            <ul class="list-disc pl-5 space-y-1.5 text-gray-800">
+                <li><strong>Account Information:</strong> username, first/last name, optional email address or phone number, securely hashed password, and preferred study language.</li>
+                <li><strong>Educational Activity:</strong> enrolled and generated courses, completed lessons, quiz answers, practice submissions, XP points, daily streaks, quests, energy balance, and certificates.</li>
+                <li><strong>AI Prompts & Uploaded Documents:</strong> messages sent to the AI tutor, course generation topics, and PDF files you voluntarily upload to generate study courses.</li>
+            </ul>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">2. How We Use Information & AI Processing</h2>
+            <p class="text-gray-800">We use your data strictly to deliver personalized AI courses, evaluate practice exercises, track learning streaks, and provide customer support. Study prompts and uploaded study text are sent securely to the <strong>Google Gemini API</strong> solely to generate educational responses. We <strong>never sell</strong> your personal data or share it with third-party data brokers or ad networks.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">3. Payments & Security</h2>
+            <p class="text-gray-800">When digital purchases or subscriptions are offered on Google Play, transactions are processed securely through Google Play Billing. StudyAi never stores raw credit or debit card details. All network traffic between the app and <code>study-ai.uz</code> is encrypted via HTTPS/TLS, and passwords are stored using Django's cryptographic hashing.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">4. Children's Privacy</h2>
+            <p class="text-gray-800">StudyAi is designed for learners in compliance with applicable laws. Parents or guardians who believe a child under the applicable age of consent provided personal data without permission may contact us or use the account deletion page to remove the account immediately.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="text-xl font-black">5. Data Retention & Account Deletion</h2>
+            <p class="text-gray-800">You retain full control of your data. You can permanently delete your account and all associated learning data at any time directly inside the StudyAi app (<em>Profile &rarr; Delete Account</em>) or online at <a href="{% url 'delete_account_web' %}?lang=en" class="underline font-bold text-blue-600">https://study-ai.uz/delete-account/</a>.</p>
+        </section>
+
+        <section class="space-y-2 bg-[#FFCF0D]/20 border-2 border-[#111827] rounded-2xl p-4">
+            <h2 class="text-lg font-black">6. Contact Us</h2>
+            <p>Developer: <strong>FunDev</strong> &bull; Website: <a href="https://study-ai.uz" class="underline font-bold">https://study-ai.uz</a> &bull; Email: <a href="mailto:aza4kf@gmail.com" class="underline font-bold">aza4kf@gmail.com</a> &bull; Telegram: <a href="https://t.me/fundevuz" class="underline font-bold">@fundevuz</a></p>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

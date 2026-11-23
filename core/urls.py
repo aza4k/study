@@ -21,5 +21,13 @@ urlpatterns = [
     path('lesson/<int:lesson_id>/chatbot/', views.lesson_chatbot, name='lesson_chatbot'),
     path('task-status/<str:task_id>/', views.check_task_status, name='check_task_status'),
     path('clear-chat/', views.clear_chat_history, name='clear_chat_history'),
+    path('privacy/', views.PrivacyPolicyView.as_view(), name='privacy_policy'),
+    path('privacy-policy/', views.PrivacyPolicyView.as_view(), name='privacy_policy_alias'),
+    path('delete-account/', views.AccountDeletionWebView.as_view(), name='delete_account_web'),
+    path('account-deletion/', views.AccountDeletionWebView.as_view(), name='account_deletion_alias'),
+    path('terms/', views.TermsOfUseView.as_view(), name='terms_of_use'),
+    path('terms-of-use/', views.TermsOfUseView.as_view(), name='terms_of_use_alias'),
+    path('support/', views.SupportView.as_view(), name='support_page'),
+    path('contact/', views.SupportView.as_view(), name='contact_alias'),
 ]
 

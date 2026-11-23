@@ -55,7 +55,7 @@
                         </div>
                         <span
                             class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:opacity-80 transition-opacity">
-                            StuDy
+                            StudyAi
                         </span>
                     </a>
                 </div>
@@ -285,7 +285,7 @@
                             class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
                             S
                         </div>
-                        <span class="text-xl font-bold text-white">StuDy</span>
+                        <span class="text-xl font-bold text-white">StudyAi</span>
                     </div>
                     <p class="text-sm">{% trans "The world's most advanced AI-powered learning platform. Empowering
                         education for everyone, everywhere." %}</p>
@@ -298,21 +298,25 @@
                         <li><a href="{% url 'dashboard' %}" class="hover:text-white transition">{% trans "Dashboard" %}</a></li>
                         <li><a href="{% url 'chatbot' %}" class="hover:text-white transition">{% trans "New Course" %}</a></li>
                         <li><a href="{% url 'leaderboard' %}" class="hover:text-white transition">{% trans "Leaderboard" %}</a></li>
+                        <li><a href="{% url 'privacy_policy' %}" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="{% url 'delete_account_web' %}" class="hover:text-white transition">Delete Account</a></li>
+                        <li><a href="{% url 'terms_of_use' %}" class="hover:text-white transition">Terms of Use</a></li>
+                        <li><a href="{% url 'support_page' %}" class="hover:text-white transition">Support</a></li>
                     </ul>
                 </div>
 
                 <!-- Team Info -->
                 <div>
                     <h4 class="text-white font-bold mb-4">{% trans "About" %}</h4>
-                    <p class="text-sm mb-2">{% trans "Developed by" %} <span class="text-indigo-400 font-semibold">Lose
-                            pro</span></p>
-                    <p class="text-sm">{% trans "Making education accessible through AI" %}</p>
+                    <p class="text-sm mb-2">{% trans "Developed by" %} <span class="text-indigo-400 font-semibold">FunDev</span></p>
+                    <p class="text-sm mb-2">{% trans "Making education accessible through AI" %}</p>
+                    <p class="text-sm text-indigo-300">study-ai.uz &bull; aza4kf@gmail.com</p>
                 </div>
             </div>
 
             <!-- Copyright -->
             <div class="border-t border-gray-800 pt-6 text-center text-sm">
-                <p>&copy; 2025 StuDy by Lose pro. {% trans "All rights reserved." %}</p>
+                <p>&copy; 2026 StudyAi by FunDev (study-ai.uz). {% trans "All rights reserved." %}</p>
             </div>
         </div>
     </footer>

@@ -1,0 +1,146 @@
+{% extends 'legal_base.html' %}
+
+{% block title %}{% if page_lang == 'uz' %}Akkauntni o'chirish{% elif page_lang == 'ru' %}Удаление аккаунта{% else %}Delete Account{% endif %}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="neo-card p-6 sm:p-10 space-y-5">
+        <div class="inline-block px-3 py-1 bg-[#EF4444] text-white border-2 border-[#111827] rounded-lg text-xs font-black uppercase tracking-wider">
+            Google Play Data Safety &bull; StudyAi (com.fundev.uz)
+        </div>
+
+        {% if deleted_success %}
+            <div class="bg-[#22C55E]/20 border-[3px] border-[#111827] rounded-2xl p-6 space-y-2">
+                <h2 class="text-2xl font-black text-[#111827]">
+                    {% if page_lang == 'uz' %}Akkaunt butunlay o'chirildi{% elif page_lang == 'ru' %}Аккаунт полностью удален{% else %}Account Permanently Deleted{% endif %}
+                </h2>
+                <p class="font-semibold text-gray-800">
+                    {% if page_lang == 'uz' %}
+                        Sizning StudyAi akkauntingiz (@{{ deleted_username }}) va unga bog'liq barcha kurslar, progress, XP, streaklar hamda AI yozishmalari darhol o'chirildi.
+                    {% elif page_lang == 'ru' %}
+                        Ваш аккаунт StudyAi (@{{ deleted_username }}) и все связанные курсы, прогресс, XP, серии и переписка с ИИ были немедленно удалены.
+                    {% else %}
+                        Your StudyAi account (@{{ deleted_username }}) and all associated courses, learning progress, XP, streaks, certificates, and AI chat history have been permanently deleted.
+                    {% endif %}
+                </p>
+            </div>
+        {% else %}
+            <h1 class="text-3xl sm:text-4xl font-black">
+                {% if page_lang == 'uz' %}StudyAi akkaunti va ma'lumotlarni o'chirish
+                {% elif page_lang == 'ru' %}Удаление аккаунта и данных StudyAi
+                {% else %}Delete Your StudyAi Account & Data{% endif %}
+            </h1>
+
+            <p class="text-gray-700 leading-relaxed">
+                {% if page_lang == 'uz' %}
+                    StudyAi foydalanuvchilari o'z akkaunti va barcha shaxsiy ma'lumotlarini ikki usulda butunlay o'chirib tashlashlari mumkin:
+                {% elif page_lang == 'ru' %}
+                    Пользователи StudyAi могут полностью удалить свой аккаунт и все личные данные двумя способами:
+                {% else %}
+                    StudyAi users can permanently delete their account and all personal learning data at any time using either method below:
+                {% endif %}
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-[#FBF8F3] border-2 border-[#111827] rounded-2xl p-5 space-y-2">
+                    <div class="font-black text-sm uppercase text-[#4DB8FF] tracking-wide">
+                        {% if page_lang == 'uz' %}1-usul: Ilova ichidan{% elif page_lang == 'ru' %}Способ 1: В приложении{% else %}Method 1: Inside the Android App{% endif %}
+                    </div>
+                    <ol class="list-decimal pl-5 text-sm font-semibold space-y-1 text-gray-800">
+                        {% if page_lang == 'uz' %}
+                            <li><strong>StudyAi</strong> ilovasini oching va tizimga kiring.</li>
+                            <li>Pastki menyudan <strong>Profil</strong> bo'limiga o'ting.</li>
+                            <li>Pastga tushib <strong>"Akkauntni o'chirish"</strong> tugmasini bosing.</li>
+                            <li><strong>"Ha, o'chirish"</strong> tugmasini tasdiqlang — ma'lumotlar darhol o'chadi.</li>
+                        {% elif page_lang == 'ru' %}
+                            <li>Откройте приложение <strong>StudyAi</strong> и войдите в аккаунт.</li>
+                            <li>Перейдите на вкладку <strong>Профиль</strong>.</li>
+                            <li>Нажмите <strong>«Удалить аккаунт»</strong> внизу страницы.</li>
+                            <li>Подтвердите действие — данные удалятся немедленно.</li>
+                        {% else %}
+                            <li>Open the <strong>StudyAi</strong> app on your device and sign in.</li>
+                            <li>Go to the <strong>Profile</strong> tab.</li>
+                            <li>Scroll down and tap <strong>Delete Account</strong>.</li>
+                            <li>Confirm <strong>Yes, Delete</strong> — your account is erased immediately.</li>
+                        {% endif %}
+                    </ol>
+                </div>
+
+                <div class="bg-[#FBF8F3] border-2 border-[#111827] rounded-2xl p-5 space-y-2">
+                    <div class="font-black text-sm uppercase text-[#EF4444] tracking-wide">
+                        {% if page_lang == 'uz' %}Qaysi ma'lumotlar o'chiriladi?{% elif page_lang == 'ru' %}Какие данные удаляются?{% else %}What Data Is Deleted?{% endif %}
+                    </div>
+                    <ul class="list-disc pl-5 text-sm font-semibold space-y-1 text-gray-800">
+                        {% if page_lang == 'uz' %}
+                            <li>Profil, login, email, telefon va parol xeshi</li>
+                            <li>Barcha kurslar, dars natijalari, XP va streaklar</li>
+                            <li>AI chat yozishmalari va sertifikatlar</li>
+                            <li><strong>Saqlanish muddati:</strong> 0 kun (darhol butunlay o'chiriladi)</li>
+                        {% elif page_lang == 'ru' %}
+                            <li>Профиль, логин, email, телефон и пароль</li>
+                            <li>Все курсы, прогресс уроков, XP и серии</li>
+                            <li>История чата с ИИ и сертификаты</li>
+                            <li><strong>Срок хранения:</strong> 0 дней (удаляется сразу и безвозвратно)</li>
+                        {% else %}
+                            <li>Profile details, username, email, phone & password hash</li>
+                            <li>All generated/enrolled courses, lesson progress, XP & streaks</li>
+                            <li>AI tutor chat history and earned certificates</li>
+                            <li><strong>Retention period:</strong> 0 days (immediately and permanently purged)</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if not deleted_success %}
+    <div class="neo-card p-6 sm:p-10 space-y-4">
+        <h2 class="text-2xl font-black">
+            {% if page_lang == 'uz' %}2-usul: Veb-sayt orqali darhol o'chirish{% elif page_lang == 'ru' %}Способ 2: Удаление через веб-форму{% else %}Method 2: Delete Directly via Web{% endif %}
+        </h2>
+        <p class="text-sm font-semibold text-gray-600">
+            {% if page_lang == 'uz' %}Ilovani o'chirib yuborgan bo'lsangiz, login va parolingizni kiritib akkauntingizni shu yerdan butunlay o'chirishingiz mumkin.
+            {% elif page_lang == 'ru' %}Если вы уже удалили приложение, введите свой логин и пароль ниже для безвозвратного удаления аккаунта.
+            {% else %}If you no longer have the app installed, verify your StudyAi credentials below to permanently delete your account right now.{% endif %}
+        </p>
+
+        {% if error_message %}
+            <div class="bg-[#EF4444]/15 border-2 border-[#EF4444] text-[#991B1B] font-bold px-4 py-3 rounded-xl text-sm">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'delete_account_web' %}?lang={{ page_lang }}" class="space-y-4 max-w-md">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-black mb-1">
+                    {% if page_lang == 'uz' %}Foydalanuvchi nomi (Username){% elif page_lang == 'ru' %}Имя пользователя (Username){% else %}Username{% endif %}
+                </label>
+                <input type="text" name="username" required autocomplete="username"
+                    class="w-full px-4 py-3 bg-white border-2 border-[#111827] rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#FFCF0D]"
+                    placeholder="username">
+            </div>
+            <div>
+                <label class="block text-sm font-black mb-1">
+                    {% if page_lang == 'uz' %}Parol{% elif page_lang == 'ru' %}Пароль{% else %}Password{% endif %}
+                </label>
+                <input type="password" name="password" required autocomplete="current-password"
+                    class="w-full px-4 py-3 bg-white border-2 border-[#111827] rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#FFCF0D]"
+                    placeholder="••••••••">
+            </div>
+            <label class="flex items-start gap-3 cursor-pointer text-sm font-bold text-gray-800">
+                <input type="checkbox" name="confirm_delete" value="yes" required class="mt-1 w-4 h-4 accent-[#EF4444]">
+                <span>
+                    {% if page_lang == 'uz' %}Barcha kurslarim, XP va ma'lumotlarim qaytarib bo'lmaydigan tarzda o'chirilishiga roziman.
+                    {% elif page_lang == 'ru' %}Я понимаю, что все мои курсы, XP и данные будут удалены безвозвратно.
+                    {% else %}I understand that all my courses, XP, streaks, and data will be permanently deleted and cannot be recovered.{% endif %}
+                </span>
+            </label>
+            <button type="submit" class="neo-btn bg-[#EF4444] text-white font-black px-6 py-3 text-sm uppercase tracking-wide">
+                {% if page_lang == 'uz' %}Akkauntni butunlay o'chirish{% elif page_lang == 'ru' %}Удалить аккаунт навсегда{% else %}Permanently Delete Account{% endif %}
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
