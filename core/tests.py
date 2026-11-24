@@ -373,3 +373,34 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
             self.assertEqual(self.user.subscription_type, 'pro')
             self.assertTrue(self.user.is_annual)
             self.assertEqual(self.user.energy, Decimal('230.00'))
+
+    def test_case_insensitive_username_registration_and_login(self):
+        anon = APIClient()
+        # Register with mixed-case username -> stored lowercase
+        reg1 = anon.post(
+            reverse('api_register'),
+            {'username': 'AzamatTest', 'password': 'StrongPassword123!', 'first_name': 'Azamat'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(reg1.status_code, 201)
+        self.assertEqual(reg1.data['username'], 'azamattest')
+
+        # Second registration with different casing is rejected
+        reg2 = anon.post(
+            reverse('api_register'),
+            {'username': 'azamattest', 'password': 'StrongPassword123!'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(reg2.status_code, 400)
+
+        # Login works regardless of casing
+        tok = anon.post(
+            reverse('token_obtain_pair'),
+            {'username': 'AZAMATTEST', 'password': 'StrongPassword123!'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(tok.status_code, 200)
+        self.assertIn('access', tok.data)

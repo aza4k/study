@@ -18,6 +18,7 @@ from core.models import (
     Certificate, DailyActivity, PlayPurchase
 )
 from core.api.serializers import (
+    CaseInsensitiveTokenObtainPairSerializer,
     UserSerializer, CourseSerializer, CourseListSerializer,
     LessonSerializer, ChatMessageSerializer, UserStreakSerializer,
     CertificateSerializer
@@ -81,6 +82,11 @@ def _build_daily_quests(user, activity: DailyActivity) -> list[dict]:
 
 
 # --- Auth & Profile ---
+from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
+
+
+class CaseInsensitiveTokenObtainPairView(BaseTokenObtainPairView):
+    serializer_class = CaseInsensitiveTokenObtainPairSerializer
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)

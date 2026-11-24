@@ -53,6 +53,14 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password1'].widget.attrs.update({'class': NEO_INPUT_CLASS, 'placeholder': 'Parol'})
         self.fields['password2'].widget.attrs.update({'class': NEO_INPUT_CLASS, 'placeholder': 'Parolni tasdiqlang'})
 
+    def clean_username(self):
+        uname = (self.cleaned_data.get('username') or '').strip().lower()
+        if not uname:
+            raise forms.ValidationError("Foydalanuvchi nomi bo'sh bo'lishi mumkin emas.")
+        if CustomUser.objects.filter(username__iexact=uname).exists():
+            raise forms.ValidationError("Ushbu username allaqachon band! Boshqa nom tanlang.")
+        return uname
+
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
@@ -61,3 +69,11 @@ class CustomAuthenticationForm(AuthenticationForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': NEO_INPUT_CLASS, 'placeholder': '••••••••'})
     )
+
+    def clean_username(self):
+        raw = (self.cleaned_data.get('username') or '').strip()
+        if raw and not CustomUser.objects.filter(username=raw).exists():
+            match = CustomUser.objects.filter(username__iexact=raw).first()
+            if match:
+                return match.username
+        return raw

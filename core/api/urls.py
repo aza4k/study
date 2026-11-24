@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
 router = DefaultRouter()
@@ -10,7 +10,7 @@ router.register(r'lessons', views.LessonViewSet, basename='lesson')
 urlpatterns = [
     # Auth
     path('auth/register/', views.RegisterView.as_view(), name='api_register'),
-    path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/token/', views.CaseInsensitiveTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/profile/', views.UserProfileView.as_view(), name='api_profile'),
     path('auth/delete-account/', views.DeleteAccountView.as_view(), name='api_delete_account'),

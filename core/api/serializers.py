@@ -1,8 +1,29 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from core.models import Course, Module, Lesson, Quiz, UserProgress, UserCourse, ChatMessage, UserStreak, Certificate
 
 User = get_user_model()
+
+
+class CaseInsensitiveTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        raw_username = (attrs.get(self.username_field) or '').strip()
+        password = attrs.get('password') or ''
+        if raw_username:
+            exact = User.objects.filter(username=raw_username).first()
+            if exact and exact.check_password(password):
+                attrs[self.username_field] = exact.username
+            else:
+                matches = list(User.objects.filter(username__iexact=raw_username)[:5])
+                for m in matches:
+                    if m.check_password(password):
+                        attrs[self.username_field] = m.username
+                        break
+                else:
+                    if matches:
+                        attrs[self.username_field] = matches[0].username
+        return super().validate(attrs)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,8 +41,20 @@ class UserSerializer(serializers.ModelSerializer):
             'last_bonus_claimed', 'bonus_xp'
         )
 
+    def validate_username(self, value):
+        normalized = (value or '').strip().lower()
+        if not normalized:
+            raise serializers.ValidationError("Foydalanuvchi nomi bo'sh bo'lishi mumkin emas.")
+        qs = User.objects.filter(username__iexact=normalized)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Ushbu username allaqachon band! Boshqa nom tanlang.")
+        return normalized
+
     def create(self, validated_data):
         password = validated_data.pop('password', None)
+        validated_data['username'] = validated_data['username'].strip().lower()
         user = User.objects.create_user(**validated_data)
         if password:
             user.set_password(password)

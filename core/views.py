@@ -1148,7 +1148,12 @@ class AccountDeletionWebView(View):
                 'error_message': msg,
             })
 
-        user = authenticate(request, username=username, password=password)
+        lookup_username = username
+        if username and not User.objects.filter(username=username).exists():
+            match = User.objects.filter(username__iexact=username).first()
+            if match:
+                lookup_username = match.username
+        user = authenticate(request, username=lookup_username, password=password)
         if not user:
             msg = {
                 'uz': "Foydalanuvchi nomi yoki parol noto'g'ri.",
