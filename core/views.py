@@ -546,16 +546,20 @@ class LessonView(LoginRequiredMixin, DetailView):
 
         prev_lesson = None
         next_lesson = None
+        lookahead_lesson = None
         if obj.id in ordered_lessons:
             idx = ordered_lessons.index(obj.id)
             if idx > 0:
                 prev_lesson = Lesson.objects.filter(id=ordered_lessons[idx - 1]).first()
             if idx + 1 < len(ordered_lessons):
                 next_lesson = Lesson.objects.filter(id=ordered_lessons[idx + 1]).first()
+            if idx + 2 < len(ordered_lessons):
+                lookahead_lesson = Lesson.objects.filter(id=ordered_lessons[idx + 2]).first()
 
-        # Strictly pre-warm ONLY the immediate next lesson once this lesson is actually opened
-        if next_lesson and (len(next_lesson.content.strip()) < 80 or not next_lesson.interactive_data):
-            _schedule_single_lesson_prewarm(next_lesson.id, course.language, sub)
+        # Lookahead N+2 pre-warming: Lesson 1+2 ready upfront; opening N triggers N+2 (and N+1 fallback if empty)
+        for target_les in (next_lesson, lookahead_lesson):
+            if target_les and (len(target_les.content.strip()) < 80 or not target_les.interactive_data):
+                _schedule_single_lesson_prewarm(target_les.id, course.language, sub)
 
         progress = UserProgress.objects.filter(user=user, lesson=obj).first()
         completed_quizzes = set(progress.completed_quizzes or []) if progress else set()

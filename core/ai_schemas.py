@@ -78,17 +78,17 @@ class LessonContent(BaseModel):
     )
     visual_diagram: Optional[VisualDiagram] = Field(
         default=None,
-        description="Structured step-by-step concept flow diagram for visual learners"
+        description="Optional structured step-by-step workflow/concept diagram ONLY when sequential visual flow genuinely clarifies the lesson; omit/null otherwise"
     )
     flashcards: List[FlashcardItem] = Field(
         default_factory=list,
-        description="2 to 4 bite-sized study flashcards summarizing key concepts or vocabulary"
+        description="Optional 0 to 4 active-recall flashcards ONLY when vocabulary, formulas, or key definitions warrant memorization; leave empty [] for pure coding/story/hands-on lessons"
     )
     practice_lab: Optional[PracticeLab] = Field(
         default=None,
-        description="Interactive hands-on code or domain practice exercise"
+        description="Interactive hands-on code or domain practice exercise tailored to topic & subscription tier"
     )
-    quizzes: List[QuizItem] = Field(description="2 to 3 multiple-choice quizzes checking lesson mastery")
+    quizzes: List[QuizItem] = Field(description="2 to 4 multiple-choice quizzes checking real understanding")
 
 
 class PracticeEvaluation(BaseModel):

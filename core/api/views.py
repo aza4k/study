@@ -279,6 +279,7 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
         )
         prev_lesson_id = None
         next_lesson_id = None
+        lookahead_lesson_id = None
         if instance.id in ordered_lessons:
             idx = ordered_lessons.index(instance.id)
             if idx > 0:
@@ -298,16 +299,19 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
                     )
             if idx + 1 < len(ordered_lessons):
                 next_lesson_id = ordered_lessons[idx + 1]
+            if idx + 2 < len(ordered_lessons):
+                lookahead_lesson_id = ordered_lessons[idx + 2]
 
         # Generate rich content lazily if empty or missing interactive blocks
         if len(instance.content.strip()) < 80 or not instance.quizzes.exists() or not instance.interactive_data:
             instance = get_or_generate_lesson_content(instance, course.language, tier=sub)
 
-        # Trigger next-lesson background generation ONLY once this lesson has actually been opened
-        if next_lesson_id is not None:
-            next_les = Lesson.objects.filter(id=next_lesson_id).first()
-            if next_les and (len(next_les.content.strip()) < 80 or not next_les.interactive_data):
-                _schedule_single_lesson_prewarm(next_lesson_id, course.language, sub)
+        # Lookahead N+2 pre-warming: Lesson 1+2 are generated upfront; opening N triggers N+2 (and N+1 fallback if empty)
+        for target_id in (next_lesson_id, lookahead_lesson_id):
+            if target_id is not None:
+                target_les = Lesson.objects.filter(id=target_id).first()
+                if target_les and (len(target_les.content.strip()) < 80 or not target_les.interactive_data):
+                    _schedule_single_lesson_prewarm(target_id, course.language, sub)
 
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)

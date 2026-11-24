@@ -2,6 +2,7 @@ import os
 import re
 import json
 import base64
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from decimal import Decimal
@@ -318,48 +319,94 @@ def get_or_generate_lesson_content(lesson: Lesson, language: str = 'en', tier: s
 
     category = getattr(course, 'category', 'general') or detect_category(course.title)
     difficulty = getattr(course, 'difficulty', 'beginner')
+    tier_norm = (tier or 'free').lower()
+    lesson_order = getattr(lesson, 'order', 1) or 1
+
+    # Vary pedagogical format across lessons so courses never feel repetitive/formulaic
+    style_modes = [
+        ("Conceptual Story & Analogy", "Teach via an engaging real-world story/analogy first, then unpack core mechanics."),
+        ("Hands-On Workshop", "Dive straight into practical examples, step-by-step walkthroughs, and actionable patterns."),
+        ("Visual Architecture Breakdown", "Focus on mental models, step flows, comparison tables, and clear cause-and-effect."),
+        ("Case Study & Common Mistakes", "Analyze a realistic scenario, contrast rookie mistakes vs pro approaches, and distill rules."),
+    ]
+    style_name, style_desc = style_modes[(course.id + lesson_order) % len(style_modes)]
+
+    # Decide flashcards dynamically rather than forcing them on every single lesson
+    include_flashcards = (
+        category == 'language'
+        or (lesson_order % 2 == 1 and category in ('science', 'general', 'business'))
+        or (category == 'coding' and lesson_order == 1 and tier_norm != 'free')
+    )
+    flashcard_rule = (
+        "- Include 2-4 crisp flashcards focused ONLY on high-value terms/vocabulary/formulas."
+        if include_flashcards
+        else "- Set flashcards to an EMPTY list [] for this lesson (no flashcards needed here; focus on richer explanations/examples instead)."
+    )
+
+    include_diagram = (lesson_order % 2 == 1) or (category in ('coding', 'science', 'business'))
+    diagram_rule = (
+        "- Populate visual_diagram with 3-5 crisp sequential steps."
+        if include_diagram
+        else "- Set visual_diagram to null so the reading experience stays varied and uncluttered."
+    )
+
+    if tier_norm == 'ultra':
+        tier_hint = (
+            "User Tier: ULTRA VIP — deliver deep mastery: 3-4 scenario-based quizzes, nuanced pro-tips/edge cases, "
+            "and a rich interactive practice_lab challenge."
+        )
+    elif tier_norm == 'pro':
+        tier_hint = (
+            "User Tier: PRO — deliver strong practical depth: 3 thoughtful quizzes, real-world examples, "
+            "and an enabled hands-on practice_lab."
+        )
+    else:
+        tier_hint = (
+            "User Tier: FREE — deliver crisp, high-clarity fundamentals: 2-3 quizzes, scannable Markdown; "
+            "only enable a short reflection practice_lab when truly helpful (otherwise set practice_lab=null)."
+        )
 
     domain_hint = ""
     if category == 'coding':
         domain_hint = (
             "Since this is a PROGRAMMING/TECH course:\n"
-            "- Include well-formatted fenced code blocks (```python, ```javascript, ```dart, etc.) with inline comments in content.\n"
-            "- Set lesson_type='coding' and populate practice_lab with enabled=true, lab_type='code', a concise coding challenge prompt, "
-            "3-8 lines of starter_code, expected_output, and a helpful hint."
+            "- Include well-formatted fenced code blocks (```python, ```javascript, ```dart, etc.) with inline comments.\n"
+            "- Set lesson_type='coding'. For PRO/ULTRA (or coding drills), populate practice_lab with enabled=true, lab_type='code', "
+            "a concise coding challenge prompt, 3-8 lines of starter_code, expected_output, and a helpful hint."
         )
     elif category == 'language':
         domain_hint = (
             "Since this is a LANGUAGE learning course:\n"
-            "- Include clear vocabulary tables/lists, pronunciation/usage notes, and realistic mini-dialogues.\n"
-            "- Populate 3-4 flashcards with target phrase on front, translation/meaning on back, and example sentence.\n"
-            "- Set lesson_type='language' and practice_lab with enabled=true, lab_type='dialogue' asking student to write 1-2 sentences using today's grammar/words."
+            "- Include vocabulary tables, pronunciation/usage notes, and realistic mini-dialogues.\n"
+            "- Set lesson_type='language' and practice_lab with enabled=true, lab_type='dialogue' asking the student to write 1-2 natural sentences."
         )
     elif category in ('science', 'business'):
         domain_hint = (
             f"Since this is a {category.upper()} course:\n"
-            "- Include formulas, real-world case study numbers, or step-by-step calculations.\n"
-            "- Populate visual_diagram with a clear framework/process and practice_lab with enabled=true, lab_type='exercise' containing a practical scenario for the student to solve."
+            "- Include formulas, real-world case study numbers, or decision frameworks.\n"
+            "- Populate practice_lab with enabled=true, lab_type='exercise' containing a realistic scenario."
         )
     else:
         domain_hint = (
-            "- Include clear conceptual explanations, real-world analogies, and memorable key takeaways.\n"
-            "- Populate visual_diagram, 2-3 flashcards, and practice_lab with a short reflection/application prompt."
+            "- Include clear conceptual explanations, real-world analogies, comparison tables where useful, and memorable key takeaways."
         )
 
     prompt = f"""You are an elite interactive curriculum designer (Duolingo + Brilliant.org + Mimo style).
 Course Title: "{course.title}" (Category: {category}, Difficulty: {difficulty})
 Module Title: "{lesson.module.title}"
-Lesson Title: "{lesson.title}"
+Lesson Title: "{lesson.title}" (Lesson #{lesson_order})
+Teaching Style for THIS lesson: {style_name} — {style_desc}
+{tier_hint}
 Language requirement: Strictly write ALL text, explanations, flashcards, diagram nodes, practice prompts, and quizzes in {lang_name}.
 
 {domain_hint}
 
-Requirements:
-1. "content": Engaging Markdown with clear headings (##), bullet points, bold highlights, and practical examples. Keep paragraphs scannable!
-2. "visual_diagram": 3-5 sequential steps summarizing the core workflow/concept.
-3. "flashcards": 3 high-yield flashcards for active recall.
-4. "practice_lab": A hands-on micro-task the user can try right inside the lesson.
-5. "quizzes": 3 multiple-choice questions. Every question MUST include a short "explanation" telling the learner why the right answer is correct.
+Dynamic Structure Rules:
+1. "content": Engaging Markdown matching the Teaching Style above (headings ##, callouts, concrete examples). Avoid repetitive boilerplate.
+2. {diagram_rule}
+3. {flashcard_rule}
+4. "practice_lab": Follow the User Tier & Domain instructions above.
+5. "quizzes": Multiple-choice questions testing real application (NOT trivial recall). Every question MUST include a short "explanation".
 """
 
     try:
@@ -613,8 +660,23 @@ Ensure lesson titles flow naturally from fundamentals to practical mastery.
             except Exception:
                 pass
 
-        # Populate ONLY Lesson 1 synchronously. Lesson 2+ starts pre-warming strictly when Lesson 1 is opened.
-        if created_lessons:
+        # Populate Lessons 1 AND 2 concurrently before Lesson 1 is opened.
+        # Opening Lesson N later triggers background generation of Lesson N+2.
+        if len(created_lessons) >= 2:
+            from django.db import connections
+
+            def _gen_worker(les):
+                try:
+                    return get_or_generate_lesson_content(les, language, tier=sub_type)
+                finally:
+                    connections.close_all()
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                f1 = pool.submit(_gen_worker, created_lessons[0])
+                f2 = pool.submit(_gen_worker, created_lessons[1])
+                f1.result()
+                f2.result()
+        elif created_lessons:
             get_or_generate_lesson_content(created_lessons[0], language, tier=sub_type)
 
         cache.clear()
