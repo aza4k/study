@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from core.models import (
     Course, Module, Lesson, Quiz, UserProgress,
     UserCourse, ChatMessage, UserStreak, CourseStar,
-    Certificate, DailyActivity
+    Certificate, DailyActivity, PlayPurchase
 )
 from core.api.serializers import (
     UserSerializer, CourseSerializer, CourseListSerializer,
@@ -977,6 +977,13 @@ class PurchaseEnergyView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        import sys
+        from django.conf import settings
+        if not settings.DEBUG and 'test' not in sys.argv:
+            return Response(
+                {'error': 'Direct mock purchases are disabled. Use Google Play Billing.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         user = request.user
         package = str(request.data.get('package', ''))
         amount = ECONOMY_CONFIG['energy_packs'].get(package)
@@ -997,6 +1004,13 @@ class SubscribeView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        import sys
+        from django.conf import settings
+        if not settings.DEBUG and 'test' not in sys.argv:
+            return Response(
+                {'error': 'Direct mock subscriptions are disabled. Use Google Play Billing.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         user = request.user
         plan = request.data.get('plan')
         is_annual = bool(request.data.get('is_annual', False))
@@ -1022,6 +1036,96 @@ class SubscribeView(views.APIView):
             'message': f'Successfully activated {plan.upper()}! (+{int(grant)}⚡)',
             'subscription_type': user.subscription_type,
             'current_energy': user.energy
+        })
+
+
+class VerifyGooglePurchaseView(views.APIView):
+    """
+    Production Google Play Billing receipt verifier.
+    Verifies one-time energy packs and subscriptions directly with Google Play Android Publisher API,
+    prevents purchaseToken replay, and grants entitlements atomically.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from django.db import transaction
+        from core.billing import (
+            BillingConfigError,
+            BillingVerificationError,
+            PLAY_ONE_TIME_PRODUCTS,
+            PLAY_SUBSCRIPTIONS,
+            verify_google_play_purchase,
+        )
+
+        user = request.user
+        product_id = str(request.data.get('product_id', '')).strip()
+        purchase_token = str(request.data.get('purchase_token', '')).strip()
+        order_id = str(request.data.get('order_id', '')).strip()
+
+        if not product_id or not purchase_token:
+            return Response({'error': 'product_id and purchase_token are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        existing = PlayPurchase.objects.filter(purchase_token=purchase_token).first()
+        if existing:
+            if existing.user_id != user.id:
+                return Response({'error': 'Purchase token belongs to another account.'}, status=status.HTTP_409_CONFLICT)
+            return Response({
+                'success': True,
+                'already_processed': True,
+                'message': 'Purchase already credited.',
+                'subscription_type': user.subscription_type,
+                'current_energy': user.energy,
+            })
+
+        try:
+            verified = verify_google_play_purchase(product_id, purchase_token)
+        except BillingConfigError as ce:
+            return Response({'error': str(ce)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except BillingVerificationError as ve:
+            return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': f'Verification error: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        with transaction.atomic():
+            if PlayPurchase.objects.filter(purchase_token=purchase_token).exists():
+                return Response({
+                    'success': True,
+                    'already_processed': True,
+                    'subscription_type': user.subscription_type,
+                    'current_energy': user.energy,
+                })
+
+            PlayPurchase.objects.create(
+                user=user,
+                product_id=product_id,
+                purchase_token=purchase_token,
+                order_id=verified.get('order_id') or order_id,
+                purchase_type=verified['purchase_type'],
+                verified=True,
+                raw_response=verified.get('raw') or {},
+            )
+
+            if product_id in PLAY_ONE_TIME_PRODUCTS:
+                amount = PLAY_ONE_TIME_PRODUCTS[product_id]
+                user.energy = Decimal(str(user.energy)) + amount
+                user.save(update_fields=['energy'])
+                msg = f'+{int(amount)}⚡ Energiya hisobingizga qo\'shildi!'
+            else:
+                plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
+                user.subscription_type = plan
+                user.is_annual = is_annual
+                grant = ECONOMY_CONFIG['subscription_energy'].get(plan, Decimal('150.00'))
+                user.energy = Decimal(str(user.energy)) + grant
+                user.save(update_fields=['subscription_type', 'is_annual', 'energy'])
+                cache.delete(f"courses_list_v2_{user.id}")
+                cache.delete('api_leaderboard_cache')
+                msg = f'{plan.upper()} obuna faollashtirildi! (+{int(grant)}⚡)'
+
+        return Response({
+            'success': True,
+            'message': msg,
+            'subscription_type': user.subscription_type,
+            'current_energy': user.energy,
         })
 
 

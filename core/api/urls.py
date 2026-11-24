@@ -44,5 +44,6 @@ urlpatterns = [
     path('profile/certificates/', views.CertificatesListView.as_view(), name='api_certificates_list'),
     path('profile/mock-purchase/', views.PurchaseEnergyView.as_view(), name='api_mock_purchase'),
     path('profile/mock-subscribe/', views.SubscribeView.as_view(), name='api_mock_subscribe'),
+    path('profile/verify-google-purchase/', views.VerifyGooglePurchaseView.as_view(), name='api_verify_google_purchase'),
     path('courses/<int:course_id>/certificate/', views.CertificateView.as_view(), name='api_certificate'),
 ]

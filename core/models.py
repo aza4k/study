@@ -218,3 +218,25 @@ class DailyActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.date}"
+
+
+class PlayPurchase(models.Model):
+    """Verified Google Play Billing one-time & subscription purchases (prevents token replay)."""
+    PURCHASE_TYPES = (
+        ('one_time', 'One-time Energy Pack'),
+        ('subscription', 'Subscription'),
+    )
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='play_purchases')
+    product_id = models.CharField(max_length=100)
+    purchase_token = models.CharField(max_length=512, unique=True)
+    order_id = models.CharField(max_length=128, blank=True, default='')
+    purchase_type = models.CharField(max_length=20, choices=PURCHASE_TYPES)
+    verified = models.BooleanField(default=True)
+    raw_response = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product_id} ({self.purchase_type})"

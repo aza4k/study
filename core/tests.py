@@ -312,3 +312,64 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         )
         self.assertEqual(blitz_post.status_code, 200)
         self.assertEqual(blitz_post.json()['xp_earned'], 15)
+
+    def test_google_play_billing_verification_and_replay_protection(self):
+        # Verify one-time energy pack credits +50 Energy once and rejects replay across users
+        with patch('core.billing.verify_google_play_purchase') as mock_verify:
+            mock_verify.return_value = {
+                'purchase_type': 'one_time',
+                'order_id': 'GPA.1234-5678-9012',
+                'raw': {'purchaseState': 0},
+            }
+            res = self.client.post(
+                reverse('api_verify_google_purchase'),
+                {'product_id': 'energy_50', 'purchase_token': 'tok-abc-123', 'order_id': 'GPA.1'},
+                format='json',
+                **self.headers,
+            )
+            self.assertEqual(res.status_code, 200)
+            self.user.refresh_from_db()
+            self.assertEqual(self.user.energy, Decimal('80.00'))
+
+            # Replay for same user is idempotent (no double credit)
+            dup = self.client.post(
+                reverse('api_verify_google_purchase'),
+                {'product_id': 'energy_50', 'purchase_token': 'tok-abc-123'},
+                format='json',
+                **self.headers,
+            )
+            self.assertEqual(dup.status_code, 200)
+            self.assertTrue(dup.data.get('already_processed'))
+            self.user.refresh_from_db()
+            self.assertEqual(self.user.energy, Decimal('80.00'))
+
+            # Replay by a second user returns 409 Conflict
+            user2 = User.objects.create_user(username='otherbuyer', password='Password123!')
+            c2 = APIClient()
+            c2.force_authenticate(user=user2)
+            steal = c2.post(
+                reverse('api_verify_google_purchase'),
+                {'product_id': 'energy_50', 'purchase_token': 'tok-abc-123'},
+                format='json',
+                **self.headers,
+            )
+            self.assertEqual(steal.status_code, 409)
+
+        # Verify subscription activates PRO + grants +150 Energy
+        with patch('core.billing.verify_google_play_purchase') as mock_sub:
+            mock_sub.return_value = {
+                'purchase_type': 'subscription',
+                'order_id': 'GPA.SUB-999',
+                'raw': {'subscriptionState': 'SUBSCRIPTION_STATE_ACTIVE'},
+            }
+            sub_res = self.client.post(
+                reverse('api_verify_google_purchase'),
+                {'product_id': 'studyai_pro_annual', 'purchase_token': 'tok-sub-999'},
+                format='json',
+                **self.headers,
+            )
+            self.assertEqual(sub_res.status_code, 200)
+            self.user.refresh_from_db()
+            self.assertEqual(self.user.subscription_type, 'pro')
+            self.assertTrue(self.user.is_annual)
+            self.assertEqual(self.user.energy, Decimal('230.00'))
