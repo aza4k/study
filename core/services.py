@@ -101,14 +101,17 @@ def _fast_chat_model() -> str:
 
 
 def _fast_content_model() -> str:
-    return getattr(settings, 'GEMINI_CONTENT_MODEL', None) or os.getenv('GEMINI_CONTENT_MODEL', 'gemini-3.5-flash-lite')
+    return getattr(settings, 'GEMINI_CONTENT_MODEL', None) or os.getenv('GEMINI_CONTENT_MODEL', 'gemini-3.6-flash')
 
 
-def _create_fast_interaction(client, *, model: str, input_text: str, response_format=None, stream: bool = False):
+def _create_fast_interaction(client, *, model: str, input_text: str, response_format=None, stream: bool = False, max_output_tokens: Optional[int] = None):
+    gen_config = {'thinking_level': 'minimal'}
+    if max_output_tokens is not None:
+        gen_config['max_output_tokens'] = max_output_tokens
     kwargs = {
         'model': model,
         'input': input_text,
-        'generation_config': {'thinking_level': 'minimal'},
+        'generation_config': gen_config,
     }
     if response_format is not None:
         kwargs['response_format'] = response_format
@@ -117,8 +120,9 @@ def _create_fast_interaction(client, *, model: str, input_text: str, response_fo
     try:
         return client.interactions.create(**kwargs)
     except Exception:
-        if model != 'gemini-3.5-flash-lite':
-            kwargs['model'] = 'gemini-3.5-flash-lite'
+        fallback_model = 'gemini-3.5-flash'
+        if model != fallback_model:
+            kwargs['model'] = fallback_model
             return client.interactions.create(**kwargs)
         raise
 
@@ -268,6 +272,7 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
             client,
             model=model_name,
             input_text=conversation,
+            max_output_tokens=700,
         )
         return (interaction.output_text or "").strip()
     except Exception as e:
@@ -301,6 +306,7 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
             model=model_name,
             input_text=conversation,
             stream=True,
+            max_output_tokens=700,
         )
         for event in stream:
             if event.event_type == "step.delta" and hasattr(event, 'delta') and event.delta.type == "text":
@@ -431,7 +437,7 @@ Language requirement: Strictly write ALL text, explanations, flashcards, diagram
 {domain_hint}
 
 Dynamic Structure Rules:
-1. "content": Engaging Markdown matching the Teaching Style above (headings ##, callouts, concrete examples). Avoid repetitive boilerplate.
+1. "content": Engaging Markdown matching the Teaching Style above (headings ##, callouts, concrete examples). Keep it focused, crisp, and scannable (350-550 words) without filler.
 2. {diagram_rule}
 3. {flashcard_rule}
 4. "practice_lab": Follow the User Tier & Domain instructions above.
@@ -448,6 +454,7 @@ Dynamic Structure Rules:
                 "mime_type": "application/json",
                 "schema": LessonContent.model_json_schema()
             },
+            max_output_tokens=2600,
         )
         data = LessonContent.model_validate_json(interaction.output_text)
 
@@ -525,6 +532,7 @@ Evaluate fairly: if the core logic/answer solves the task (even with minor style
             "mime_type": "application/json",
             "schema": PracticeEvaluation.model_json_schema()
         },
+        max_output_tokens=600,
     )
     result = PracticeEvaluation.model_validate_json(interaction.output_text)
     return result.model_dump()
@@ -553,6 +561,7 @@ Student Question: {question}
         client,
         model=_fast_chat_model(),
         input_text=prompt,
+        max_output_tokens=450,
     )
     return (interaction.output_text or "").strip()
 
@@ -647,6 +656,7 @@ Ensure lesson titles flow naturally from fundamentals to practical mastery.
                 "mime_type": "application/json",
                 "schema": CourseOutline.model_json_schema()
             },
+            max_output_tokens=1400,
         )
         outline = CourseOutline.model_validate_json(interaction.output_text)
 

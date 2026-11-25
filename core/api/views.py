@@ -643,11 +643,12 @@ class ChatbotStreamView(views.APIView):
                     topic = match.group(1).strip()
                     full_reply = re.sub(r'TOPIC_CLEAR:.+', '', full_reply).strip()
 
-            ChatMessage.objects.create(user=user, message=full_reply, is_user=False)
-            user.energy = Decimal(str(user.energy)) - chat_cost
-            user.save(update_fields=['energy'])
-            activity.chats_sent += 1
-            activity.save(update_fields=['chats_sent'])
+            if full_reply and full_reply != "Xatolik yuz berdi.":
+                ChatMessage.objects.create(user=user, message=full_reply, is_user=False)
+                user.energy = Decimal(str(user.energy)) - chat_cost
+                user.save(update_fields=['energy'])
+                activity.chats_sent += 1
+                activity.save(update_fields=['chats_sent'])
             yield f"data: {json.dumps({'done': True, 'topic_clear': topic_clear, 'topic': topic, 'current_energy': str(user.energy)})}\n\n"
 
         response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
