@@ -529,3 +529,28 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         )
         self.assertEqual(login_res.status_code, 200)
         self.assertIn('access', login_res.data)
+
+    def test_chatbot_stream_accepts_event_stream_header(self):
+        with patch('core.api.views.chatbot_response_stream', return_value=iter(['Hello ', 'world!'])):
+            res = self.client.post(
+                reverse('api_chatbot_stream'),
+                {'message': 'Hi'},
+                format='json',
+                HTTP_ACCEPT='text/event-stream',
+                **self.headers,
+            )
+            self.assertEqual(res.status_code, 200)
+            body = b''.join(res.streaming_content).decode('utf-8')
+        self.assertIn('"delta": "Hello "', body)
+        self.assertIn('"done": true', body)
+
+        self.user.energy = Decimal('0.00')
+        self.user.save(update_fields=['energy'])
+        err_res = self.client.post(
+            reverse('api_chatbot_stream'),
+            {'message': 'Hi again'},
+            format='json',
+            HTTP_ACCEPT='text/event-stream',
+            **self.headers,
+        )
+        self.assertEqual(err_res.status_code, 400)

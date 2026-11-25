@@ -17,6 +17,7 @@ from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 from django.http import StreamingHttpResponse
 from rest_framework import viewsets, views, status, generics
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -599,8 +600,21 @@ class ChatbotView(views.APIView):
         })
 
 
+class ServerSentEventRenderer(BaseRenderer):
+    media_type = 'text/event-stream'
+    format = 'txt'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, (bytes, bytearray)):
+            return bytes(data)
+        if isinstance(data, str):
+            return data.encode('utf-8')
+        return json.dumps(data).encode('utf-8')
+
+
 class ChatbotStreamView(views.APIView):
     permission_classes = [IsAuthenticated]
+    renderer_classes = [ServerSentEventRenderer, JSONRenderer]
 
     def post(self, request):
         user = request.user
@@ -643,7 +657,7 @@ class ChatbotStreamView(views.APIView):
                     topic = match.group(1).strip()
                     full_reply = re.sub(r'TOPIC_CLEAR:.+', '', full_reply).strip()
 
-            if full_reply and full_reply != "Xatolik yuz berdi.":
+            if full_reply and full_reply not in ("Xatolik yuz berdi.", "AI service is unavailable."):
                 ChatMessage.objects.create(user=user, message=full_reply, is_user=False)
                 user.energy = Decimal(str(user.energy)) - chat_cost
                 user.save(update_fields=['energy'])
