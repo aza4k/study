@@ -404,3 +404,128 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         )
         self.assertEqual(tok.status_code, 200)
         self.assertIn('access', tok.data)
+
+    def test_n_plus_2_lesson_lookahead(self):
+        les2 = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 2 Ready',
+            content='Detailed second lesson content that is definitely longer than eighty characters and ready upfront before opening lesson one.',
+            lesson_type='coding',
+            interactive_data={'visual_diagram': {'title': 'Flow', 'steps': ['A', 'B', 'C'], 'summary': 'ok'}},
+            order=2,
+        )
+        Quiz.objects.create(lesson=les2, question='Q2?', options=['A', 'B', 'C', 'D'], correct_answer='A')
+        les3 = Lesson.objects.create(module=self.module, title='Lesson 3 Empty', content='', order=3)
+        les4 = Lesson.objects.create(module=self.module, title='Lesson 4 Empty', content='', order=4)
+
+        # Opening Lesson 1 (with Lesson 2 already populated) pre-warms Lesson 3
+        with patch('core.api.views._schedule_single_lesson_prewarm') as mock_prewarm:
+            res1 = self.client.get(f'/api/v1/lessons/{self.lesson.id}/', **self.headers)
+            self.assertEqual(res1.status_code, 200)
+            mock_prewarm.assert_called_once_with(les3.id, 'uz', 'free')
+
+        # Complete Lesson 1, open Lesson 2 -> pre-warms Lesson 4 (while Lesson 3 is already non-empty if generated)
+        les3.content = 'Generated rich lesson three content that exceeds eighty characters for prewarm lookahead check.'
+        les3.interactive_data = {'flashcards': []}
+        les3.save()
+        from core.models import UserProgress
+        UserProgress.objects.update_or_create(
+            user=self.user, lesson=self.lesson, defaults={'is_completed': True}
+        )
+        with patch('core.api.views._schedule_single_lesson_prewarm') as mock_prewarm:
+            res2 = self.client.get(f'/api/v1/lessons/{les2.id}/', **self.headers)
+            self.assertEqual(res2.status_code, 200)
+            mock_prewarm.assert_called_once_with(les4.id, 'uz', 'free')
+
+    def test_subscription_expiry_and_rtdn_webhook(self):
+        import base64
+        import json
+        from datetime import timedelta
+        from django.utils import timezone
+
+        self.user.subscription_type = 'pro'
+        self.user.play_purchase_token = 'rtdn-tok-123'
+        self.user.last_play_product_id = 'studyai_pro_monthly'
+        self.user.subscription_expires_at = timezone.now() - timedelta(minutes=5)
+        self.user.save()
+
+        # When expired and Google Play reports expired/canceled -> auto-downgrades to free on profile fetch
+        with patch('core.billing.verify_google_play_purchase') as mock_play:
+            from core.billing import BillingVerificationError
+            mock_play.side_effect = BillingVerificationError('Obuna faol emas (holat: SUBSCRIPTION_STATE_EXPIRED).')
+            prof = self.client.get(reverse('api_profile'), **self.headers)
+            self.assertEqual(prof.status_code, 200)
+            self.assertEqual(prof.data['subscription_type'], 'free')
+
+        # RTDN Pub/Sub webhook without X-App-Signature re-syncs renewal and credits +150 Energy
+        self.user.subscription_type = 'pro'
+        self.user.save()
+        payload = base64.b64encode(json.dumps({
+            'subscriptionNotification': {
+                'notificationType': 2,
+                'purchaseToken': 'rtdn-tok-123',
+                'subscriptionId': 'studyai_pro_monthly',
+            }
+        }).encode()).decode()
+
+        with patch('core.billing.verify_google_play_purchase') as mock_play:
+            mock_play.return_value = {
+                'purchase_type': 'subscription',
+                'order_id': 'GPA.RENEW-2',
+                'expires_at': timezone.now() + timedelta(days=30),
+                'raw': {'subscriptionState': 'SUBSCRIPTION_STATE_ACTIVE'},
+            }
+            anon = APIClient()
+            rtdn_res = anon.post(
+                reverse('api_google_play_rtdn'),
+                {'message': {'data': payload}},
+                format='json',
+            )
+            self.assertEqual(rtdn_res.status_code, 200)
+            self.user.refresh_from_db()
+            self.assertEqual(self.user.subscription_type, 'pro')
+            self.assertEqual(self.user.energy, Decimal('180.00'))
+
+    def test_password_reset_otp_flow(self):
+        from django.core import mail
+        from core.models import PasswordResetCode
+
+        self.user.email = 'learner@example.com'
+        self.user.save(update_fields=['email'])
+        anon = APIClient()
+
+        req = anon.post(
+            reverse('api_password_reset_request'),
+            {'identifier': 'testlearner'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(req.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        otp = PasswordResetCode.objects.filter(user=self.user, is_used=False).first().code
+
+        # Wrong OTP fails
+        bad = anon.post(
+            reverse('api_password_reset_confirm'),
+            {'identifier': 'learner@example.com', 'code': '000000', 'new_password': 'NewStrongPassword99!'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(bad.status_code, 400)
+
+        # Valid OTP updates password and allows login
+        ok = anon.post(
+            reverse('api_password_reset_confirm'),
+            {'identifier': 'learner@example.com', 'code': otp, 'new_password': 'NewStrongPassword99!'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(ok.status_code, 200)
+        login_res = anon.post(
+            reverse('token_obtain_pair'),
+            {'username': 'testlearner', 'password': 'NewStrongPassword99!'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(login_res.status_code, 200)
+        self.assertIn('access', login_res.data)

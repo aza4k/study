@@ -1,6 +1,14 @@
+import base64
+import os
 import re
 import json
+import secrets
+from datetime import timedelta
 from decimal import Decimal
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
@@ -15,8 +23,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from core.models import (
     Course, Module, Lesson, Quiz, UserProgress,
     UserCourse, ChatMessage, UserStreak, CourseStar,
-    Certificate, DailyActivity, PlayPurchase
+    Certificate, DailyActivity, PlayPurchase, PasswordResetCode
 )
+from core.billing import sync_user_subscription_status
 from core.api.serializers import (
     CaseInsensitiveTokenObtainPairSerializer,
     UserSerializer, CourseSerializer, CourseListSerializer,
@@ -87,10 +96,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtai
 
 class CaseInsensitiveTokenObtainPairView(BaseTokenObtainPairView):
     serializer_class = CaseInsensitiveTokenObtainPairSerializer
+    throttle_scope = 'auth_sensitive'
+
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
+    throttle_scope = 'auth_sensitive'
 
 
 class UserProfileView(views.APIView):
@@ -98,6 +111,7 @@ class UserProfileView(views.APIView):
 
     def get(self, request):
         user = request.user
+        sync_user_subscription_status(user)
         serializer = UserSerializer(user)
         streak, _ = UserStreak.objects.get_or_create(user=user)
         streak_data = UserStreakSerializer(streak).data
@@ -210,6 +224,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         user = request.user
+        sync_user_subscription_status(user)
 
         is_creator = (instance.creator == user)
         is_enrolled = UserCourse.objects.filter(user=user, course=instance).exists()
@@ -643,9 +658,11 @@ class ChatbotStreamView(views.APIView):
 
 class GenerateCourseView(views.APIView):
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_generation'
 
     def post(self, request):
         user = request.user
+        sync_user_subscription_status(user)
         topic = request.data.get('topic', '').strip()
         difficulty = request.data.get('difficulty', 'beginner').strip().lower()
         if not topic:
@@ -678,9 +695,11 @@ class GenerateCourseView(views.APIView):
 
 class UploadPDFCourseView(views.APIView):
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'ai_generation'
 
     def post(self, request):
         user = request.user
+        sync_user_subscription_status(user)
         if user.subscription_type not in ('pro', 'ultra'):
             return Response({'error': 'PDF course generation requires PRO or ULTRA subscription.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1124,9 +1143,15 @@ class VerifyGooglePurchaseView(views.APIView):
                 plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
                 user.subscription_type = plan
                 user.is_annual = is_annual
+                user.subscription_expires_at = verified.get('expires_at')
+                user.play_purchase_token = purchase_token
+                user.last_play_product_id = product_id
                 grant = ECONOMY_CONFIG['subscription_energy'].get(plan, Decimal('150.00'))
                 user.energy = Decimal(str(user.energy)) + grant
-                user.save(update_fields=['subscription_type', 'is_annual', 'energy'])
+                user.save(update_fields=[
+                    'subscription_type', 'is_annual', 'subscription_expires_at',
+                    'play_purchase_token', 'last_play_product_id', 'energy'
+                ])
                 cache.delete(f"courses_list_v2_{user.id}")
                 cache.delete('api_leaderboard_cache')
                 msg = f'{plan.upper()} obuna faollashtirildi! (+{int(grant)}⚡)'
@@ -1291,3 +1316,174 @@ class BlitzReviewView(views.APIView):
             'total_xp': total_xp,
             'current_streak': streak.current_streak,
         })
+
+
+class GooglePlayRTDNView(views.APIView):
+    """
+    Google Play Real-time Developer Notifications (Cloud Pub/Sub push endpoint).
+    Handles subscription renewals, grace periods, cancellations, revocations, and expirations automatically.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        rtdn_secret = (os.getenv('GOOGLE_PLAY_RTDN_SECRET') or '').strip()
+        if rtdn_secret:
+            token_param = request.query_params.get('secret') or request.headers.get('X-RTDN-Secret', '')
+            if not secrets.compare_digest(token_param, rtdn_secret):
+                return Response({'error': 'Unauthorized RTDN origin'}, status=status.HTTP_403_FORBIDDEN)
+
+        msg = request.data.get('message') or {}
+        raw_b64 = msg.get('data') or ''
+        if not raw_b64:
+            return Response({'status': 'ignored'}, status=status.HTTP_200_OK)
+
+        try:
+            payload = json.loads(base64.b64decode(raw_b64).decode('utf-8'))
+        except Exception:
+            return Response({'error': 'Invalid base64 payload'}, status=status.HTTP_400_BAD_REQUEST)
+
+        sub_notif = payload.get('subscriptionNotification') or {}
+        purchase_token = (sub_notif.get('purchaseToken') or '').strip()
+        subscription_id = (sub_notif.get('subscriptionId') or '').strip()
+        notif_type = sub_notif.get('notificationType')
+
+        if not purchase_token:
+            return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+        user = User.objects.filter(play_purchase_token=purchase_token).first()
+        if not user:
+            purchase = PlayPurchase.objects.filter(purchase_token=purchase_token).select_related('user').first()
+            user = purchase.user if purchase else None
+
+        if not user:
+            return Response({'status': 'user_not_found'}, status=status.HTTP_200_OK)
+
+        if subscription_id and user.last_play_product_id != subscription_id:
+            user.last_play_product_id = subscription_id
+            user.save(update_fields=['last_play_product_id'])
+
+        # Notification types 12 (REVOKED) or 13 (EXPIRED) force immediate downgrade
+        if notif_type in (12, 13):
+            user.subscription_type = 'free'
+            user.is_annual = False
+            user.subscription_expires_at = None
+            user.save(update_fields=['subscription_type', 'is_annual', 'subscription_expires_at'])
+            cache.delete(f"courses_list_v2_{user.id}")
+            cache.delete('api_leaderboard_cache')
+            return Response({'status': 'downgraded'})
+
+        # Force sync check against Google Play Developer API for renewals/recoveries/restarts
+        user.subscription_expires_at = timezone.now() - timedelta(seconds=1)
+        sync_user_subscription_status(user)
+        return Response({'status': 'synced', 'subscription_type': user.subscription_type})
+
+
+class PasswordResetRequestView(views.APIView):
+    """Generates a 6-digit OTP and sends recovery email to the user's registered address."""
+    permission_classes = [AllowAny]
+    throttle_scope = 'auth_sensitive'
+
+    def post(self, request):
+        identifier = (request.data.get('identifier') or request.data.get('email') or '').strip()
+        if not identifier:
+            return Response({'error': 'Email yoki username kiriting.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = (
+            User.objects.filter(email__iexact=identifier).first()
+            or User.objects.filter(username__iexact=identifier).first()
+        )
+        if not user:
+            return Response({
+                'success': True,
+                'message': 'Agar hisob va email mavjud bo\'lsa, 6 xonali tasdiqlash kodi yuborildi.',
+            })
+
+        if not user.email:
+            return Response(
+                {'error': 'Ushbu akkauntga email biriktirilmagan. Yordam markaziga murojaat qiling.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        PasswordResetCode.objects.filter(user=user, is_used=False).update(is_used=True)
+        otp = f"{secrets.randbelow(900000) + 100000}"
+        PasswordResetCode.objects.create(
+            user=user,
+            code=otp,
+            expires_at=timezone.now() + timedelta(minutes=15),
+        )
+
+        try:
+            send_mail(
+                subject='StudyAi — Password Reset Code',
+                message=(
+                    f"Hi {user.first_name or user.username},\n\n"
+                    f"Your StudyAi password reset code is: {otp}\n"
+                    f"This code expires in 15 minutes.\n\n"
+                    f"If you did not request this, ignore this email."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except Exception:
+            return Response(
+                {'error': 'Email xizmati vaqtincha ishlamayapti. Keyinroq urinib ko\'ring.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({
+            'success': True,
+            'message': '6 xonali tasdiqlash kodi emailingizga yuborildi.',
+        })
+
+
+class PasswordResetConfirmView(views.APIView):
+    """Verifies the 6-digit OTP and updates the user's password."""
+    permission_classes = [AllowAny]
+    throttle_scope = 'auth_sensitive'
+
+    def post(self, request):
+        identifier = (request.data.get('identifier') or request.data.get('email') or '').strip()
+        code = (request.data.get('code') or '').strip()
+        new_password = request.data.get('new_password') or ''
+
+        if not identifier or not code or not new_password:
+            return Response(
+                {'error': 'Barcha maydonlarni to\'ldiring.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = (
+            User.objects.filter(email__iexact=identifier).first()
+            or User.objects.filter(username__iexact=identifier).first()
+        )
+        if not user:
+            return Response({'error': 'Noto\'g\'ri kod yoki foydalanuvchi.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        reset_obj = PasswordResetCode.objects.filter(
+            user=user, is_used=False, expires_at__gt=timezone.now()
+        ).first()
+        if not reset_obj:
+            return Response({'error': 'Tasdiqlash kodi muddati tugagan yoki topilmadi.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if reset_obj.attempts >= 5:
+            reset_obj.is_used = True
+            reset_obj.save(update_fields=['is_used'])
+            return Response({'error': 'Juda ko\'p noto\'g\'ri urinish. Yangi kod so\'rang.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not secrets.compare_digest(reset_obj.code, code):
+            reset_obj.attempts += 1
+            reset_obj.save(update_fields=['attempts'])
+            return Response({'error': 'Tasdiqlash kodi noto\'g\'ri.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as ve:
+            return Response({'error': ' '.join(ve.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        reset_obj.is_used = True
+        reset_obj.save(update_fields=['is_used'])
+
+        return Response({'success': True, 'message': 'Parol muvaffaqiyatli yangilandi!'})

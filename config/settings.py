@@ -212,8 +212,23 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/chatbot/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Gemini API Key (loaded from .env file)
+# Gemini API Key & Fast Model Selection (loaded from .env file)
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_CHAT_MODEL = os.getenv('GEMINI_CHAT_MODEL', 'gemini-3.6-flash')
+GEMINI_CONTENT_MODEL = os.getenv('GEMINI_CONTENT_MODEL', 'gemini-3.5-flash-lite')
+
+# Email / SMTP Configuration for Password Recovery
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if os.getenv('EMAIL_HOST_USER')
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@study-ai.uz')
 
 # ============================================================================
 # CELERY CONFIGURATION (Optional - only for VPS deployments with Redis)
@@ -313,10 +328,27 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '90/min',
+        'user': '240/min',
+        'auth_sensitive': '12/min',
+        'ai_generation': '25/hour',
+    },
 }
 
-# CORS Configuration for API access from Flutter
-CORS_ALLOW_ALL_ORIGINS = True  # For dev only, restrict in production
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = [
+    'https://study-ai.uz',
+    'https://www.study-ai.uz',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = list(default_headers) + [

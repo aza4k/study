@@ -22,6 +22,9 @@ class CustomUser(AbstractUser):
         default='free',
         verbose_name=_("Subscription Type")
     )
+    subscription_expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Subscription Expires At"))
+    play_purchase_token = models.CharField(max_length=512, blank=True, default='', verbose_name=_("Play Purchase Token"))
+    last_play_product_id = models.CharField(max_length=100, blank=True, default='', verbose_name=_("Last Play Product ID"))
     energy = models.DecimalField(max_digits=8, decimal_places=2, default=30.00, verbose_name=_("Energy"))
     is_annual = models.BooleanField(default=False, verbose_name=_("Is Annual"))
     redeemed_xp = models.PositiveIntegerField(default=0, verbose_name=_("Redeemed XP"))
@@ -240,3 +243,19 @@ class PlayPurchase(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.product_id} ({self.purchase_type})"
+
+
+class PasswordResetCode(models.Model):
+    """Short-lived 6-digit OTP codes for email-based password recovery."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='password_reset_codes')
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveIntegerField(default=0)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"ResetCode({self.user.username}, used={self.is_used})"

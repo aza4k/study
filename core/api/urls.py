@@ -14,6 +14,8 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/profile/', views.UserProfileView.as_view(), name='api_profile'),
     path('auth/delete-account/', views.DeleteAccountView.as_view(), name='api_delete_account'),
+    path('auth/password-reset/request/', views.PasswordResetRequestView.as_view(), name='api_password_reset_request'),
+    path('auth/password-reset/confirm/', views.PasswordResetConfirmView.as_view(), name='api_password_reset_confirm'),
 
     # Explore & Custom Courses
     path('courses/explore/', views.ExploreCoursesView.as_view(), name='api_explore_courses'),
@@ -45,5 +47,6 @@ urlpatterns = [
     path('profile/mock-purchase/', views.PurchaseEnergyView.as_view(), name='api_mock_purchase'),
     path('profile/mock-subscribe/', views.SubscribeView.as_view(), name='api_mock_subscribe'),
     path('profile/verify-google-purchase/', views.VerifyGooglePurchaseView.as_view(), name='api_verify_google_purchase'),
+    path('billing/rtdn/', views.GooglePlayRTDNView.as_view(), name='api_google_play_rtdn'),
     path('courses/<int:course_id>/certificate/', views.CertificateView.as_view(), name='api_certificate'),
 ]

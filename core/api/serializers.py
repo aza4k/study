@@ -33,11 +33,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'username', 'password', 'first_name', 'last_name', 'email', 'phone_number',
-            'age', 'preferred_language', 'subscription_type', 'energy',
+            'age', 'preferred_language', 'subscription_type', 'subscription_expires_at', 'energy',
             'is_annual', 'redeemed_xp', 'last_bonus_claimed', 'bonus_xp'
         )
         read_only_fields = (
-            'subscription_type', 'energy', 'is_annual', 'redeemed_xp',
+            'subscription_type', 'subscription_expires_at', 'energy', 'is_annual', 'redeemed_xp',
             'last_bonus_claimed', 'bonus_xp'
         )
 

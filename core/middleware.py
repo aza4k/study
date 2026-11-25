@@ -48,8 +48,8 @@ class AppSignatureMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Filter all /api/ endpoints (exclude Django Admin, static files, etc.)
-        if request.path.startswith('/api/'):
+        # Filter all /api/ endpoints (exclude Google Play Pub/Sub webhook which uses RTDN secret)
+        if request.path.startswith('/api/') and not request.path.startswith('/api/v1/billing/rtdn/'):
             # Direct successful response to all OPTIONS preflight requests
             if request.method == 'OPTIONS':
                 response = HttpResponse(status=200)

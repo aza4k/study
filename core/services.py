@@ -96,6 +96,33 @@ def get_gemini_client():
     return _client
 
 
+def _fast_chat_model() -> str:
+    return getattr(settings, 'GEMINI_CHAT_MODEL', None) or os.getenv('GEMINI_CHAT_MODEL', 'gemini-3.6-flash')
+
+
+def _fast_content_model() -> str:
+    return getattr(settings, 'GEMINI_CONTENT_MODEL', None) or os.getenv('GEMINI_CONTENT_MODEL', 'gemini-3.5-flash-lite')
+
+
+def _create_fast_interaction(client, *, model: str, input_text: str, response_format=None, stream: bool = False):
+    kwargs = {
+        'model': model,
+        'input': input_text,
+        'generation_config': {'thinking_level': 'minimal'},
+    }
+    if response_format is not None:
+        kwargs['response_format'] = response_format
+    if stream:
+        kwargs['stream'] = True
+    try:
+        return client.interactions.create(**kwargs)
+    except Exception:
+        if model != 'gemini-3.5-flash-lite':
+            kwargs['model'] = 'gemini-3.5-flash-lite'
+            return client.interactions.create(**kwargs)
+        raise
+
+
 # Language-specific system prompts for Chatbot
 CHATBOT_SYSTEM_PROMPTS = {
     'en': """You are StuDy AI, an expert personal tutor. Your job is to answer questions clearly and help users pick what they want to learn next.
@@ -224,7 +251,7 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
     if not GENAI_AVAILABLE:
         return "Sorry, the AI service is not available. Please install google-genai package."
 
-    model_name = 'gemini-3.5-flash-lite'
+    model_name = _fast_chat_model()
     client = get_gemini_client()
 
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
@@ -237,9 +264,10 @@ def chatbot_response(user_message, chat_history, language='en', user=None):
     conversation += f"User: {user_message}\nAssistant:"
 
     try:
-        interaction = client.interactions.create(
+        interaction = _create_fast_interaction(
+            client,
             model=model_name,
-            input=conversation,
+            input_text=conversation,
         )
         return (interaction.output_text or "").strip()
     except Exception as e:
@@ -255,7 +283,7 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
         yield "AI service is unavailable."
         return
 
-    model_name = 'gemini-3.5-flash-lite'
+    model_name = _fast_chat_model()
     client = get_gemini_client()
 
     system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
@@ -268,10 +296,11 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
     conversation += f"User: {user_message}\nAssistant:"
 
     try:
-        stream = client.interactions.create(
+        stream = _create_fast_interaction(
+            client,
             model=model_name,
-            input=conversation,
-            stream=True
+            input_text=conversation,
+            stream=True,
         )
         for event in stream:
             if event.event_type == "step.delta" and hasattr(event, 'delta') and event.delta.type == "text":
@@ -410,14 +439,15 @@ Dynamic Structure Rules:
 """
 
     try:
-        interaction = client.interactions.create(
-            model="gemini-3.5-flash-lite",
-            input=prompt,
+        interaction = _create_fast_interaction(
+            client,
+            model=_fast_content_model(),
+            input_text=prompt,
             response_format={
                 "type": "text",
                 "mime_type": "application/json",
                 "schema": LessonContent.model_json_schema()
-            }
+            },
         )
         data = LessonContent.model_validate_json(interaction.output_text)
 
@@ -486,14 +516,15 @@ Language requirement: Write feedback strictly in {lang_name}.
 Evaluate fairly: if the core logic/answer solves the task (even with minor style differences), mark is_passed=true and give encouraging tips. If incomplete or buggy, mark is_passed=false and explain clearly how to fix it in 2-4 sentences, plus provide a clean improved_version.
 """
 
-    interaction = client.interactions.create(
-        model="gemini-3.5-flash-lite",
-        input=prompt,
+    interaction = _create_fast_interaction(
+        client,
+        model=_fast_chat_model(),
+        input_text=prompt,
         response_format={
             "type": "text",
             "mime_type": "application/json",
             "schema": PracticeEvaluation.model_json_schema()
-        }
+        },
     )
     result = PracticeEvaluation.model_validate_json(interaction.output_text)
     return result.model_dump()
@@ -518,9 +549,10 @@ Lesson Excerpt:
 
 Student Question: {question}
 """
-    interaction = client.interactions.create(
-        model="gemini-3.5-flash-lite",
-        input=prompt,
+    interaction = _create_fast_interaction(
+        client,
+        model=_fast_chat_model(),
+        input_text=prompt,
     )
     return (interaction.output_text or "").strip()
 
@@ -566,7 +598,7 @@ def generate_course_from_ai(
         cost = ECONOMY_CONFIG['course_cost'].get(sub_type, Decimal('15.00'))
         modules_count = 1 if sub_type == 'free' else (2 if sub_type == 'pro' else 3)
 
-    model_name = 'gemini-3.5-flash-lite'
+    model_name = _fast_chat_model()
 
     # Check and deduct energy
     if user:
@@ -606,14 +638,15 @@ Ensure lesson titles flow naturally from fundamentals to practical mastery.
     client = get_gemini_client()
 
     try:
-        interaction = client.interactions.create(
+        interaction = _create_fast_interaction(
+            client,
             model=model_name,
-            input=prompt,
+            input_text=prompt,
             response_format={
                 "type": "text",
                 "mime_type": "application/json",
                 "schema": CourseOutline.model_json_schema()
-            }
+            },
         )
         outline = CourseOutline.model_validate_json(interaction.output_text)
 
