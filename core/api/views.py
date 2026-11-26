@@ -230,7 +230,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         is_creator = (instance.creator == user)
         is_enrolled = UserCourse.objects.filter(user=user, course=instance).exists()
 
-        top_25_ids = Course.objects.annotate(star_count=Count('stars')).order_by('-star_count')[:25].values_list('id', flat=True)
+        if not instance.is_public and not is_creator and not is_enrolled:
+            return Response(
+                {'error': 'This is a private course.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        top_25_ids = Course.objects.filter(is_public=True).annotate(star_count=Count('stars')).order_by('-star_count')[:25].values_list('id', flat=True)
         is_top_25 = instance.id in top_25_ids
 
         is_preview = False
@@ -287,6 +293,11 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
         course = instance.module.course
         user = request.user
         sub = getattr(user, 'subscription_type', 'free')
+
+        is_creator = (course.creator_id == user.id)
+        is_enrolled = UserCourse.objects.filter(user=user, course=course).exists()
+        if not course.is_public and not is_creator and not is_enrolled:
+            return Response({'error': 'This is a private course.'}, status=status.HTTP_403_FORBIDDEN)
 
         ordered_lessons = list(
             Lesson.objects.filter(module__course=course)
@@ -680,6 +691,8 @@ class GenerateCourseView(views.APIView):
         sync_user_subscription_status(user)
         topic = request.data.get('topic', '').strip()
         difficulty = request.data.get('difficulty', 'beginner').strip().lower()
+        raw_pub = request.data.get('is_public', False)
+        is_public = raw_pub if isinstance(raw_pub, bool) else str(raw_pub).strip().lower() in ('true', '1', 'yes')
         if not topic:
             return Response({'error': 'Topic is required'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -693,7 +706,9 @@ class GenerateCourseView(views.APIView):
             )
 
         try:
-            course = generate_course_from_ai(topic, user.preferred_language, user, difficulty=difficulty)
+            course = generate_course_from_ai(
+                topic, user.preferred_language, user, difficulty=difficulty, is_public=is_public
+            )
             cache.delete(f"courses_list_v2_{user.id}")
             return Response({
                 'success': True,
@@ -727,7 +742,11 @@ class UploadPDFCourseView(views.APIView):
             if not pdf_text:
                 return Response({'error': 'Could not extract text from PDF.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            course = generate_course_from_ai("Custom PDF Course", user.preferred_language, user, pdf_text=pdf_text)
+            raw_pub = request.data.get('is_public', False)
+            is_public = raw_pub if isinstance(raw_pub, bool) else str(raw_pub).strip().lower() in ('true', '1', 'yes')
+            course = generate_course_from_ai(
+                "Custom PDF Course", user.preferred_language, user, pdf_text=pdf_text, is_public=is_public
+            )
             cache.delete(f"courses_list_v2_{user.id}")
             return Response({
                 'success': True,
@@ -757,7 +776,7 @@ class ExploreCoursesView(views.APIView):
         user = request.user
         sub = user.subscription_type or 'free'
 
-        courses_qs = Course.objects.annotate(
+        courses_qs = Course.objects.filter(is_public=True).annotate(
             star_count=Count('stars', distinct=True),
             lessons_count=Count('modules__lessons', distinct=True)
         ).select_related('creator')
@@ -839,6 +858,9 @@ class ToggleStarCourseView(views.APIView):
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if not course.is_public and course.creator_id != user.id:
+            return Response({'error': 'This is a private course.'}, status=status.HTTP_403_FORBIDDEN)
+
         star_record = CourseStar.objects.filter(user=user, course=course).first()
         if star_record:
             star_record.delete()
@@ -870,8 +892,11 @@ class ToggleEnrollCourseView(views.APIView):
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if not course.is_public and course.creator_id != user.id:
+            return Response({'error': 'This is a private course.'}, status=status.HTTP_403_FORBIDDEN)
+
         if sub == 'pro':
-            top_25_ids = Course.objects.annotate(star_count=Count('stars')).order_by('-star_count')[:25].values_list('id', flat=True)
+            top_25_ids = Course.objects.filter(is_public=True).annotate(star_count=Count('stars')).order_by('-star_count')[:25].values_list('id', flat=True)
             if course.id not in top_25_ids and course.creator != user:
                 return Response({'error': 'PRO subscription can save Top 25 courses. Upgrade to ULTRA for all.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -888,6 +913,89 @@ class ToggleEnrollCourseView(views.APIView):
 
         cache.delete(f"courses_list_v2_{user.id}")
         return Response({'success': True, 'enrolled': enrolled})
+
+
+class CourseSettingsView(views.APIView):
+    """Allows a course creator to update visibility/metadata or delete their course."""
+    permission_classes = [IsAuthenticated]
+
+    def _invalidate_course_caches(self, course: Course):
+        user_ids = set(UserCourse.objects.filter(course=course).values_list('user_id', flat=True))
+        if course.creator_id:
+            user_ids.add(course.creator_id)
+        for uid in user_ids:
+            cache.delete(f"courses_list_v2_{uid}")
+
+    def patch(self, request, course_id):
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if course.creator_id != request.user.id:
+            return Response({'error': 'Only the course creator can change settings.'}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        update_fields = []
+
+        if 'title' in data:
+            title = str(data.get('title') or '').strip()
+            if not title:
+                return Response({'error': 'Title cannot be empty.'}, status=status.HTTP_400_BAD_REQUEST)
+            course.title = title[:200]
+            update_fields.append('title')
+
+        if 'description' in data:
+            course.description = str(data.get('description') or '').strip()
+            update_fields.append('description')
+
+        if 'category' in data:
+            cat = str(data.get('category') or '').strip()
+            valid_cats = {c[0] for c in Course.CATEGORY_CHOICES}
+            if cat not in valid_cats:
+                return Response({'error': 'Invalid category.'}, status=status.HTTP_400_BAD_REQUEST)
+            course.category = cat
+            update_fields.append('category')
+
+        if 'difficulty' in data:
+            diff = str(data.get('difficulty') or '').strip()
+            valid_diffs = {d[0] for d in Course.DIFFICULTY_CHOICES}
+            if diff not in valid_diffs:
+                return Response({'error': 'Invalid difficulty.'}, status=status.HTTP_400_BAD_REQUEST)
+            course.difficulty = diff
+            update_fields.append('difficulty')
+
+        if 'is_public' in data:
+            raw_pub = data.get('is_public')
+            course.is_public = raw_pub if isinstance(raw_pub, bool) else str(raw_pub).strip().lower() in ('true', '1', 'yes')
+            update_fields.append('is_public')
+
+        if update_fields:
+            course.save(update_fields=update_fields)
+            self._invalidate_course_caches(course)
+
+        return Response({
+            'success': True,
+            'id': course.id,
+            'title': course.title,
+            'description': course.description,
+            'category': course.category,
+            'difficulty': course.difficulty,
+            'is_public': course.is_public,
+        })
+
+    def delete(self, request, course_id):
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if course.creator_id != request.user.id:
+            return Response({'error': 'Only the course creator can delete this course.'}, status=status.HTTP_403_FORBIDDEN)
+
+        self._invalidate_course_caches(course)
+        course.delete()
+        return Response({'success': True})
 
 
 # --- Gamification & Business Model API ---
@@ -1191,6 +1299,9 @@ class CertificateView(views.APIView):
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not course.is_public and course.creator_id != user.id and not UserCourse.objects.filter(user=user, course=course).exists():
+            return Response({'error': 'This is a private course.'}, status=status.HTTP_403_FORBIDDEN)
 
         lessons = Lesson.objects.filter(module__course=course)
         total_lessons = lessons.count()

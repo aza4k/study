@@ -141,7 +141,7 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
     def test_blitz_review_open_preview_and_delete_account(self):
         # Other user's course preview works for Free users (Lesson 1 unlocked, Lesson 2 locked)
         other_user = User.objects.create_user(username='author2', password='Password123!')
-        other_course = Course.objects.create(title='Explore Course', description='Open preview', language='uz', creator=other_user)
+        other_course = Course.objects.create(title='Explore Course', description='Open preview', language='uz', creator=other_user, is_public=True)
         mod = Module.objects.create(course=other_course, title='M1', order=1)
         Lesson.objects.create(module=mod, title='L1', content='Free preview content', order=1)
         Lesson.objects.create(module=mod, title='L2', content='Locked Pro content', order=2)
@@ -580,3 +580,54 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         self.assertEqual(r2.status_code, 200)
         self.assertTrue(r2.data['topic_clear'])
         self.assertEqual(r2.data['topic'], 'Python Django Backend')
+
+    def test_course_privacy_explore_filtering_and_settings(self):
+        # Private course owned by another author must stay hidden from Explore & blocked from other users
+        other_user = User.objects.create_user(username='private_author', password='Password123!')
+        private_course = Course.objects.create(
+            title='Private Secret Plan',
+            description='Personal notes',
+            language='uz',
+            creator=other_user,
+            is_public=False,
+        )
+        mod = Module.objects.create(course=private_course, title='Private M1', order=1)
+        les = Lesson.objects.create(module=mod, title='Secret L1', content='Secret content', order=1)
+
+        explore_res = self.client.get(reverse('api_explore_courses'), **self.headers)
+        self.assertEqual(explore_res.status_code, 200)
+        ids_in_explore = [c['id'] for c in explore_res.data['courses']]
+        self.assertNotIn(private_course.id, ids_in_explore)
+
+        self.assertEqual(self.client.get(f'/api/v1/courses/{private_course.id}/', **self.headers).status_code, 403)
+        self.assertEqual(self.client.get(f'/api/v1/lessons/{les.id}/', **self.headers).status_code, 403)
+
+        # Non-creator cannot change course settings
+        forbidden_patch = self.client.patch(
+            reverse('api_course_settings', kwargs={'course_id': private_course.id}),
+            {'is_public': True},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(forbidden_patch.status_code, 403)
+
+        # Creator can publish and rename via settings, then it appears in Explore
+        owner_client = APIClient()
+        owner_client.force_authenticate(user=other_user)
+        ok_patch = owner_client.patch(
+            reverse('api_course_settings', kwargs={'course_id': private_course.id}),
+            {'title': 'Public Python Guide', 'is_public': True, 'difficulty': 'intermediate'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(ok_patch.status_code, 200)
+        self.assertTrue(ok_patch.data['is_public'])
+        self.assertEqual(ok_patch.data['title'], 'Public Python Guide')
+
+        explore_res2 = self.client.get(reverse('api_explore_courses'), **self.headers)
+        self.assertIn(private_course.id, [c['id'] for c in explore_res2.data['courses']])
+
+        # Creator can delete course cleanly
+        del_res = owner_client.delete(reverse('api_course_settings', kwargs={'course_id': private_course.id}), **self.headers)
+        self.assertEqual(del_res.status_code, 200)
+        self.assertFalse(Course.objects.filter(id=private_course.id).exists())

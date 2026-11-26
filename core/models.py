@@ -54,6 +54,7 @@ class Course(models.Model):
     language = models.CharField(max_length=3, default='en', verbose_name=_("Language"))
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general', verbose_name=_("Category"))
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='beginner', verbose_name=_("Difficulty"))
+    is_public = models.BooleanField(default=False, verbose_name=_("Public in Catalog"))
     image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_("Image URL"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     creator = models.ForeignKey(

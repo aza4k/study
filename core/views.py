@@ -355,7 +355,7 @@ class ExploreCoursesWebView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         sub = user.subscription_type or 'free'
 
-        courses_qs = Course.objects.annotate(
+        courses_qs = Course.objects.filter(is_public=True).annotate(
             star_count=Count('stars', distinct=True),
             lessons_count=Count('modules__lessons', distinct=True),
         ).select_related('creator')
@@ -401,6 +401,8 @@ def explore_star_web(request, course_id):
     if user.subscription_type == 'free':
         return JsonResponse({'error': "Yulduzcha bosish PRO/ULTRA tarifida ishlaydi."}, status=403)
     course = get_object_or_404(Course, id=course_id)
+    if not course.is_public and course.creator_id != user.id:
+        return JsonResponse({'error': "Bu shaxsiy kurs."}, status=403)
     existing = CourseStar.objects.filter(user=user, course=course).first()
     if existing:
         existing.delete()
@@ -419,8 +421,10 @@ def explore_enroll_web(request, course_id):
     if sub == 'free':
         return JsonResponse({'error': "Jamoa kurslariga qo'shilish uchun PRO yoki ULTRA tarifi kerak."}, status=403)
     course = get_object_or_404(Course, id=course_id)
+    if not course.is_public and course.creator_id != user.id:
+        return JsonResponse({'error': "Bu shaxsiy kurs."}, status=403)
     if sub == 'pro':
-        top_25_ids = list(Course.objects.annotate(sc=Count('stars')).order_by('-sc')[:25].values_list('id', flat=True))
+        top_25_ids = list(Course.objects.filter(is_public=True).annotate(sc=Count('stars')).order_by('-sc')[:25].values_list('id', flat=True))
         if course.id not in top_25_ids and course.creator != user:
             return JsonResponse({'error': "PRO tarifi Top-25 kurslarni saqlay oladi. Barchasi uchun ULTRA kerak."}, status=403)
 
@@ -1020,6 +1024,8 @@ class GamificationView(LoginRequiredMixin, View):
 @login_required
 def download_certificate(request, course_id):
     course = get_object_or_404(Course, id=course_id)
+    if not course.is_public and course.creator_id != request.user.id and not UserCourse.objects.filter(user=request.user, course=course).exists():
+        return HttpResponse("Bu shaxsiy kurs.", status=403)
     if not is_course_completed(request.user, course):
         return HttpResponse("Sertifikat olish uchun kursdagi barcha darslarni tugating.", status=403)
     Certificate.objects.get_or_create(user=request.user, course=course)

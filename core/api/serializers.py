@@ -137,6 +137,7 @@ class ModuleSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     modules = ModuleSerializer(many=True, read_only=True)
     is_frozen = serializers.SerializerMethodField()
+    is_creator = serializers.SerializerMethodField()
     lessons_count = serializers.SerializerMethodField()
     completed_lessons_count = serializers.SerializerMethodField()
     progress_percent = serializers.SerializerMethodField()
@@ -145,12 +146,16 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = (
             'id', 'title', 'description', 'language', 'category', 'difficulty',
-            'image_url', 'created_at', 'modules', 'is_frozen',
+            'is_public', 'is_creator', 'image_url', 'created_at', 'modules', 'is_frozen',
             'lessons_count', 'completed_lessons_count', 'progress_percent'
         )
 
     def get_is_frozen(self, obj):
         return False
+
+    def get_is_creator(self, obj):
+        request = self.context.get('request')
+        return bool(request and request.user.is_authenticated and obj.creator_id == request.user.id)
 
     def _get_counts(self, obj):
         total = 0
@@ -184,12 +189,13 @@ class CourseListSerializer(serializers.ModelSerializer):
     completed_lessons_count = serializers.SerializerMethodField()
     progress_percent = serializers.SerializerMethodField()
     creator_username = serializers.SerializerMethodField()
+    is_creator = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = (
             'id', 'title', 'description', 'language', 'category', 'difficulty',
-            'image_url', 'created_at', 'modules_count', 'lessons_count',
+            'is_public', 'is_creator', 'image_url', 'created_at', 'modules_count', 'lessons_count',
             'completed_lessons_count', 'progress_percent', 'creator_username'
         )
 
@@ -220,6 +226,10 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     def get_creator_username(self, obj):
         return obj.creator.username if obj.creator else 'StuDy AI'
+
+    def get_is_creator(self, obj):
+        request = self.context.get('request')
+        return bool(request and request.user.is_authenticated and obj.creator_id == request.user.id)
 
 
 class UserProgressSerializer(serializers.ModelSerializer):
