@@ -554,3 +554,29 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
             **self.headers,
         )
         self.assertEqual(err_res.status_code, 400)
+
+    def test_chatbot_discovery_requires_prior_turn_before_topic_clear(self):
+        # Turn 1: premature TOPIC_CLEAR must be suppressed until user shares goals/interests
+        with patch('core.api.views.chatbot_response', return_value='Salom! Qaysi yo\'nalish qiziq?\nTOPIC_CLEAR: Python'):
+            r1 = self.client.post(
+                reverse('api_chatbot'),
+                {'message': 'Salom, Python o\'rganmoqchiman'},
+                format='json',
+                **self.headers,
+            )
+        self.assertEqual(r1.status_code, 200)
+        self.assertFalse(r1.data['topic_clear'])
+        self.assertIsNone(r1.data['topic'])
+        self.assertNotIn('TOPIC_CLEAR:', r1.data['bot_message'])
+
+        # Turn 2: after discovery exchange, TOPIC_CLEAR is honored
+        with patch('core.api.views.chatbot_response', return_value='Ajoyib! Backend kursi boshlaymiz.\nTOPIC_CLEAR: Python Django Backend'):
+            r2 = self.client.post(
+                reverse('api_chatbot'),
+                {'message': 'Ish topish uchun backend o\'rganmoqchiman, boshlang\'ichman'},
+                format='json',
+                **self.headers,
+            )
+        self.assertEqual(r2.status_code, 200)
+        self.assertTrue(r2.data['topic_clear'])
+        self.assertEqual(r2.data['topic'], 'Python Django Backend')

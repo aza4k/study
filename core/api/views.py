@@ -539,6 +539,21 @@ class LessonAskAIView(views.APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def _extract_topic_if_ready(reply_text: str, chat_history) -> tuple[str, bool, str | None]:
+    """Extracts TOPIC_CLEAR only after at least one discovery exchange has occurred."""
+    prior_user_msgs = sum(1 for m in list(chat_history)[:-1] if m.is_user)
+    topic_clear = False
+    topic = None
+    cleaned = reply_text
+    if 'TOPIC_CLEAR:' in reply_text:
+        match = re.search(r'TOPIC_CLEAR:\s*(.+)', reply_text)
+        cleaned = re.sub(r'\n?\s*TOPIC_CLEAR:.*$', '', reply_text, flags=re.DOTALL).strip()
+        if prior_user_msgs >= 1 and match:
+            topic = match.group(1).strip()
+            topic_clear = bool(topic)
+    return cleaned, topic_clear, topic
+
+
 # --- Chatbot & Generation ---
 class ChatbotView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -575,15 +590,7 @@ class ChatbotView(views.APIView):
         chat_history = ChatMessage.objects.filter(user=user).order_by('created_at')
 
         bot_reply = chatbot_response(user_message, chat_history, user.preferred_language, user=user)
-
-        topic_clear = False
-        topic = None
-        if 'TOPIC_CLEAR:' in bot_reply:
-            topic_clear = True
-            match = re.search(r'TOPIC_CLEAR:\s*(.+)', bot_reply)
-            if match:
-                topic = match.group(1).strip()
-                bot_reply = re.sub(r'TOPIC_CLEAR:.+', '', bot_reply).strip()
+        bot_reply, topic_clear, topic = _extract_topic_if_ready(bot_reply, chat_history)
 
         ChatMessage.objects.create(user=user, message=bot_reply, is_user=False)
 
@@ -648,14 +655,7 @@ class ChatbotStreamView(views.APIView):
                 yield f"data: {json.dumps({'delta': chunk})}\n\n"
 
             full_reply = "".join(collected)
-            topic_clear = False
-            topic = None
-            if 'TOPIC_CLEAR:' in full_reply:
-                topic_clear = True
-                match = re.search(r'TOPIC_CLEAR:\s*(.+)', full_reply)
-                if match:
-                    topic = match.group(1).strip()
-                    full_reply = re.sub(r'TOPIC_CLEAR:.+', '', full_reply).strip()
+            full_reply, topic_clear, topic = _extract_topic_if_ready(full_reply, chat_history)
 
             if full_reply and full_reply not in ("Xatolik yuz berdi.", "AI service is unavailable."):
                 ChatMessage.objects.create(user=user, message=full_reply, is_user=False)

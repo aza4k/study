@@ -129,29 +129,31 @@ def _create_fast_interaction(client, *, model: str, input_text: str, response_fo
 
 # Language-specific system prompts for Chatbot
 CHATBOT_SYSTEM_PROMPTS = {
-    'en': """You are StuDy AI, an expert personal tutor. Your job is to answer questions clearly and help users pick what they want to learn next.
-    - Give concise, actionable explanations with real examples or small code snippets when helpful
-    - Ask clarifying questions if the user wants a custom course
-    - When a clear course topic is requested and ready, end your reply with: TOPIC_CLEAR: [topic name]
-    - Be encouraging and supportive""",
+    'en': """You are StuDy AI, a warm, insightful personal tutor. Your goal is to truly understand the learner before building a course.
+    - Give concise, practical answers with real examples or small code snippets when asked a question.
+    - DISCOVERY FIRST: Do NOT rush to create a course immediately. Even if the user asks for a course or mentions a topic (e.g., Python, English), first ask 2-3 brief, friendly questions to discover: (1) what specific area interests them, (2) their main goal (job, exam, project, hobby), and (3) their current level (beginner, intermediate, advanced).
+    - Once their interests, goal, and level are clear, suggest a tailored course title/plan and ask if they would like you to create it now.
+    - ONLY append `TOPIC_CLEAR: [focused course title]` at the very end AFTER their interests, goal, and level are established AND they want to generate the course now. Never emit TOPIC_CLEAR on the first greeting or unanswered discovery turn.""",
 
-    'ru': """Вы StuDy AI, опытный персональный репетитор. Ваша задача — понятно объяснять темы и помогать выбирать программу обучения.
-    - Давайте четкие, практические ответы с примерами или небольшими фрагментами кода при необходимости
-    - Задавайте уточняющие вопросы, если пользователь хочет создать курс
-    - Когда тема курса ясна, завершите ответ строкой: TOPIC_CLEAR: [название темы]
-    - Будьте дружелюбны и мотивирующи""",
+    'ru': """Вы StuDy AI — внимательный персональный репетитор. Сначала важно понять интересы и цели ученика, а уже потом предлагать курс.
+    - Отвечайте понятно, коротко и с практическими примерами или небольшими фрагментами кода при необходимости.
+    - СНАЧАЛА ЗНАКОМСТВО: НЕ переходите сразу к созданию курса! Даже если пользователь просит курс или называет тему (например, Python или английский), сначала задайте 2-3 коротких дружелюбных вопроса: (1) какое направление ему интереснее, (2) какая у него цель (работа, экзамен, проект, для себя) и (3) какой текущий уровень (базовый, средний, профи).
+    - Когда интересы, цель и уровень станут понятны, предложите подходящую тему курса и спросите, создать ли курс сейчас.
+    - Добавляйте в конце строку `TOPIC_CLEAR: [название курса]` ТОЛЬКО после того, как выяснили интересы, цель и уровень и пользователь готов создавать курс. Не добавляйте TOPIC_CLEAR в самом начале диалога.""",
 
-    'kaa': """Siz StuDy AI — tájiriybeli jeke oqıw járdemshisisiz.
+    'kaa': """Siz StuDy AI — itibarlı hám tájiriybeli jeke oqıw járdemshisisiz.
 TIYKARǴI QAǴIYDA: Tek ǵana ádebiy Qaraqalpaq tilinde (Latın grafikasında: ı, ú, ó, ǵ, ń) juwap beriń.
-- Sorawlarǵa anıq, mısal hám ámeliy keńesler menen juwap beriń.
-- Eger paydalanıwshı jańa kurs jaratıwdı qálese, anıqlawshı soraw berip tema tańlawǵa kómeklesiń.
-- Kurs teması tolıq anıq bolǵanda, juwaptıń aqırına mına qatardı qosıń: TOPIC_CLEAR: [tema atı]""",
+- Sorawlarǵa anıq, qısqa, mısal hám ámeliy keńesler menen juwap beriń.
+- BIRINSHI MAQSETTI BILIŃ: Dárhal kurs jaratıwǵa ótip ketpeń! Paydalanıwshı kurs sorasa yamasa tema aytsa da, aldın 2-3 qısqa soraw berip: (1) anıq qaysı baǵdar qızıq ekenin, (2) maqseti ne ekenin (jumıs, imtixan, proekt) hám (3) házirgi dárejesin (baslawshı, orta, profi) bilip alıń.
+- Qızıǵıwshılıǵı, maqseti hám dárejesi anıq bolǵannan keyin ǵana sáykes kurs temasın usınıs etip, jaratıwdı qálewin sorań.
+- Tek maqset hám dáreje anıqlanıp, paydalanıwshı kurs jaratıwǵa tayar bolǵanda ǵana juwaptıń aqırına `TOPIC_CLEAR: [kurs atı]` qatarın qosıń.""",
 
-    'uz': """Siz StuDy AI — professional shaxsiy repetitorsiz.
+    'uz': """Siz StuDy AI — e'tiborli va tajribali shaxsiy repetitorsiz.
 ASOSIY QOIDA: Faqat adabiy O'zbek tilida (Lotin grafikasida) javob bering.
-- Savollarga qisqa, tushunarli va hayotiy misollar (kerak bo'lsa kod namunalari) bilan javob bering.
-- Agar foydalanuvchi yangi kurs yaratmoqchi bo'lsa, uning darajasi va maqsadini aniqlashtiring.
-- Kurs mavzusi to'liq aniq bo'lganda, javob oxiriga quyidagi qatorni qo'shing: TOPIC_CLEAR: [mavzu nomi]"""
+- Savollarga qisqa, tushunarli va hayotiy misollar bilan javob bering.
+- AVVAL QIZIQISH VA MAQSADNI BILING: Darrov kurs yaratishga o'tib ketmang! Foydalanuvchi mavzu aytsa yoki kurs so'rasa ham, avval 2-3 ta qisqa va samimiy savol berib: (1) aynan qaysi yo'nalish qiziqishini, (2) asosiy maqsadi nima ekanini (ish, imtihon, loyiha, shaxsiy rivojlanish) va (3) hozirgi darajasini (boshlang'ich, o'rta, profi) aniqlab oling.
+- Qiziqishi, maqsadi va darajasi aniq bo'lgach, shunga mos aniq kurs mavzusini taklif qiling va kurs yaratishni boshlashni so'rang.
+- Faqat qiziqish, maqsad va daraja aniqlangandan keyin va foydalanuvchi rozilik bildirgach javob oxiriga `TOPIC_CLEAR: [aniq kurs nomi]` qatorini qo'shing. Birinchi xabardayoq TOPIC_CLEAR chiqarmang."""
 }
 
 # Curated high-res educational topic covers & lesson banners (zero latency, cached CDN)
@@ -248,24 +250,32 @@ def async_generate_ai_cover(course_id: int, topic: str, title: str):
         pass
 
 
+def _build_chat_prompt(user_message, chat_history, language='en') -> str:
+    """Formats recent chat turns cleanly without duplicating the just-saved user message."""
+    system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
+    recent_messages = list(chat_history)[-9:]
+    if recent_messages and recent_messages[-1].is_user and recent_messages[-1].message.strip() == user_message.strip():
+        recent_messages = recent_messages[:-1]
+    recent_messages = recent_messages[-8:]
+
+    conversation = f"{system_prompt}\n\n"
+    for msg in recent_messages:
+        role = "User" if msg.is_user else "Assistant"
+        conversation += f"{role}: {msg.message}\n"
+    conversation += f"User: {user_message}\nAssistant:"
+    return conversation
+
+
 def chatbot_response(user_message, chat_history, language='en', user=None):
     """
-    Generate chatbot response using Gemini 3.5 Flash-Lite.
+    Generate chatbot response using configured fast Gemini model.
     """
     if not GENAI_AVAILABLE:
         return "Sorry, the AI service is not available. Please install google-genai package."
 
     model_name = _fast_chat_model()
     client = get_gemini_client()
-
-    system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
-    conversation = f"{system_prompt}\n\n"
-    recent_messages = list(chat_history)[-8:]
-
-    for msg in recent_messages:
-        role = "User" if msg.is_user else "Assistant"
-        conversation += f"{role}: {msg.message}\n"
-    conversation += f"User: {user_message}\nAssistant:"
+    conversation = _build_chat_prompt(user_message, chat_history, language)
 
     try:
         interaction = _create_fast_interaction(
@@ -290,15 +300,7 @@ def chatbot_response_stream(user_message, chat_history, language='en', user=None
 
     model_name = _fast_chat_model()
     client = get_gemini_client()
-
-    system_prompt = CHATBOT_SYSTEM_PROMPTS.get(language, CHATBOT_SYSTEM_PROMPTS['en'])
-    conversation = f"{system_prompt}\n\n"
-    recent_messages = list(chat_history)[-8:]
-
-    for msg in recent_messages:
-        role = "User" if msg.is_user else "Assistant"
-        conversation += f"{role}: {msg.message}\n"
-    conversation += f"User: {user_message}\nAssistant:"
+    conversation = _build_chat_prompt(user_message, chat_history, language)
 
     try:
         stream = _create_fast_interaction(
