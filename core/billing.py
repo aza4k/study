@@ -1,6 +1,7 @@
 import json
 import os
-from datetime import timedelta
+import urllib.request
+from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 
 from django.core.cache import cache
@@ -10,6 +11,9 @@ from google.auth.transport.requests import AuthorizedSession
 from google.oauth2 import service_account
 
 ANDROID_PACKAGE_NAME = os.getenv('GOOGLE_PLAY_PACKAGE_NAME', 'com.fundev.uz')
+APPLE_BUNDLE_ID = os.getenv('APPLE_BUNDLE_ID', 'com.fundev.uz')
+APPLE_PROD_VERIFY_URL = 'https://buy.itunes.apple.com/verifyReceipt'
+APPLE_SANDBOX_VERIFY_URL = 'https://sandbox.itunes.apple.com/verifyReceipt'
 ANDROID_PUBLISHER_SCOPE = 'https://www.googleapis.com/auth/androidpublisher'
 BASE_PUBLISHER_URL = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications'
 
@@ -131,6 +135,89 @@ def verify_google_play_purchase(product_id: str, purchase_token: str) -> dict:
     }
 
 
+def _post_apple_verify(url: str, payload: dict) -> dict:
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST',
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode('utf-8'))
+
+
+def verify_apple_receipt(product_id: str, receipt_data: str, transaction_id: str = '') -> dict:
+    """
+    Verifies an iOS App Store receipt (consumable energy pack or auto-renewable subscription)
+    against Apple verifyReceipt with automatic Sandbox (status 21007) fallback.
+    """
+    if product_id not in PLAY_ONE_TIME_PRODUCTS and product_id not in PLAY_SUBSCRIPTIONS:
+        raise BillingVerificationError(f"Noma'lum mahsulot ID: {product_id}")
+
+    payload = {
+        'receipt-data': receipt_data,
+        'exclude-old-transactions': True,
+    }
+    shared_secret = (os.getenv('APPLE_SHARED_SECRET') or '').strip()
+    if shared_secret:
+        payload['password'] = shared_secret
+
+    data = _post_apple_verify(APPLE_PROD_VERIFY_URL, payload)
+    if data.get('status') == 21007:
+        data = _post_apple_verify(APPLE_SANDBOX_VERIFY_URL, payload)
+
+    if data.get('status') != 0:
+        raise BillingVerificationError(f"Apple App Store tekshiruvi xatosi (status: {data.get('status')}).")
+
+    receipt = data.get('receipt') or {}
+    bundle_id = receipt.get('bundle_id')
+    if bundle_id and bundle_id != APPLE_BUNDLE_ID:
+        raise BillingVerificationError("Noto'g'ri App Store bundle_id.")
+
+    candidates = []
+    for item in (data.get('latest_receipt_info') or []) + (receipt.get('in_app') or []):
+        if isinstance(item, dict) and item.get('product_id') == product_id:
+            candidates.append(item)
+
+    if not candidates:
+        raise BillingVerificationError(f"Receipt ichida mahsulot ({product_id}) topilmadi.")
+
+    matched = None
+    if transaction_id:
+        for item in candidates:
+            if item.get('transaction_id') == transaction_id or item.get('original_transaction_id') == transaction_id:
+                matched = item
+                break
+    if matched is None:
+        matched = max(candidates, key=lambda x: int(x.get('expires_date_ms') or x.get('purchase_date_ms') or 0))
+
+    resolved_tx = matched.get('transaction_id') or matched.get('original_transaction_id') or transaction_id
+
+    if product_id in PLAY_ONE_TIME_PRODUCTS:
+        return {
+            'purchase_type': 'one_time',
+            'order_id': resolved_tx,
+            'expires_at': None,
+            'raw': {'bundle_id': bundle_id, 'transaction': matched},
+        }
+
+    _, is_annual = PLAY_SUBSCRIPTIONS[product_id]
+    expires_ms = matched.get('expires_date_ms')
+    if expires_ms:
+        expires_at = datetime.fromtimestamp(int(expires_ms) / 1000.0, tz=dt_timezone.utc)
+        if expires_at <= timezone.now():
+            raise BillingVerificationError("Apple obuna muddati tugagan.")
+    else:
+        expires_at = timezone.now() + timedelta(days=366 if is_annual else 31)
+
+    return {
+        'purchase_type': 'subscription',
+        'order_id': resolved_tx,
+        'expires_at': expires_at,
+        'raw': {'bundle_id': bundle_id, 'transaction': matched},
+    }
+
+
 def sync_user_subscription_status(user) -> bool:
     """
     Reconciles a user's active PRO/ULTRA subscription when `subscription_expires_at` passes.
@@ -151,42 +238,47 @@ def sync_user_subscription_status(user) -> bool:
     product_id = (getattr(user, 'last_play_product_id', '') or '').strip()
 
     if token and product_id in PLAY_SUBSCRIPTIONS:
-        try:
-            verified = verify_google_play_purchase(product_id, token)
-            new_exp = verified.get('expires_at')
-            if new_exp and new_exp > timezone.now():
-                plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
-                latest_order = verified.get('order_id', '')
-                known_orders = set(
-                    PlayPurchase.objects.filter(user=user).values_list('order_id', flat=True)
-                )
-                user.subscription_type = plan
-                user.is_annual = is_annual
-                user.subscription_expires_at = new_exp
-                update_fields = ['subscription_type', 'is_annual', 'subscription_expires_at']
-                if latest_order and latest_order not in known_orders:
-                    grant = SUBSCRIPTION_ENERGY_REWARDS.get(plan, Decimal('150.00'))
-                    user.energy = Decimal(str(user.energy)) + grant
-                    update_fields.append('energy')
-                    PlayPurchase.objects.create(
-                        user=user,
-                        product_id=product_id,
-                        purchase_token=f"{token}:renew:{latest_order}"[:512],
-                        order_id=latest_order,
-                        purchase_type='subscription',
-                        verified=True,
-                        raw_response=verified.get('raw') or {},
-                    )
-                user.save(update_fields=update_fields)
-                cache.delete(f"courses_list_v2_{user.id}")
-                cache.delete('api_leaderboard_cache')
-                return True
-        except BillingVerificationError:
-            # Expired, canceled, paused, or revoked in Google Play -> downgrade below
+        if token.startswith('apple:'):
+            # Apple subscription renewals can also be reconciled via App Store Server Notifications
+            # Keep grace if valid receipt or downgrade normally once expired
             pass
-        except Exception:
-            # Transient network/API error: keep current plan temporarily instead of premature downgrade
-            return False
+        else:
+            try:
+                verified = verify_google_play_purchase(product_id, token)
+                new_exp = verified.get('expires_at')
+                if new_exp and new_exp > timezone.now():
+                    plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
+                    latest_order = verified.get('order_id', '')
+                    known_orders = set(
+                        PlayPurchase.objects.filter(user=user).values_list('order_id', flat=True)
+                    )
+                    user.subscription_type = plan
+                    user.is_annual = is_annual
+                    user.subscription_expires_at = new_exp
+                    update_fields = ['subscription_type', 'is_annual', 'subscription_expires_at']
+                    if latest_order and latest_order not in known_orders:
+                        grant = SUBSCRIPTION_ENERGY_REWARDS.get(plan, Decimal('150.00'))
+                        user.energy = Decimal(str(user.energy)) + grant
+                        update_fields.append('energy')
+                        PlayPurchase.objects.create(
+                            user=user,
+                            product_id=product_id,
+                            purchase_token=f"{token}:renew:{latest_order}"[:512],
+                            order_id=latest_order,
+                            purchase_type='subscription',
+                            verified=True,
+                            raw_response=verified.get('raw') or {},
+                        )
+                    user.save(update_fields=update_fields)
+                    cache.delete(f"courses_list_v2_{user.id}")
+                    cache.delete('api_leaderboard_cache')
+                    return True
+            except BillingVerificationError:
+                # Expired, canceled, paused, or revoked in Google Play -> downgrade below
+                pass
+            except Exception:
+                # Transient network/API error: keep current plan temporarily instead of premature downgrade
+                return False
 
     user.subscription_type = 'free'
     user.is_annual = False

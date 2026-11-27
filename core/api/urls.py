@@ -48,6 +48,7 @@ urlpatterns = [
     path('profile/mock-purchase/', views.PurchaseEnergyView.as_view(), name='api_mock_purchase'),
     path('profile/mock-subscribe/', views.SubscribeView.as_view(), name='api_mock_subscribe'),
     path('profile/verify-google-purchase/', views.VerifyGooglePurchaseView.as_view(), name='api_verify_google_purchase'),
+    path('profile/verify-apple-purchase/', views.VerifyApplePurchaseView.as_view(), name='api_verify_apple_purchase'),
     path('billing/rtdn/', views.GooglePlayRTDNView.as_view(), name='api_google_play_rtdn'),
     path('courses/<int:course_id>/certificate/', views.CertificateView.as_view(), name='api_certificate'),
 ]

@@ -1191,6 +1191,59 @@ class SubscribeView(views.APIView):
         })
 
 
+def _credit_verified_purchase(user, product_id: str, purchase_token: str, order_id: str, verified: dict):
+    from django.db import transaction
+    from core.billing import PLAY_ONE_TIME_PRODUCTS, PLAY_SUBSCRIPTIONS
+
+    with transaction.atomic():
+        if PlayPurchase.objects.filter(purchase_token=purchase_token).exists():
+            return Response({
+                'success': True,
+                'already_processed': True,
+                'subscription_type': user.subscription_type,
+                'current_energy': user.energy,
+            })
+
+        PlayPurchase.objects.create(
+            user=user,
+            product_id=product_id,
+            purchase_token=purchase_token,
+            order_id=verified.get('order_id') or order_id,
+            purchase_type=verified['purchase_type'],
+            verified=True,
+            raw_response=verified.get('raw') or {},
+        )
+
+        if product_id in PLAY_ONE_TIME_PRODUCTS:
+            amount = PLAY_ONE_TIME_PRODUCTS[product_id]
+            user.energy = Decimal(str(user.energy)) + amount
+            user.save(update_fields=['energy'])
+            msg = f'+{int(amount)}⚡ Energiya hisobingizga qo\'shildi!'
+        else:
+            plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
+            user.subscription_type = plan
+            user.is_annual = is_annual
+            user.subscription_expires_at = verified.get('expires_at')
+            user.play_purchase_token = purchase_token
+            user.last_play_product_id = product_id
+            grant = ECONOMY_CONFIG['subscription_energy'].get(plan, Decimal('150.00'))
+            user.energy = Decimal(str(user.energy)) + grant
+            user.save(update_fields=[
+                'subscription_type', 'is_annual', 'subscription_expires_at',
+                'play_purchase_token', 'last_play_product_id', 'energy'
+            ])
+            cache.delete(f"courses_list_v2_{user.id}")
+            cache.delete('api_leaderboard_cache')
+            msg = f'{plan.upper()} obuna faollashtirildi! (+{int(grant)}⚡)'
+
+    return Response({
+        'success': True,
+        'message': msg,
+        'subscription_type': user.subscription_type,
+        'current_energy': user.energy,
+    })
+
+
 class VerifyGooglePurchaseView(views.APIView):
     """
     Production Google Play Billing receipt verifier.
@@ -1200,12 +1253,9 @@ class VerifyGooglePurchaseView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        from django.db import transaction
         from core.billing import (
             BillingConfigError,
             BillingVerificationError,
-            PLAY_ONE_TIME_PRODUCTS,
-            PLAY_SUBSCRIPTIONS,
             verify_google_play_purchase,
         )
 
@@ -1238,53 +1288,52 @@ class VerifyGooglePurchaseView(views.APIView):
         except Exception as e:
             return Response({'error': f'Verification error: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
 
-        with transaction.atomic():
-            if PlayPurchase.objects.filter(purchase_token=purchase_token).exists():
-                return Response({
-                    'success': True,
-                    'already_processed': True,
-                    'subscription_type': user.subscription_type,
-                    'current_energy': user.energy,
-                })
+        return _credit_verified_purchase(user, product_id, purchase_token, order_id, verified)
 
-            PlayPurchase.objects.create(
-                user=user,
-                product_id=product_id,
-                purchase_token=purchase_token,
-                order_id=verified.get('order_id') or order_id,
-                purchase_type=verified['purchase_type'],
-                verified=True,
-                raw_response=verified.get('raw') or {},
-            )
 
-            if product_id in PLAY_ONE_TIME_PRODUCTS:
-                amount = PLAY_ONE_TIME_PRODUCTS[product_id]
-                user.energy = Decimal(str(user.energy)) + amount
-                user.save(update_fields=['energy'])
-                msg = f'+{int(amount)}⚡ Energiya hisobingizga qo\'shildi!'
-            else:
-                plan, is_annual = PLAY_SUBSCRIPTIONS[product_id]
-                user.subscription_type = plan
-                user.is_annual = is_annual
-                user.subscription_expires_at = verified.get('expires_at')
-                user.play_purchase_token = purchase_token
-                user.last_play_product_id = product_id
-                grant = ECONOMY_CONFIG['subscription_energy'].get(plan, Decimal('150.00'))
-                user.energy = Decimal(str(user.energy)) + grant
-                user.save(update_fields=[
-                    'subscription_type', 'is_annual', 'subscription_expires_at',
-                    'play_purchase_token', 'last_play_product_id', 'energy'
-                ])
-                cache.delete(f"courses_list_v2_{user.id}")
-                cache.delete('api_leaderboard_cache')
-                msg = f'{plan.upper()} obuna faollashtirildi! (+{int(grant)}⚡)'
+class VerifyApplePurchaseView(views.APIView):
+    """
+    iOS App Store StoreKit receipt verifier (handles production + automatic Sandbox 21007 fallback).
+    """
+    permission_classes = [IsAuthenticated]
 
-        return Response({
-            'success': True,
-            'message': msg,
-            'subscription_type': user.subscription_type,
-            'current_energy': user.energy,
-        })
+    def post(self, request):
+        import hashlib
+        from core.billing import BillingVerificationError, verify_apple_receipt
+
+        user = request.user
+        product_id = str(request.data.get('product_id', '')).strip()
+        receipt_data = str(request.data.get('receipt_data', '')).strip()
+        transaction_id = str(request.data.get('transaction_id', '')).strip()
+
+        if not product_id or not receipt_data:
+            return Response({'error': 'product_id and receipt_data are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            verified = verify_apple_receipt(product_id, receipt_data, transaction_id=transaction_id)
+        except BillingVerificationError as ve:
+            return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': f'Verification error: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        resolved_tx = (verified.get('order_id') or transaction_id or '').strip()
+        if not resolved_tx:
+            resolved_tx = hashlib.sha256(f"{product_id}:{receipt_data}".encode('utf-8')).hexdigest()[:40]
+        purchase_token = f"apple:{resolved_tx}"[:512]
+
+        existing = PlayPurchase.objects.filter(purchase_token=purchase_token).first()
+        if existing:
+            if existing.user_id != user.id:
+                return Response({'error': 'Purchase belongs to another account.'}, status=status.HTTP_409_CONFLICT)
+            return Response({
+                'success': True,
+                'already_processed': True,
+                'message': 'Purchase already credited.',
+                'subscription_type': user.subscription_type,
+                'current_energy': user.energy,
+            })
+
+        return _credit_verified_purchase(user, product_id, purchase_token, resolved_tx, verified)
 
 
 class CertificateView(views.APIView):

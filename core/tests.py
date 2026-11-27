@@ -631,3 +631,49 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
         del_res = owner_client.delete(reverse('api_course_settings', kwargs={'course_id': private_course.id}), **self.headers)
         self.assertEqual(del_res.status_code, 200)
         self.assertFalse(Course.objects.filter(id=private_course.id).exists())
+
+    def test_apple_purchase_verification_sandbox_and_replay(self):
+        from django.utils import timezone
+        from datetime import timedelta
+
+        future_ms = str(int((timezone.now() + timedelta(days=30)).timestamp() * 1000))
+        responses = [
+            {'status': 21007},
+            {
+                'status': 0,
+                'receipt': {'bundle_id': 'com.fundev.uz', 'in_app': []},
+                'latest_receipt_info': [{
+                    'product_id': 'studyai_pro_monthly',
+                    'transaction_id': 'apple_tx_9001',
+                    'expires_date_ms': future_ms,
+                }],
+            },
+        ]
+        with patch('core.billing._post_apple_verify', side_effect=responses):
+            res = self.client.post(
+                reverse('api_verify_apple_purchase'),
+                {
+                    'product_id': 'studyai_pro_monthly',
+                    'receipt_data': 'BASE64_RECEIPT_SAMPLE',
+                    'transaction_id': 'apple_tx_9001',
+                },
+                format='json',
+                **self.headers,
+            )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['subscription_type'], 'pro')
+
+        # Replay of the same Apple transaction does not double-credit
+        with patch('core.billing._post_apple_verify', return_value=responses[1]):
+            replay = self.client.post(
+                reverse('api_verify_apple_purchase'),
+                {
+                    'product_id': 'studyai_pro_monthly',
+                    'receipt_data': 'BASE64_RECEIPT_SAMPLE',
+                    'transaction_id': 'apple_tx_9001',
+                },
+                format='json',
+                **self.headers,
+            )
+        self.assertEqual(replay.status_code, 200)
+        self.assertTrue(replay.data['already_processed'])
