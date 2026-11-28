@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Course, Module, Lesson, Quiz, UserProgress, UserCourse, ChatMessage, DailyActivity
+from .models import (
+    CustomUser, Course, Module, Lesson, Quiz, UserProgress,
+    UserCourse, ChatMessage, DailyActivity, CourseReport, BlockedAuthor,
+)
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -62,3 +65,16 @@ class ChatMessageAdmin(admin.ModelAdmin):
 class DailyActivityAdmin(admin.ModelAdmin):
     list_display = ['user', 'date', 'lessons_completed', 'quizzes_correct', 'chats_sent', 'practice_completed']
     list_filter = ['date']
+
+
+@admin.register(CourseReport)
+class CourseReportAdmin(admin.ModelAdmin):
+    list_display = ['course', 'reporter', 'reason', 'created_at']
+    list_filter = ['reason', 'created_at']
+    search_fields = ['course__title', 'reporter__username', 'details']
+
+
+@admin.register(BlockedAuthor)
+class BlockedAuthorAdmin(admin.ModelAdmin):
+    list_display = ['user', 'blocked_user', 'created_at']
+    search_fields = ['user__username', 'blocked_user__username']

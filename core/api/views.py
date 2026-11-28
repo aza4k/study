@@ -24,7 +24,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from core.models import (
     Course, Module, Lesson, Quiz, UserProgress,
     UserCourse, ChatMessage, UserStreak, CourseStar,
-    Certificate, DailyActivity, PlayPurchase, PasswordResetCode
+    Certificate, DailyActivity, PlayPurchase, PasswordResetCode,
+    CourseReport, BlockedAuthor,
 )
 from core.billing import sync_user_subscription_status
 from core.api.serializers import (
@@ -233,6 +234,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         if not instance.is_public and not is_creator and not is_enrolled:
             return Response(
                 {'error': 'This is a private course.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if instance.creator_id and not is_creator and BlockedAuthor.objects.filter(
+            user=user, blocked_user_id=instance.creator_id
+        ).exists():
+            return Response(
+                {'error': 'You have blocked this author.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -776,7 +785,18 @@ class ExploreCoursesView(views.APIView):
         user = request.user
         sub = user.subscription_type or 'free'
 
-        courses_qs = Course.objects.filter(is_public=True).annotate(
+        blocked_author_ids = list(
+            BlockedAuthor.objects.filter(user=user).values_list('blocked_user_id', flat=True)
+        )
+        reported_course_ids = list(
+            CourseReport.objects.filter(reporter=user).values_list('course_id', flat=True)
+        )
+
+        courses_qs = Course.objects.filter(is_public=True).exclude(
+            creator_id__in=blocked_author_ids
+        ).exclude(
+            id__in=reported_course_ids
+        ).annotate(
             star_count=Count('stars', distinct=True),
             lessons_count=Count('modules__lessons', distinct=True)
         ).select_related('creator')
@@ -831,6 +851,7 @@ class ExploreCoursesView(views.APIView):
                 'lessons_count': course.lessons_count,
                 'image_url': course.image_url,
                 'created_at': course.created_at,
+                'creator_id': course.creator_id,
                 'creator_username': course.creator.username if course.creator else 'StuDy AI',
                 'star_count': course.star_count,
                 'is_starred': course.id in starred_course_ids,
@@ -996,6 +1017,58 @@ class CourseSettingsView(views.APIView):
         self._invalidate_course_caches(course)
         course.delete()
         return Response({'success': True})
+
+
+class ReportCourseView(views.APIView):
+    """Allows users to report inappropriate public courses (App Store Guideline 1.2)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        course = Course.objects.filter(id=course_id).first()
+        if not course:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+        if course.creator_id == request.user.id:
+            return Response({'error': 'You cannot report your own course.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        valid_reasons = {choice[0] for choice in CourseReport.REASON_CHOICES}
+        reason = str(request.data.get('reason') or 'inappropriate').strip().lower()
+        if reason not in valid_reasons:
+            reason = 'other'
+        details = str(request.data.get('details') or '').strip()[:500]
+
+        CourseReport.objects.update_or_create(
+            reporter=request.user,
+            course=course,
+            defaults={'reason': reason, 'details': details},
+        )
+
+        # Auto-quarantine if multiple independent users flag the same course
+        if course.is_public and CourseReport.objects.filter(course=course).count() >= 5:
+            course.is_public = False
+            course.save(update_fields=['is_public'])
+
+        return Response({'success': True, 'reported': True, 'course_id': course.id})
+
+
+class BlockAuthorView(views.APIView):
+    """Allows users to block a course author and hide their public courses."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        course = Course.objects.filter(id=course_id).select_related('creator').first()
+        if not course:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+        if not course.creator_id:
+            return Response({'error': 'System courses cannot be blocked.'}, status=status.HTTP_400_BAD_REQUEST)
+        if course.creator_id == request.user.id:
+            return Response({'error': 'You cannot block yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        BlockedAuthor.objects.get_or_create(user=request.user, blocked_user=course.creator)
+        return Response({
+            'success': True,
+            'blocked_creator_id': course.creator_id,
+            'creator_username': course.creator.username,
+        })
 
 
 # --- Gamification & Business Model API ---

@@ -260,3 +260,40 @@ class PasswordResetCode(models.Model):
 
     def __str__(self):
         return f"ResetCode({self.user.username}, used={self.is_used})"
+
+
+class CourseReport(models.Model):
+    """User-generated content report for public catalog courses (App Store Guideline 1.2)."""
+    REASON_CHOICES = (
+        ('inappropriate', 'Inappropriate Content'),
+        ('spam', 'Spam or Low Quality'),
+        ('misleading', 'Inaccurate / Misleading'),
+        ('copyright', 'Copyright Concern'),
+        ('other', 'Other'),
+    )
+    reporter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='course_reports')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=24, choices=REASON_CHOICES, default='inappropriate')
+    details = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['reporter', 'course']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Report({self.reporter.username} -> {self.course_id}: {self.reason})"
+
+
+class BlockedAuthor(models.Model):
+    """Hides all public catalog courses created by a blocked author for the blocking user."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='blocked_authors')
+    blocked_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='blocked_by_users')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'blocked_user']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Block({self.user.username} -x-> {self.blocked_user.username})"

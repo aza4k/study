@@ -20,6 +20,8 @@ urlpatterns = [
     # Explore & Custom Courses
     path('courses/explore/', views.ExploreCoursesView.as_view(), name='api_explore_courses'),
     path('courses/<int:course_id>/settings/', views.CourseSettingsView.as_view(), name='api_course_settings'),
+    path('courses/<int:course_id>/report/', views.ReportCourseView.as_view(), name='api_report_course'),
+    path('courses/<int:course_id>/block-author/', views.BlockAuthorView.as_view(), name='api_block_author'),
     path('courses/<int:course_id>/star/', views.ToggleStarCourseView.as_view(), name='api_star_course'),
     path('courses/<int:course_id>/enroll/', views.ToggleEnrollCourseView.as_view(), name='api_enroll_course'),
 

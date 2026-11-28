@@ -677,3 +677,57 @@ class StuDyAPIEconomyAndFeaturesTests(TestCase):
             )
         self.assertEqual(replay.status_code, 200)
         self.assertTrue(replay.data['already_processed'])
+
+    def test_ugc_report_course_and_block_author_filters_explore(self):
+        author = User.objects.create_user(username='ugc_author', password='Password123!')
+        public_course_1 = Course.objects.create(
+            title='Public UGC Course One',
+            description='Shared course',
+            language='en',
+            creator=author,
+            is_public=True,
+        )
+        public_course_2 = Course.objects.create(
+            title='Public UGC Course Two',
+            description='Another shared course',
+            language='en',
+            creator=author,
+            is_public=True,
+        )
+
+        # Both courses visible initially
+        res = self.client.get(reverse('api_explore_courses'), **self.headers)
+        self.assertEqual(res.status_code, 200)
+        ids = [c['id'] for c in res.data['courses']]
+        self.assertIn(public_course_1.id, ids)
+        self.assertIn(public_course_2.id, ids)
+
+        # Reporting course 1 hides course 1 immediately while leaving course 2
+        rep_res = self.client.post(
+            reverse('api_report_course', kwargs={'course_id': public_course_1.id}),
+            {'reason': 'inappropriate', 'details': 'Off-topic sample'},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(rep_res.status_code, 200)
+        self.assertTrue(rep_res.data['reported'])
+
+        res2 = self.client.get(reverse('api_explore_courses'), **self.headers)
+        ids2 = [c['id'] for c in res2.data['courses']]
+        self.assertNotIn(public_course_1.id, ids2)
+        self.assertIn(public_course_2.id, ids2)
+
+        # Blocking author hides all of their courses and denies direct course retrieval
+        blk_res = self.client.post(
+            reverse('api_block_author', kwargs={'course_id': public_course_2.id}),
+            {},
+            format='json',
+            **self.headers,
+        )
+        self.assertEqual(blk_res.status_code, 200)
+        self.assertEqual(blk_res.data['blocked_creator_id'], author.id)
+
+        res3 = self.client.get(reverse('api_explore_courses'), **self.headers)
+        ids3 = [c['id'] for c in res3.data['courses']]
+        self.assertNotIn(public_course_2.id, ids3)
+        self.assertEqual(self.client.get(f'/api/v1/courses/{public_course_2.id}/', **self.headers).status_code, 403)
